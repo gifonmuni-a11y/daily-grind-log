@@ -1,4 +1,3 @@
-cat > api/chat.js << 'EOF'
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const config = { api: { bodyParser: true } };
