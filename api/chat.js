@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: systemPrompt });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b', systemInstruction: systemPrompt });
     const history = messages.slice(0,-1).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
     const chat = model.startChat({ history });
     const last = messages[messages.length-1];
