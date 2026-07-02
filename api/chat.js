@@ -15,19 +15,22 @@ export default async function handler(req, res) {
 
   if (!apiKey) return res.status(500).json({ error: 'API key tidak ditemukan.' });
 
-  const { messages, userStats } = req.body;
+  const { messages = [], userStats = {} } = req.body || {};
+
+  if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
+
   const systemPrompt = `Kamu adalah ARIA, AI Companion di Daily Grind Log, fitness tracker bergaya manhwa RPG. Persona: tenang, tajam, seperti mentor manhwa. Data user: hari latihan ${userStats?.totalDays||0}, streak ${userStats?.streak||0} hari, level ${userStats?.level||1}, EXP ${userStats?.totalExp||0}. Jawab soal latihan, nutrisi, recovery dalam bahasa Indonesia, maks 4 kalimat.`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemPrompt });
-    const history = messages.slice(0,-1).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+    const history = messages.slice(0, -1).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
     const chat = model.startChat({ history });
-    const last = messages[messages.length-1];
+    const last = messages[messages.length - 1];
     const result = await chat.sendMessage(last.content);
     const text = result.response.text();
     return res.status(200).json({ reply: text });
   } catch(err) {
-    return res.status(500).json({ error: 'Gagal: '+err.message });
+    return res.status(500).json({ error: 'Gagal: ' + err.message });
   }
 }
