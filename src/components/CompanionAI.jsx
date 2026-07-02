@@ -117,7 +117,7 @@ export default function CompanionAI({ userId }) {
 
     try {
       // Mengirim chat ke Serverless Function internal kita sendiri di Vercel
-      const response = await fetch('/api/gemini', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
