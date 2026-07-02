@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export const config = { api: { bodyParser: true } };
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -15,7 +17,14 @@ export default async function handler(req, res) {
 
   if (!apiKey) return res.status(500).json({ error: 'API key tidak ditemukan.' });
 
-  const { messages = [], userStats = {} } = req.body || {};
+  let messages, userStats;
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    messages = body?.messages || [];
+    userStats = body?.userStats || {};
+  } catch(e) {
+    return res.status(400).json({ error: 'Body tidak valid.' });
+  }
 
   if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
 
@@ -24,13 +33,13 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemPrompt });
-    const history = messages.slice(0, -1).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+    const history = messages.slice(0,-1).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
     const chat = model.startChat({ history });
-    const last = messages[messages.length - 1];
+    const last = messages[messages.length-1];
     const result = await chat.sendMessage(last.content);
     const text = result.response.text();
     return res.status(200).json({ reply: text });
   } catch(err) {
-    return res.status(500).json({ error: 'Gagal: ' + err.message });
+    return res.status(500).json({ error: 'Gagal: '+err.message });
   }
 }
