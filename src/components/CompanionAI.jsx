@@ -1,21 +1,59 @@
 import { useState, useRef, useEffect } from 'react';
 
 const FAQ = [
-  { q: 'Pemula mulai dari mana?', a: 'Mulai 3x seminggu full body — push-up, squat, plank. Kuasai teknik dulu 3-4 minggu sebelum nambah beban.' },
-  { q: 'Kardio atau angkat beban?', a: 'Keduanya. Angkat beban untuk massa dan metabolisme, kardio untuk jantung. Kombinasikan.' },
-  { q: 'Berapa lama hasil keliatan?', a: 'Strength naik 2-3 minggu. Perubahan visual mulai 6-8 minggu dengan konsistensi dan nutrisi yang bener.' },
-  { q: 'Istirahat berapa hari?', a: 'Minimal 1-2 hari rest per minggu. Otot tumbuh saat istirahat, bukan saat latihan.' },
-  { q: 'Protein sehari berapa?', a: 'Target 1.6-2.2g per kg berat badan. Sumber: telur, dada ayam, ikan, tahu, tempe.' },
+  { q: 'Pemula mulai dari mana?', a: 'Mulai 3x seminggu (push-up, squat, plank), 1 hari istirahat di antaranya. Kuasai teknik dulu 3-4 minggu sebelum nambah beban. Imbangi protein cukup dan tidur 7-8 jam, target konsisten sebulan penuh tanpa bolong.' },
+  { q: 'Kardio atau angkat beban?', a: 'Keduanya, gantian — misal Senin/Rabu/Jumat angkat beban, Selasa/Kamis kardio ringan 20-30 menit. Kombinasi ini plus tidur cukup bikin metabolisme dan jantung sama-sama kebentuk dalam sebulan.' },
+  { q: 'Berapa lama hasil keliatan?', a: 'Strength naik dalam 2-3 minggu kalau latihan konsisten 3-4x seminggu. Perubahan visual mulai kelihatan minggu 6-8, asal pola makan dan tidur 7-8 jam juga dijaga, bukan cuma latihannya doang.' },
+  { q: 'Istirahat berapa hari?', a: 'Minimal 1-2 hari rest per minggu, jangan latihan otot yang sama 2 hari berturut-turut. Otot tumbuh saat istirahat dan tidur — jaga jam tidur konsisten biar progres sebulan gak keganggu.' },
+  { q: 'Protein sehari berapa?', a: 'Target 1.6-2.2g per kg berat badan, sebar ke 3-4 waktu makan. Sumber: telur, dada ayam, ikan, tahu, tempe. Konsisten sebulan plus latihan rutin baru kelihatan efeknya.' },
 ];
+
+function resolveTZ() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta';
+  } catch {
+    return 'Asia/Jakarta';
+  }
+}
+
+function getClock(tz) {
+  try {
+    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }).format(new Date());
+  } catch {
+    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' }).format(new Date());
+  }
+}
+
+function getGreeting(tz) {
+  let hour;
+  try {
+    hour = parseInt(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: tz }).format(new Date()).replace(/\D/g, ''), 10);
+  } catch {
+    hour = parseInt(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' }).format(new Date()).replace(/\D/g, ''), 10);
+  }
+  if (hour >= 4 && hour < 11) return 'Selamat pagi';
+  if (hour >= 11 && hour < 15) return 'Selamat siang';
+  if (hour >= 15 && hour < 18) return 'Selamat sore';
+  if (hour >= 18 && hour < 22) return 'Selamat malam';
+  return 'Selamat tidur';
+}
 
 export default function CompanionAI({ userStats, onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [energy, setEnergy] = useState(5);
+  const [tz] = useState(resolveTZ);
+  const [clock, setClock] = useState(() => getClock(tz));
+  const [greeting] = useState(() => getGreeting(tz));
   const bottomRef = useRef(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  useEffect(() => {
+    const id = setInterval(() => setClock(getClock(tz)), 30000);
+    return () => clearInterval(id);
+  }, [tz]);
 
   const send = async (text) => {
     if (!text.trim() || loading || energy <= 0) return;
@@ -49,18 +87,20 @@ export default function CompanionAI({ userStats, onClose }) {
   const FI = { fontFamily: "'Inter', sans-serif" };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
-      <div style={{ width: '100%', maxWidth: 480, background: '#100E16', borderTop: '1px solid #2A2636', borderRadius: '16px 16px 0 0', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, background: '#100E16', borderTop: '1px solid #2A2636', borderRadius: '16px 16px 0 0', height: '80vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #211D2C', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7C5CFF', boxShadow: '0 0 8px rgba(124,92,255,0.8)' }} />
-            <span style={{ ...FR, fontWeight: 700, fontSize: 15, color: '#EDEAF6' }}>ARIA</span>
+            <span style={{ ...FR, fontWeight: 700, fontSize: 15, color: '#EDEAF6' }}>Seolha</span>
             <span style={{ ...F, fontSize: 9, color: '#5C5868', textTransform: 'uppercase', letterSpacing: '0.2em' }}>AI Companion</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ ...F, fontSize: 10, color: '#5C5868' }}>{clock}</span>
             <span style={{ ...F, fontSize: 10, color: energy > 0 ? '#2DD4BF' : '#E0444C' }}>{energy}/5 energi</span>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#5C5868', cursor: 'pointer' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button onClick={(e) => { e.stopPropagation(); onClose(); }} type="button"
+              style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#9CA3AF', cursor: 'pointer', width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative', zIndex: 9999 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
         </div>
@@ -68,7 +108,7 @@ export default function CompanionAI({ userStats, onClose }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {messages.length === 0 && (
             <div style={{ textAlign: 'center', marginTop: 24 }}>
-              <p style={{ ...F, fontSize: 11, color: '#5C5868', lineHeight: 1.7 }}>Selamat datang, Trainer.<br/>Tanya apapun soal latihan, nutrisi, atau recovery.</p>
+              <p style={{ ...F, fontSize: 11, color: '#5C5868', lineHeight: 1.7 }}>{greeting}, Trainer.<br/>Tanya apapun soal latihan, nutrisi, atau recovery.</p>
             </div>
           )}
           {messages.map((m, i) => (
@@ -97,7 +137,7 @@ export default function CompanionAI({ userStats, onClose }) {
 
         <div style={{ padding: '12px 20px 24px', borderTop: '1px solid #211D2C', display: 'flex', gap: 10, flexShrink: 0 }}>
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send(input)}
-            placeholder={energy > 0 ? 'Tanya ARIA...' : 'Energi habis hari ini.'}
+            placeholder={energy > 0 ? 'Tanya Seolha...' : 'Energi habis hari ini.'}
             disabled={energy <= 0 || loading}
             style={{ flex: 1, background: '#0A0A0E', border: '1px solid #211D2C', color: '#EDEAF6', padding: '10px 14px', ...FI, fontSize: 13, outline: 'none' }}/>
           <button onClick={() => send(input)} disabled={energy <= 0 || loading || !input.trim()}
@@ -108,5 +148,7 @@ export default function CompanionAI({ userStats, onClose }) {
       </div>
       <style>{`@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>
     </div>
+  );
+}    </div>
   );
 }
