@@ -16,7 +16,9 @@ export default defineConfig({
       manifest: false,
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: []
+        runtimeCaching: [],
+        skipWaiting: true,
+        clientsClaim: true,
       }
     })
   ]
