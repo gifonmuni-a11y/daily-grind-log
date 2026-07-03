@@ -72,7 +72,6 @@ export default function CompanionAI({ userStats, onClose }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Back button HP dan history
   useEffect(() => {
     window.history.pushState({ companion: true }, '');
     const handlePop = () => onClose();
@@ -147,7 +146,6 @@ export default function CompanionAI({ userStats, onClose }) {
           zIndex: 10000,
         }}
       >
-        {/* Header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '16px 20px', borderBottom: '1px solid #211D2C', flexShrink: 0,
@@ -184,7 +182,6 @@ export default function CompanionAI({ userStats, onClose }) {
           </div>
         </div>
 
-        {/* Chat area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {messages.length === 0 && (
             <div style={{ background: '#0A0A0E', border: '1px solid #211D2C', padding: '14px 16px', marginBottom: 4 }}>
@@ -215,7 +212,6 @@ export default function CompanionAI({ userStats, onClose }) {
           <div ref={bottomRef} />
         </div>
 
-        {/* FAQ */}
         <div style={{ padding: '8px 20px', borderTop: '1px solid #211D2C', flexShrink: 0 }}>
           <p style={{ ...F, fontSize: 9, color: '#5C5868', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 8 }}>FAQ — 0 energi</p>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
@@ -228,7 +224,6 @@ export default function CompanionAI({ userStats, onClose }) {
           </div>
         </div>
 
-        {/* Input */}
         <div style={{ padding: '12px 20px 28px', borderTop: '1px solid #211D2C', display: 'flex', gap: 10, flexShrink: 0 }}>
           <input
             value={input}

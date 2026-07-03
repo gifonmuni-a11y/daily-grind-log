@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2 } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel } from '../lib/expSystem'
@@ -66,6 +66,7 @@ export default function Home({ session }) {
   const [showLogModal, setShowLogModal] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
+  const [showCompanion, setShowCompanion] = useState(false)
   const [editEntry, setEditEntry] = useState(null)
   const [seeding, setSeeding] = useState(false)
 
@@ -143,6 +144,7 @@ export default function Home({ session }) {
   const totalExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
   const { level } = calcLevel(totalExp)
   const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
+  const userStats = { totalDays: entries.length, streak, totalExp, level }
 
   if (loading) {
     return (
@@ -281,8 +283,22 @@ export default function Home({ session }) {
         <Plus size={24} className="text-white" />
       </button>
 
-      {/* Komponen Widget Companion AI */}
-      <CompanionAI userId={userId} />
+      {/* Tombol buka AI Companion. Panel-nya sendiri cuma dirender kalau showCompanion true */}
+      <button
+        onClick={() => setShowCompanion(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 z-40"
+        style={{
+          background: '#7C5CFF',
+          clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+        }}
+        title="Ngobrol sama Seolha"
+      >
+        <Bot size={24} className="text-white" />
+      </button>
+
+      {showCompanion && (
+        <CompanionAI userStats={userStats} onClose={() => setShowCompanion(false)} />
+      )}
 
       {showLogModal && (
         <LogModal
