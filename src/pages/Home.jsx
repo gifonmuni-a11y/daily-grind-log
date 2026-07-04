@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel } from '../lib/expSystem'
@@ -12,6 +12,12 @@ import {
   getTotalQuestExp,
   claimQuest,
 } from '../lib/dailyQuests'
+import {
+  ACHIEVEMENTS,
+  getUnlockedAchievements,
+  getEquippedTitle,
+  setEquippedTitle,
+} from '../lib/achievements'
 import ProfileHeader from '../components/ProfileHeader'
 import ProfileEditModal from '../components/ProfileEditModal'
 import StatusPanel from '../components/StatusPanel'
@@ -79,6 +85,7 @@ export default function Home({ session }) {
   const [seeding, setSeeding] = useState(false)
   const [questClaims, setQuestClaims] = useState([])
   const [claimingId, setClaimingId] = useState(null)
+  const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
   const fetchProfile = useCallback(async () => {
     const { data } = await supabase
@@ -162,6 +169,16 @@ export default function Home({ session }) {
     setClaimingId(null)
   }
 
+  function handleToggleTitle(achievementId) {
+    if (equippedTitleId === achievementId) {
+      setEquippedTitle(userId, null)
+      setEquippedTitleId(null)
+    } else {
+      setEquippedTitle(userId, achievementId)
+      setEquippedTitleId(achievementId)
+    }
+  }
+
   const filteredEntries = filterEntries(entries, activeFilter)
   const cardEntries = filteredEntries.slice(0, 3)
   const compactEntries = filteredEntries.slice(3)
@@ -175,6 +192,8 @@ export default function Home({ session }) {
   const { level } = calcLevel(totalExp)
   const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
   const userStats = { totalDays: entries.length, streak, totalExp, level }
+  const unlockedAchievements = getUnlockedAchievements(entries, streak)
+  const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
   if (loading) {
     return (
@@ -277,6 +296,57 @@ export default function Home({ session }) {
               )
             })}
           </div>
+        </div>
+
+        <div className="mx-4 mb-4" style={{ border: '1px solid #211D2C' }}>
+          <div
+            className="flex items-center justify-between px-4 py-3"
+            style={{ borderBottom: '1px solid #211D2C' }}
+          >
+            <div className="flex items-center gap-2">
+              <Award size={14} className="text-accent" />
+              <span className="font-mono text-xs text-text-dim uppercase tracking-widest">
+                Achievements ({unlockedAchievements.length}/{ACHIEVEMENTS.length})
+              </span>
+            </div>
+            {equippedAchievement && (
+              <span className="font-mono text-xs text-accent">
+                Title: {equippedAchievement.title}
+              </span>
+            )}
+          </div>
+          <div className="p-3 grid grid-cols-3 gap-2">
+            {ACHIEVEMENTS.map(ach => {
+              const unlocked = unlockedAchievements.some(u => u.id === ach.id)
+              const isEquipped = equippedTitleId === ach.id
+              return (
+                <button
+                  key={ach.id}
+                  onClick={() => unlocked && handleToggleTitle(ach.id)}
+                  disabled={!unlocked}
+                  className="flex flex-col items-center justify-center text-center px-2 py-3 gap-1.5"
+                  style={{
+                    background: isEquipped ? 'rgba(124,92,255,0.15)' : '#0A0A0E',
+                    border: '1px solid ' + (isEquipped ? '#7C5CFF' : '#211D2C'),
+                    opacity: unlocked ? 1 : 0.35,
+                  }}
+                  title={ach.desc}
+                >
+                  {unlocked ? (
+                    <Trophy size={20} className={isEquipped ? 'text-accent' : 'text-text-dim'} />
+                  ) : (
+                    <Lock size={20} className="text-text-dim" />
+                  )}
+                  <span className="font-mono text-xs text-text-dim uppercase">
+                    {ach.title}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <p className="font-body text-xs text-text-dim px-4 pb-3">
+            Ketuk badge yang udah kebuka buat jadiin title di profil.
+          </p>
         </div>
 
         <StatusPanel entries={entries} />
