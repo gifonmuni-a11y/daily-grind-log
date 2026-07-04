@@ -38,9 +38,18 @@ const QUEST_POOL = [
   },
 ]
 
-function todayKey() {
-  const d = new Date()
+function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function todayKey() {
+  return dateKey(new Date())
+}
+
+function yesterdayKey() {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return dateKey(d)
 }
 
 function seededPick(seed, arr, count) {
@@ -67,23 +76,32 @@ function hashStr(str) {
   return Math.abs(h)
 }
 
+function sameCombo(a, b) {
+  if (a.length !== b.length) return false
+  const idsA = a.map(q => q.id).sort()
+  const idsB = b.map(q => q.id).sort()
+  return idsA.every((id, i) => id === idsB[i])
+}
+
 export function getTodaysQuests(userId) {
-  const key = todayKey()
-  const seed = hashStr(`${userId}-${key}`)
-  return seededPick(seed, QUEST_POOL, 3)
+  const seed = hashStr(`${userId}-${todayKey()}`)
+  const ySeed = hashStr(`${userId}-${yesterdayKey()}`)
+  const yesterdayCombo = seededPick(ySeed, QUEST_POOL, 3)
+
+  let combo = seededPick(seed, QUEST_POOL, 3)
+  let attempt = 1
+  while (sameCombo(combo, yesterdayCombo) && attempt <= 10) {
+    combo = seededPick(seed + attempt * 7919, QUEST_POOL, 3)
+    attempt++
+  }
+  return combo
 }
 
 export function getEntriesToday(entries) {
   const key = todayKey()
-  return entries.filter(e => {
-    const d = new Date(e.entry_date)
-    const eKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    return eKey === key
-  })
+  return entries.filter(e => dateKey(new Date(e.entry_date)) === key)
 }
 
-// Ambil semua histori klaim quest user ini dari Supabase (semua tanggal,
-// dipakai buat hitung total bonus EXP + status klaim hari ini).
 export async function fetchQuestClaims(userId) {
   const { data, error } = await supabase
     .from('quest_claims')
@@ -96,18 +114,15 @@ export async function fetchQuestClaims(userId) {
   return data || []
 }
 
-// quest_id yang udah diklaim HARI INI, dari daftar klaim (hasil fetchQuestClaims)
 export function getClaimedTodayIds(claims) {
   const key = todayKey()
   return claims.filter(c => c.claimed_date === key).map(c => c.quest_id)
 }
 
-// Total bonus EXP dari semua quest yang pernah diklaim (all-time)
 export function getTotalQuestExp(claims) {
   return claims.reduce((sum, c) => sum + (c.exp_awarded || 0), 0)
 }
 
-// Klaim satu quest. Balikin true kalau berhasil, false kalau gagal/udah pernah diklaim.
 export async function claimQuest(userId, questId, expAwarded) {
   const { error } = await supabase
     .from('quest_claims')
