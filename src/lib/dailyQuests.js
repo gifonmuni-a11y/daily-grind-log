@@ -1,3 +1,5 @@
+import { supabase } from './supabaseClient'
+
 const QUEST_POOL = [
   {
     id: 'log_today',
@@ -71,26 +73,6 @@ export function getTodaysQuests(userId) {
   return seededPick(seed, QUEST_POOL, 3)
 }
 
-function claimedStorageKey(userId) {
-  return `dgl_quests_claimed_${userId}_${todayKey()}`
-}
-
-export function getClaimedQuestIds(userId) {
-  try {
-    const raw = localStorage.getItem(claimedStorageKey(userId))
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-export function claimQuest(userId, questId) {
-  const claimed = getClaimedQuestIds(userId)
-  if (claimed.includes(questId)) return
-  claimed.push(questId)
-  localStorage.setItem(claimedStorageKey(userId), JSON.stringify(claimed))
-}
-
 export function getEntriesToday(entries) {
   const key = todayKey()
   return entries.filter(e => {
@@ -98,4 +80,48 @@ export function getEntriesToday(entries) {
     const eKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     return eKey === key
   })
+}
+
+// Ambil semua histori klaim quest user ini dari Supabase (semua tanggal,
+// dipakai buat hitung total bonus EXP + status klaim hari ini).
+export async function fetchQuestClaims(userId) {
+  const { data, error } = await supabase
+    .from('quest_claims')
+    .select('*')
+    .eq('user_id', userId)
+  if (error) {
+    console.error('Gagal ambil quest_claims:', error.message)
+    return []
+  }
+  return data || []
+}
+
+// quest_id yang udah diklaim HARI INI, dari daftar klaim (hasil fetchQuestClaims)
+export function getClaimedTodayIds(claims) {
+  const key = todayKey()
+  return claims.filter(c => c.claimed_date === key).map(c => c.quest_id)
+}
+
+// Total bonus EXP dari semua quest yang pernah diklaim (all-time)
+export function getTotalQuestExp(claims) {
+  return claims.reduce((sum, c) => sum + (c.exp_awarded || 0), 0)
+}
+
+// Klaim satu quest. Balikin true kalau berhasil, false kalau gagal/udah pernah diklaim.
+export async function claimQuest(userId, questId, expAwarded) {
+  const { error } = await supabase
+    .from('quest_claims')
+    .insert({
+      user_id: userId,
+      quest_id: questId,
+      claimed_date: todayKey(),
+      exp_awarded: expAwarded,
+    })
+  if (error) {
+    if (error.code !== '23505') {
+      console.error('Gagal klaim quest:', error.message)
+    }
+    return false
+  }
+  return true
 }

@@ -1,9 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel } from '../lib/expSystem'
 import { buildDummyEntries } from '../lib/dummyData'
+import {
+  getTodaysQuests,
+  getEntriesToday,
+  fetchQuestClaims,
+  getClaimedTodayIds,
+  getTotalQuestExp,
+  claimQuest,
+} from '../lib/dailyQuests'
 import ProfileHeader from '../components/ProfileHeader'
 import ProfileEditModal from '../components/ProfileEditModal'
 import StatusPanel from '../components/StatusPanel'
@@ -69,6 +77,8 @@ export default function Home({ session }) {
   const [showCompanion, setShowCompanion] = useState(false)
   const [editEntry, setEditEntry] = useState(null)
   const [seeding, setSeeding] = useState(false)
+  const [questClaims, setQuestClaims] = useState([])
+  const [claimingId, setClaimingId] = useState(null)
 
   const fetchProfile = useCallback(async () => {
     const { data } = await supabase
@@ -98,9 +108,14 @@ export default function Home({ session }) {
     if (!error) setEntries(data || [])
   }, [userId])
 
+  const fetchQuestClaimsData = useCallback(async () => {
+    const claims = await fetchQuestClaims(userId)
+    setQuestClaims(claims)
+  }, [userId])
+
   useEffect(() => {
-    Promise.all([fetchProfile(), fetchEntries()]).finally(() => setLoading(false))
-  }, [fetchProfile, fetchEntries])
+    Promise.all([fetchProfile(), fetchEntries(), fetchQuestClaimsData()]).finally(() => setLoading(false))
+  }, [fetchProfile, fetchEntries, fetchQuestClaimsData])
 
   async function handleDelete(id) {
     if (!window.confirm('Hapus entry ini?')) return
@@ -137,11 +152,26 @@ export default function Home({ session }) {
     setSeeding(false)
   }
 
+  async function handleClaimQuest(quest) {
+    if (claimingId) return
+    setClaimingId(quest.id)
+    const success = await claimQuest(userId, quest.id, quest.exp)
+    if (success) {
+      await fetchQuestClaimsData()
+    }
+    setClaimingId(null)
+  }
+
   const filteredEntries = filterEntries(entries, activeFilter)
   const cardEntries = filteredEntries.slice(0, 3)
   const compactEntries = filteredEntries.slice(3)
   const streak = calcStreak(entries)
-  const totalExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
+  const entriesExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
+  const entriesToday = getEntriesToday(entries)
+  const todaysQuests = getTodaysQuests(userId)
+  const claimedTodayIds = getClaimedTodayIds(questClaims)
+  const questBonusExp = getTotalQuestExp(questClaims)
+  const totalExp = entriesExp + questBonusExp
   const { level } = calcLevel(totalExp)
   const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
   const userStats = { totalDays: entries.length, streak, totalExp, level }
@@ -189,6 +219,65 @@ export default function Home({ session }) {
           userId={userId}
           onEditClick={() => setShowProfileModal(true)}
         />
+
+        <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
+          <div
+            className="flex items-center gap-2 px-4 py-3"
+            style={{ borderBottom: '1px solid #211D2C' }}
+          >
+            <Target size={14} className="text-accent" />
+            <span className="font-mono text-xs text-text-dim uppercase tracking-widest">
+              Daily Quest
+            </span>
+          </div>
+          <div className="p-3 flex flex-col gap-2">
+            {todaysQuests.map(quest => {
+              const isDone = quest.check(entriesToday)
+              const isClaimed = claimedTodayIds.includes(quest.id)
+              return (
+                <div
+                  key={quest.id}
+                  className="flex items-center justify-between gap-3 px-3 py-3"
+                  style={{
+                    background: isClaimed ? 'transparent' : (isDone ? 'rgba(124,92,255,0.08)' : '#0A0A0E'),
+                    border: '1px solid ' + (isDone && !isClaimed ? 'rgba(124,92,255,0.4)' : '#211D2C'),
+                    opacity: isClaimed ? 0.5 : 1,
+                  }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    {isClaimed ? (
+                      <CheckCircle2 size={18} className="text-accent flex-shrink-0" />
+                    ) : (
+                      <Circle size={18} className={isDone ? 'text-accent flex-shrink-0' : 'text-text-dim flex-shrink-0'} />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-body text-sm truncate" style={{ color: '#EDEAF6' }}>{quest.label}</p>
+                      <p className="font-body text-xs text-text-dim truncate">{quest.desc}</p>
+                    </div>
+                  </div>
+                  {isClaimed ? (
+                    <span className="font-mono text-xs text-text-dim flex-shrink-0">Selesai</span>
+                  ) : isDone ? (
+                    <button
+                      onClick={() => handleClaimQuest(quest)}
+                      disabled={claimingId === quest.id}
+                      className="font-mono text-xs px-3 py-1.5 flex-shrink-0 flex items-center gap-1"
+                      style={{ background: '#7C5CFF', color: '#fff' }}
+                    >
+                      {claimingId === quest.id ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        `+${quest.exp} EXP`
+                      )}
+                    </button>
+                  ) : (
+                    <span className="font-mono text-xs text-text-dim flex-shrink-0">+{quest.exp} EXP</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
 
         <StatusPanel entries={entries} />
         <StatsDashboard entries={entries} />
