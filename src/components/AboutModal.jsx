@@ -1,6 +1,7 @@
-import { X, Zap, Flame, TrendingUp, RefreshCw } from 'lucide-react'
+import { X, Zap, Flame, TrendingUp, RefreshCw, Target, Award, Bot } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { getRankColor } from '../lib/rankColors'
+import { ACHIEVEMENTS } from '../lib/achievements'
 
 const RANK_ROWS = [
   { rank: 'S', label: 'Legendary', exp: 100 },
@@ -92,6 +93,56 @@ export default function AboutModal({ onClose }) {
             <p className="font-body text-xs text-gray-400 leading-relaxed">
               Streak menghitung berapa hari berturut-turut kamu log sesi latihan. Lewatkan satu hari
               tanpa log, streak akan reset ke 0.
+            </p>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <Target size={16} className="text-accent" />
+              <h3 className="font-display font-bold text-base text-text-high">Daily Quest</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed">
+              Tiap hari muncul 3 dari 5 kemungkinan quest, dipilih otomatis dan konsisten sepanjang
+              hari itu (gak akan sama persis dengan kombinasi kemarin, besok ganti lagi). Selesaikan
+              syaratnya lewat sesi yang kamu log hari itu, lalu ketuk tombol klaim untuk dapat EXP
+              bonus — EXP ini langsung nambah ke total EXP dan level kamu.
+            </p>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <Award size={16} className="text-accent" />
+              <h3 className="font-display font-bold text-base text-text-high">Achievements</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 mb-3">
+              Badge kebuka otomatis begitu syaratnya kepenuhi, dan tetap kebuka selamanya walau
+              streak atau statistik kamu berubah lagi nantinya. Ketuk badge yang udah kebuka di
+              halaman utama untuk dijadiin title yang tampil di profil.
+            </p>
+            <div className="flex flex-col gap-2">
+              {ACHIEVEMENTS.map(ach => (
+                <div
+                  key={ach.id}
+                  className="px-3 py-2"
+                  style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}
+                >
+                  <p className="font-mono text-xs text-accent uppercase tracking-wide">{ach.title}</p>
+                  <p className="font-body text-xs text-gray-400 mt-0.5">{ach.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <Bot size={16} className="text-accent" />
+              <h3 className="font-display font-bold text-base text-text-high">Seolha (AI Companion)</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed">
+              Seolha adalah pendamping AI yang tau progress asli kamu (level, streak, total EXP) dan
+              bisa diajak diskusi soal latihan. Pertanyaan FAQ gratis (0 energi), sedangkan chat bebas
+              pakai energi — 5 energi per hari, reset tiap hari. Buka lewat tombol robot di pojok kanan
+              bawah layar.
             </p>
           </section>
 
