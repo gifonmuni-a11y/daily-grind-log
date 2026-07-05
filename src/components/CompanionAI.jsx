@@ -44,7 +44,7 @@ const LEGENDARY_QUOTES = [
     id: 'legend_7',
     name: 'THE ROCK',
     quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.',
-    mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.'
+    mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pcah.'
   },
   {
     id: 'legend_8',
@@ -151,8 +151,24 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
+    // FIX MUTLAK 0 ENERGI: Intercept respon secara lokal tanpa fetch API Gemini sama sekali
+    if (isFaq) {
+      window.setTimeout(() => {
+        let faqReply = ''
+        if (msgToSend.includes('Pemula')) {
+          faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik di Daily Grind Log adalah membangun fondasi konsistensi gerakan dasar. Jangan terburu-buru melompat ke porsi latihan ekstrem.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Imbangi dengan istirahat tidur 7-9 jam serta pemenuhan nutrisi tinggi protein. Musuh utamamu saat ini bukanlah beban yang berat, melainkan rasa malas untuk memulai.`
+        } else {
+          faqReply = `Kardio dan Angkat Beban adalah dua pilar kekuatan yang saling melengkapi di dalam sistem latihanmu, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek jaringan otot lama agar tumbuh menjadi massa otot baru yang lebih padat, meningkatkan metabolisme, serta membentuk postur tubuh ksatria.\n2. **Kardio:** Berfungsi menjaga stamina kapasitas jantung, paru-paru, serta mempercepat pembakaran sisa kalori.\n\n**Saran Eksekusi Seolha:** Lakukan sesi Angkat Beban terlebih dahulu selagi energimu masih penuh 100%, kemudian tutup latihanmu dengan 15-20 menit Kardio intensitas sedang.`
+        }
+        setMessages(prev => [...prev, { sender: 'seolha', text: faqReply }])
+        loadingFalse()
+      }, 250)
+      const loadingFalse = () => setLoading(false)
+      return
+    }
+
+    // Proses Chat Normal Menggunakan Token API Gemini
     try {
-      // FIX BACKEND CRASH: Saring keluar salam pembuka indeks ke-0 agar riwayat mutlak diawali oleh pesan 'user' demi chat.js
       const formattedHistory = newMessages
         .filter((_, idx) => idx > 0)
         .map(m => ({
@@ -173,10 +189,7 @@ export default function CompanionAI({ userStats, onClose }) {
         const resData = await response.json()
         const replyText = resData.reply || 'Maaf, sinyal pikiran aku terganggu.'
         setMessages(prev => [...prev, { sender: 'seolha', text: replyText }])
-        
-        if (!isFaq) {
-          setDailyCount(prev => prev + 1)
-        }
+        setDailyCount(prev => prev + 1)
       } else {
         setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.' }])
       }
@@ -205,7 +218,7 @@ export default function CompanionAI({ userStats, onClose }) {
         </div>
       </div>
 
-      {/* COMPACT DAILY QUOTE & CLICKABLE QUEST WIDGET */}
+      {/* COMPACT DAILY QUOTE WIDGET */}
       <div className="mt-2.5 p-2.5 bg-[#100E16] border border-[#211D2C] flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5">
           <Quote size={11} className="text-accent" />
@@ -215,7 +228,6 @@ export default function CompanionAI({ userStats, onClose }) {
           "{todayQuote.quote}"
         </p>
         
-        {/* BUTTON QUEST YANG BISA DIPENCET & ANTIPOTONG */}
         <button 
           type="button"
           onClick={handleClaimLegendQuest}
@@ -223,7 +235,7 @@ export default function CompanionAI({ userStats, onClose }) {
           className={`mt-1 w-full p-2 border text-left flex items-start gap-2.5 transition-all ${isQuestClaimed ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80' : 'bg-[#0A0A0E] border-accent/30 hover:border-accent active:scale-[0.99]'}`}
         >
           {isQuestClaimed ? (
-            <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5 animate-scaleUp" />
+            <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" />
           ) : (
             <div className="w-3.5 h-3.5 rounded-full border border-accent/60 shrink-0 mt-0.5 flex items-center justify-center font-mono text-[8px] text-accent font-bold">!</div>
           )}
@@ -231,7 +243,6 @@ export default function CompanionAI({ userStats, onClose }) {
             <div className={`font-bold mb-0.5 ${isQuestClaimed ? 'text-emerald-400' : 'text-text-high'}`}>
               {isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}
             </div>
-            {/* FIX WHITSPACE: Teks deskripsi misi terbuka utuh tanpa kepotong titik-titik */}
             <p className={`whitespace-normal break-words font-body text-[11px] leading-normal ${isQuestClaimed ? 'text-gray-400' : 'text-text-dim'}`}>
               Misi: {todayQuote.mission}
             </p>
@@ -267,15 +278,18 @@ export default function CompanionAI({ userStats, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* BOTTOM FAQ FREE OPTIONS BUTTONS */}
+      {/* FIX UI: BOTTOM FAQ HORIZONTAL SCROLL Container */}
       <div className="mb-2 bg-background pt-1.5">
         <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
-        <div className="flex gap-2">
+        <div 
+          className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" 
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+        >
           <button 
             type="button" 
             onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)}
             disabled={loading}
-            className="flex-1 text-left text-xs px-3 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors truncate"
+            className="flex-shrink-0 w-[220px] text-left text-xs px-3 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors whitespace-normal break-words"
           >
             Pemula mulai dari mana?
           </button>
@@ -283,14 +297,14 @@ export default function CompanionAI({ userStats, onClose }) {
             type="button" 
             onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)}
             disabled={loading}
-            className="flex-1 text-left text-xs px-3 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors truncate"
+            className="flex-shrink-0 w-[220px] text-left text-xs px-3 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors whitespace-normal break-words"
           >
             Kardio atau angkat beban?
           </button>
         </div>
       </div>
 
-      {/* FOOTER TEXT INPUT FORM COMPONENT */}
+      {/* FOOTER TEXT INPUT FORM */}
       <form onSubmit={(e) => handleSend(e)} className="pt-2 border-t border-[#211D2C] flex gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2.5 text-sm text-text-high focus:outline-none focus:border-accent" />
         <button type="submit" disabled={loading || !input.trim()} className="w-11 h-11 bg-accent flex items-center justify-center text-white disabled:opacity-40"><Send size={16} /></button>
