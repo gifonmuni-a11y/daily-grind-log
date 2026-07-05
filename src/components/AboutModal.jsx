@@ -19,10 +19,9 @@ export default function AboutModal({ onClose }) {
       style={{ background: 'rgba(10,10,14,0.85)', backdropFilter: 'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      {/* FIX: Ubah SystemFrame jadi flex container statis tanpa overflow langsung */}
-      <SystemFrame className="bg-panel w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden" size={16}>
+      {/* FIX: Mengubah max-h-[85vh] menjadi max-h-[93vh] agar kotak modal kembali tinggi ke atas seperti semula */}
+      <SystemFrame className="bg-panel w-full max-w-lg max-h-[93vh] flex flex-col overflow-hidden" size={16}>
         
-        {/* HEADER: Sekarang fixed di atas, tidak akan ikut tergulung */}
         <div
           className="flex items-center justify-between px-5 py-4 shrink-0"
           style={{ borderBottom: '1px solid #211D2C' }}
@@ -33,7 +32,6 @@ export default function AboutModal({ onClose }) {
           </button>
         </div>
 
-        {/* BODY CONTENT: Fitur scroll dipindah ke sini agar teks tidak menabrak siku bingkai */}
         <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-6 scrollbar-thin">
           <section>
             <p className="font-body text-sm text-gray-300 leading-relaxed">
@@ -109,7 +107,7 @@ export default function AboutModal({ onClose }) {
               Tiap hari muncul 3 dari 5 kemungkinan quest, dipilih otomatis dan konsisten sepanjang
               hari itu (gak akan sama persis dengan kombinasi kemarin, besok ganti lagi). Selesaikan
               syaratnya lewat sesi yang kamu log hari itu, lalu ketuk tombol klaim untuk dapat EXP
-              bonus — EXP ini langsung nambah ke total EXP and level kamu.
+              bonus — EXP ini langsung nambah ke total EXP dan level kamu.
             </p>
           </section>
 
@@ -119,7 +117,7 @@ export default function AboutModal({ onClose }) {
               <h3 className="font-display font-bold text-base text-text-high">Achievements</h3>
             </div>
             <p className="font-body text-xs text-gray-400 mb-3">
-              Badge kebuka otomatis begitu syaratnya kepenuhi, dan tetap kebuka selamanya walau
+              Badge kebuka otomatis begitu syaratnya kepenuhi, and tetap kebuka selamanya walau
               streak atau statistik kamu berubah lagi nantinya. Ketuk badge yang udah kebuka di
               halaman utama untuk dijadiin title yang tampil di profil.
             </p>
