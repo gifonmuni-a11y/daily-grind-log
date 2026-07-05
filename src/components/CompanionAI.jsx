@@ -14,7 +14,7 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-// POOL VIDEO BERSIH: Hanya menyisakan ID video yang 100% terbukti sukses di-embed tanpa blokir sepihak
+// POOL VIDEO BERSIH: Hanya menyisakan ID video yang terbukti sukses dan lolos uji coba embed PWA lu
 const VALID_YOUTUBE_POOL = {
   mulai: ['UItWltVZZmE'],
   kardio_angkat: ['GY1JhB9BEkk'],
@@ -220,13 +220,16 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
-      // ANTI-TIMEOUT FILTER: Mengabaikan pesan sapaan statik pertama agar history payload selalu valid dimulai dari 'user'
-      const formattedHistory = currentMessages
-        .filter(m => !m.text.includes('Gagal mendapatkan respon') && !m.text.includes('Ada yang bisa saya bantu untuk menemani latihan hari ini?'))
-        .map(m => ({
-          role: m.sender === 'user' ? 'user' : 'model',
-          content: m.text
-        }))
+      // MANDATORY PAYLOAD SLICER: Memotong welcome greeting message agar array pengiriman wajib diawali oleh role 'user'
+      const conversationMessages = currentMessages.filter(m => !m.text.includes('Gagal mendapatkan respon'))
+      const firstUserIdx = conversationMessages.findIndex(m => m.sender === 'user')
+      const cleanHistory = firstUserIdx !== -1 ? conversationMessages.slice(firstUserIdx) : conversationMessages
+
+      // ALIGN ROLE SPECIFICATION: Menggunakan role 'assistant' sesuai standard Vercel AI SDK PWA lu
+      const formattedHistory = cleanHistory.map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }))
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -338,11 +341,12 @@ export default function CompanionAI({ userStats, onClose }) {
             ))}
           </div>
         ))}
+        {/* MODIFIED LOADING COMPONENT: Custom loading text sesuai permintaan lo */}
         {loading && (
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang memproses visual matriks...
+              Seolha sedang berpikir
             </div>
           </div>
         )}
