@@ -54,24 +54,21 @@ const LEGENDARY_QUOTES = [
   }
 ]
 
-// DATABASE KARTU ILUSTRASI SYTEMS (FALLBACK UTK SELURUH KATEGORI JIKA VIDEO PRIVATE/ERROR)
 const SYSTEM_IMAGE_CARDS = {
-  beban: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>STRENGTH HYBRID PROTOCOL</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Target Sesi: Ledakan Daya & Kontraksi Sempurna</text><text x='35' y='105' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Fokus Form: Jaga Kestabilan Sendi & Tempo Gerakan</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='234' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>STRENGTH</text></svg>",
+  beban: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>STRENGTH HYBRID PROTOCOL</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Target Sesi: Ledakan Daya & Kontraksi Sempurna</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='234' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>STRENGTH</text></svg>",
   kardio: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ENDURANCE CARDIO SYSTEM</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Pembakaran Lemak Maksimal & Penguatan Jantung</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='239' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>ENDURE</text></svg>",
-  fleksibilitas: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>FLEXIBILITY & MOBILITY MATRIX</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='236' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>FLEX_ROM</text></svg>",
+  makanan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ANABOLIC KITCHEN MATRIX</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Rekomendasi Menu: Dada Ayam Panggang, Sayur Hijau</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='232' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>NUTRITION</text></svg>",
   pemulihan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>RECOVERY & REST TIME</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='105' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Fokus Utama: Kualitas Tidur Lelap & Hidrasi Cairan</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='238' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>RECOVER</text></svg>",
-  makanan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ANABOLIC KITCHEN MATRIX</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='232' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>NUTRITION</text></svg>",
   lainnya: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>CUSTOM HYBRID MATRIX</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='238' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>CUSTOM</text></svg>"
 }
 
-// GRANULAR POOL VIDEO LOKAL INDONESIA DENGAN CADANGAN AKURAT INTERNASIONAL
 const GRANULAR_VIDEO_POOL = [
   { tokens: ['push up', 'push-up', 'pushup'], id: 'r3o1kOaG4P4', category: 'beban' },
   { tokens: ['squat'], id: 'Gc9m0sQ8Sxk', category: 'beban' },
   { tokens: ['plank'], id: 'ASV35q6m174', category: 'beban' },
   { tokens: ['lunges', 'lunge'], id: 'QOVaHwmZ76c', category: 'beban' },
   { tokens: ['dada ayam', 'makan', 'resep', 'murah', 'nutrisi', 'diet'], id: '3_9yOQ83PjI', category: 'makanan' },
-  { tokens: ['meditasi', 'mindfulness', 'tenang', 'stres', 'pikir'], id: 'inpokvFX0o8', category: 'meditasi' },
+  { tokens: ['meditasi', 'mindfulness', 'tenang', 'stres', 'pikir'], id: 'inpokvFX0o8', category: 'fleksibilitas' },
   { tokens: ['tidur', 'sleep', 'istirahat', 'recovery', 'rest'], id: 't0kACis_dJE', category: 'pemulihan' },
   { tokens: ['kardio', 'cardio', 'hiit', 'running', 'cycling', 'swimming'], id: '2MoGxae-zyo', category: 'kardio' }
 ]
@@ -80,8 +77,7 @@ const BACKUP_CATEGORY_POOL = {
   beban: ['7K37eH7fG34', 'UItWltVZZmE'],
   kardio: ['2MoGxae-zyo', 'unV8VdfR4bE'],
   makanan: ['3_9yOQ83PjI', '7tU2-QeCjGg'],
-  pemulihan: ['t0kACis_dJE', 'qwz9z6q_JmY'],
-  meditasi: ['inpokvFX0o8', 'Kx48H27666Y']
+  pemulihan: ['t0kACis_dJE', 'qwz9z6q_JmY']
 }
 
 export default function CompanionAI({ userStats, onClose }) {
@@ -98,12 +94,60 @@ export default function CompanionAI({ userStats, onClose }) {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
-      setLiveTime(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }))
+      // Paksa separator menggunakan titik dua (HH:mm) agar universal di HP manapun
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      setLiveTime(`${hours}:${minutes}`)
     }
     updateTime()
     const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  // FIX PARSER: Mengonversi tanda ** dan * menjadi struktur HTML asli agar tidak bocor teks mentah
+  const renderMessageText = (text) => {
+    if (!text) return null
+    return text.split('\n').map((line, idx) => {
+      let processedLine = line
+      const boldRegex = /\*\*(.*?)\*\*/g
+      const parts = []
+      let lastIndex = 0
+      let match
+
+      const isBullet = line.trim().startsWith('* ')
+      if (isBullet) {
+        processedLine = line.trim().substring(2)
+      }
+
+      while ((match = boldRegex.exec(processedLine)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(processedLine.substring(lastIndex, match.index))
+        }
+        parts.push(<strong key={match.index} className="text-accent font-black">{match[1]}</strong>)
+        lastIndex = boldRegex.lastIndex
+      }
+      if (lastIndex < processedLine.length) {
+        parts.push(processedLine.substring(lastIndex))
+      }
+
+      const content = parts.length > 0 ? parts : processedLine
+
+      if (isBullet) {
+        return (
+          <div key={idx} className="flex items-start gap-2 my-1 pl-1 font-body text-sm text-[#EDEAF6]">
+            <span className="text-accent text-xs mt-1.5">•</span>
+            <p className="flex-1 whitespace-pre-wrap leading-relaxed">{content}</p>
+          </div>
+        )
+      }
+
+      return (
+        <p key={idx} className="whitespace-pre-wrap font-body text-sm text-[#EDEAF6] leading-relaxed my-1">
+          {content}
+        </p>
+      )
+    })
+  }
 
   const extractYoutubeId = (text) => {
     if (!text) return null
@@ -229,33 +273,32 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // INTERCEPTOR DEEP RESEARCH FAQ 0 ENERGI TERSTRUKTUR & DEEP SCANNED VIDEOS
     if (isFaq) {
       let faqReply = ''
       let mediaAsset = null
 
       if (msgToSend.includes('Mulai dari mana')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', '7K37eH7fG34') // Video fundamental fitness lokal
+        mediaAsset = await resolveGranularMedia(msgToSend, '', '7K37eH7fG34')
         faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
       } 
       else if (msgToSend.includes('Kardio atau angkat')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', '2MoGxae-zyo')
+        mediaAsset = await resolveGranularMedia(msgToSend, '', 'gcNh17CkW64')
         faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
       }
       else if (msgToSend.includes('Jenis & Cara Latihan')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', '7K37eH7fG34') // Video kompilasi push/pull/legs Indonesia
+        mediaAsset = await resolveGranularMedia(msgToSend, '', 'UItWltVZZmE')
         faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
       else if (msgToSend.includes('Pola Makan & Nutrisi')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', '3_9yOQ83PjI') // Resep dada ayam/nutrisi fitness lokal murah
+        mediaAsset = await resolveGranularMedia(msgToSend, '', '3_9yOQ83PjI')
         faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
       else if (msgToSend.includes('Pola Tidur & Recovery')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', 't0kACis_dJE') // Video tidur recovery fitness
+        mediaAsset = await resolveGranularMedia(msgToSend, '', 't0kACis_dJE')
         faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
       else if (msgToSend.includes('Kesalahan Fatal Pemula')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', '7K37eH7fG34') // Video bahaya ego lifting lokal
+        mediaAsset = await resolveGranularMedia(msgToSend, '', 'ixkQaYn5eg0') // Mengunci video edukasi kesalahan fatal unik terpisah
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Langsung meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
@@ -265,6 +308,7 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
+      // CLEAN ENGINE HISTORY CHAIN: Membersihkan total riwayat crash 'Gagal mendapatkan respon' agar format role berseling murni
       const formattedHistory = newMessages
         .filter((m, idx) => idx > 0 && !m.text.includes('Gagal mendapatkan respon'))
         .map(m => ({
@@ -298,9 +342,10 @@ export default function CompanionAI({ userStats, onClose }) {
       }
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke Seolha terputus.', media: null }])
-    } canvasUpdate()
+    } finally {
+      setLoading(false)
+    }
   }
-  const canvasUpdate = () => setLoading(false)
 
   const dayQuoteIndex = new Date().getDate() % LEGENDARY_QUOTES.length
   const todayQuote = LEGENDARY_QUOTES[dayQuoteIndex]
@@ -324,8 +369,9 @@ export default function CompanionAI({ userStats, onClose }) {
           
           <div className="w-[1px] h-4 bg-[#211D2C]" />
           
+          {/* FIX UI TELEMETRI: Grid kotak solid terisolasi, font kompak anti-melar, dan baterai vector ungu */}
           <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-text-high bg-[#100E16] border border-[#7C5CFF]/30 px-2 py-1 rounded shadow-[0_0_10px_rgba(124,92,255,0.05)]">
-       <svg className="w-3.5 h-3.5 text-[#7C5CFF] fill-current animate-pulse" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-[#7C5CFF] fill-current" viewBox="0 0 24 24">
               <path d="M16 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm4 4h2v4h-2v-4z"/>
             </svg>
             <span>{5 - dailyCount}/5 Energi</span>
@@ -379,13 +425,13 @@ export default function CompanionAI({ userStats, onClose }) {
         {messages.map((m, i) => {
           return (
             <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-bl-xl'}`}>
+              <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
                 {m.sender === 'seolha' && (
                   <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1">
                     <Bot size={10} /> SEOLHA
                   </div>
                 )}
-                <p className="whitespace-pre-wrap">{m.text}</p>
+                <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
               </div>
               
               {/* RENDERING IN-APP INLINE VIDEO EMBED MATRIX */}
@@ -414,7 +460,7 @@ export default function CompanionAI({ userStats, onClose }) {
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang menyelaraskan data matriks...
+              Seolha sedang memvalidasi kelayakan media...
             </div>
           </div>
         )}
