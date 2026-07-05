@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+// FIX: Import sistem deteksi tingkat kasta untuk dipahami oleh Seolha
+import { getRankTier } from '../lib/expSystem';
+import { getTitleTierColor } from '../lib/rankColors';
 
 const FAQ = [
   { q: 'Pemula mulai dari mana?', a: 'Mulai 3x seminggu full body — push-up, squat, plank. Kuasai teknik dulu 3-4 minggu sebelum nambah beban.' },
@@ -67,6 +70,10 @@ export default function CompanionAI({ userStats, onClose }) {
   const [energy, setEnergy] = useState(5);
   const bottomRef = useRef(null);
   const { salam, timeStr, quote } = getGreeting();
+
+  // FIX: Kalkulasi nama kasta user secara real-time berdasarkan level saat ini
+  const userTierName = getRankTier(userStats?.level || 1);
+  const userTierColor = getTitleTierColor(userTierName);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -186,7 +193,10 @@ export default function CompanionAI({ userStats, onClose }) {
           {messages.length === 0 && (
             <div style={{ background: '#0A0A0E', border: '1px solid #211D2C', padding: '14px 16px', marginBottom: 4 }}>
               <p style={{ ...F, fontSize: 10, color: '#7C5CFF', textTransform: 'uppercase', letterSpacing: '0.2em', margin: '0 0 6px' }}>{timeStr}</p>
-              <p style={{ ...FR, fontWeight: 700, fontSize: 17, color: '#EDEAF6', margin: '0 0 8px' }}>{salam}, Trainer.</p>
+              {/* FIX: Seolha sekarang menyapa user sesuai nama kasta terkininya dengan warna dinamis */}
+              <p style={{ ...FR, fontWeight: 700, fontSize: 17, color: '#EDEAF6', margin: '0 0 8px' }}>
+                {salam}, <span style={{ color: userTierColor }}>{userTierName}</span>.
+              </p>
               <p style={{ ...FI, fontSize: 13, color: '#9CA3AF', lineHeight: 1.6, margin: 0 }}>{quote}</p>
             </div>
           )}
