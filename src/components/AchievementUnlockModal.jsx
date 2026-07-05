@@ -35,10 +35,11 @@ export default function AchievementUnlockModal({ isOpen, achievement, onClose })
         <h2 className="font-mono text-lg text-accent font-bold uppercase tracking-wider">{achievement.title}</h2>
         <p className="font-body text-xs text-text-muted mt-2 mb-6 px-2">{achievement.desc}</p>
         
+        {/* FIX CLIP-PATH: Sudut potongan cyber simetris dan aman tanpa memotong teks */}
         <button 
           onClick={onClose} 
-          className="w-full py-2.5 bg-accent text-white font-mono font-bold uppercase text-xs tracking-widest"
-          style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 10px, 10px 100%, 0 calc(100% - 10px))' }}
+          className="w-full py-3 bg-accent text-white font-mono font-bold uppercase text-xs tracking-widest transition-transform active:scale-95"
+          style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}
         >
           KONFIRMASI
         </button>
