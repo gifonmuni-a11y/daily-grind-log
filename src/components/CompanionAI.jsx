@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { X, Send, Bot, Loader2, Quote, CheckCircle2 } from 'lucide-react'
+import { X, Send, Bot, Loader2, Quote, CheckCircle2, Clock } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
 
@@ -44,7 +44,7 @@ const LEGENDARY_QUOTES = [
     id: 'legend_7',
     name: 'THE ROCK',
     quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.',
-    mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pcah.'
+    mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.'
   },
   {
     id: 'legend_8',
@@ -60,10 +60,36 @@ export default function CompanionAI({ userStats, onClose }) {
   const [loading, setLoading] = useState(false)
   const [dailyCount, setDailyCount] = useState(0)
   const [isQuestClaimed, setIsQuestClaimed] = useState(false)
+  const [liveTime, setLiveTime] = useState('') // State jam digital harian
   const messagesEndRef = useRef(null)
 
   const currentTier = getRankTier(userStats?.level || 1)
   
+  // LOGIKA JAM DIGITAL AKTIF (DIPERBAHARUI TIAP DETIK)
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date()
+      setLiveTime(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+    }
+    updateTime()
+    const interval = setInterval(updateTime, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // REGEX PARSER UNTUK MENGEKSTRAK ID VIDEO YOUTUBE DARI DALAM TEKS CHAT
+  const extractYoutubeId = (text) => {
+    if (!text) return null
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const matches = text.match(regExp)
+    if (matches && matches[2].length === 11) {
+      return matches[2]
+    }
+    // Fallback pencarian url di dalam string paragraf panjang
+    const inlineReg = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    const inlineMatches = text.match(inlineReg)
+    return inlineMatches ? inlineMatches[1] : null
+  }
+
   const getTodayDateStr = () => {
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -151,23 +177,21 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // FIX MUTLAK 0 ENERGI: Intercept respon secara lokal tanpa fetch API Gemini sama sekali
+    // SINKRONISASI JAWABAN FAQ SECARA LOKAL + LINK EMBED YOUTUBE RELEVAN (0 ENERGI ASLI)
     if (isFaq) {
       window.setTimeout(() => {
         let faqReply = ''
         if (msgToSend.includes('Pemula')) {
-          faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik di Daily Grind Log adalah membangun fondasi konsistensi gerakan dasar. Jangan terburu-buru melompat ke porsi latihan ekstrem.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Imbangi dengan istirahat tidur 7-9 jam serta pemenuhan nutrisi tinggi protein. Musuh utamamu saat ini bukanlah beban yang berat, melainkan rasa malas untuk memulai.`
+          faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik di Daily Grind Log adalah membangun fondasi konsistensi gerakan dasar.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n\nTonton video panduan gerakan dasar full-body berikut ini untuk menyelaraskan form latihanmu:\nhttps://www.youtube.com/watch?v=UItWltVZZmE`
         } else {
-          faqReply = `Kardio dan Angkat Beban adalah dua pilar kekuatan yang saling melengkapi di dalam sistem latihanmu, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek jaringan otot lama agar tumbuh menjadi massa otot baru yang lebih padat, meningkatkan metabolisme, serta membentuk postur tubuh ksatria.\n2. **Kardio:** Berfungsi menjaga stamina kapasitas jantung, paru-paru, serta mempercepat pembakaran sisa kalori.\n\n**Saran Eksekusi Seolha:** Lakukan sesi Angkat Beban terlebih dahulu selagi energimu masih penuh 100%, kemudian tutup latihanmu dengan 15-20 menit Kardio intensitas sedang.`
+          faqReply = `Kardio dan Angkat Beban adalah dua pilar kekuatan yang saling melengkapi, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek jaringan otot lama agar tumbuh menjadi massa otot baru yang lebih padat.\n2. **Kardio:** Berfungsi menjaga stamina kapasitas jantung dan paru-paru.\n\nTonton penjelasan ilmiah perbandingan kardio vs angkat beban di sini:\nhttps://www.youtube.com/watch?v=gcNh17CkW64`
         }
         setMessages(prev => [...prev, { sender: 'seolha', text: faqReply }])
-        loadingFalse()
+        setLoading(false)
       }, 250)
-      const loadingFalse = () => setLoading(false)
       return
     }
 
-    // Proses Chat Normal Menggunakan Token API Gemini
     try {
       const formattedHistory = newMessages
         .filter((_, idx) => idx > 0)
@@ -203,7 +227,7 @@ export default function CompanionAI({ userStats, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md p-4 max-w-lg mx-auto select-none">
       
-      {/* HEADER TOP BAR */}
+      {/* HEADER TOP BAR - KEMBALI DIISI CLOCK DIGITAL REAL-TIME */}
       <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
@@ -211,6 +235,11 @@ export default function CompanionAI({ userStats, onClose }) {
           <span className="font-mono text-[10px] text-text-dim uppercase">AI Companion</span>
         </div>
         <div className="flex items-center gap-3">
+          {/* DIGITAL WATCH WIDGET */}
+          <div className="flex items-center gap-1 font-mono text-xs text-text-dim bg-[#100E16] px-2 py-0.5 border border-[#211D2C]">
+            <Clock size={11} className="text-accent" />
+            <span>{liveTime || '00:00:00'}</span>
+          </div>
           <span className="font-mono text-xs text-accent">{5 - dailyCount}/5 energi</span>
           <button onClick={onClose} className="p-1 hover:bg-border-hover rounded text-text-dim transition-colors">
             <X size={18} />
@@ -243,7 +272,7 @@ export default function CompanionAI({ userStats, onClose }) {
             <div className={`font-bold mb-0.5 ${isQuestClaimed ? 'text-emerald-400' : 'text-text-high'}`}>
               {isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}
             </div>
-            <p className={`whitespace-normal break-words font-body text-[11px] leading-normal ${isQuestClaimed ? 'text-gray-400' : 'text-text-dim'}`}>
+            <p className="whitespace-normal break-words font-body text-[11px] leading-normal text-text-dim">
               Misi: {todayQuote.mission}
             </p>
           </div>
@@ -253,20 +282,37 @@ export default function CompanionAI({ userStats, onClose }) {
         </button>
       </div>
 
-      {/* INTERACTIVE CHAT WINDOW SCREEN */}
+      {/* CHAT CONTAINER LAYAR UTAMA - DIDUKUNG EMBED VIDEO PLAYER DETECTOR */}
       <div className="flex-1 overflow-y-auto py-3 space-y-4 pr-1">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
-              {m.sender === 'seolha' && (
-                <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1">
-                  <Bot size={10} /> SEOLHA
+        {messages.map((m, i) => {
+          const ytVideoId = extractYoutubeId(m.text)
+          return (
+            <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
+              <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
+                {m.sender === 'seolha' && (
+                  <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1">
+                    <Bot size={10} /> SEOLHA
+                  </div>
+                )}
+                <p className="whitespace-pre-wrap">{m.text}</p>
+              </div>
+              
+              {/* RENDERING IFRAME YOUTUBE DETECTED DI BAWAH CHAT BUBBLE */}
+              {m.sender === 'seolha' && ytVideoId && (
+                <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
+                  <iframe
+                    className="w-full h-full rounded"
+                    src={`https://www.youtube.com/embed/${ytVideoId}`}
+                    title="YouTube Video Guide"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
                 </div>
               )}
-              <p className="whitespace-pre-wrap">{m.text}</p>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {loading && (
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
@@ -278,18 +324,18 @@ export default function CompanionAI({ userStats, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* FIX UI: BOTTOM FAQ HORIZONTAL SCROLL Container */}
+      {/* HORIZONTAL SWIPE / SCROLL FAQ AREA - REAKTIF & HALUS */}
       <div className="mb-2 bg-background pt-1.5">
         <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
         <div 
-          className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" 
+          className="flex gap-2 overflow-x-auto pb-1 flex-nowrap scrollbar-none" 
           style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
         >
           <button 
             type="button" 
             onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[220px] text-left text-xs px-3 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors whitespace-normal break-words"
+            className="flex-shrink-0 w-[200px] text-left text-xs px-3 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors whitespace-normal break-words active:scale-[0.98]"
           >
             Pemula mulai dari mana?
           </button>
@@ -297,14 +343,14 @@ export default function CompanionAI({ userStats, onClose }) {
             type="button" 
             onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[220px] text-left text-xs px-3 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors whitespace-normal break-words"
+            className="flex-shrink-0 w-[200px] text-left text-xs px-3 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-body hover:border-accent transition-colors whitespace-normal break-words active:scale-[0.98]"
           >
             Kardio atau angkat beban?
           </button>
         </div>
       </div>
 
-      {/* FOOTER TEXT INPUT FORM */}
+      {/* INPUT FORM BOX */}
       <form onSubmit={(e) => handleSend(e)} className="pt-2 border-t border-[#211D2C] flex gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2.5 text-sm text-text-high focus:outline-none focus:border-accent" />
         <button type="submit" disabled={loading || !input.trim()} className="w-11 h-11 bg-accent flex items-center justify-center text-white disabled:opacity-40"><Send size={16} /></button>
