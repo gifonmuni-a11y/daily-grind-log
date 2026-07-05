@@ -1,7 +1,7 @@
 import { Edit2, Music, Flame, Zap } from 'lucide-react'
 import SystemFrame from './SystemFrame'
-import { calcLevel, getEffectiveTotalExp } from '../lib/expSystem'
-import { getRankDetails } from '../lib/rankColors'
+import { calcLevel, getEffectiveTotalExp, getRankTier } from '../lib/expSystem'
+import { getRankDetails, getTitleTierColor, getTitleTierGlow } from '../lib/rankColors'
 import { ACHIEVEMENTS, getEquippedTitle } from '../lib/achievements'
 
 function getSpotifyEmbedUrl(link) {
@@ -27,10 +27,15 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
   const { level, expIntoLevel, expForNext } = calcLevel(totalExp)
   const expPct = Math.min(100, Math.round((expIntoLevel / expForNext) * 100))
   
-  // Menggunakan sistem penentuan rank baru (Bronze -> Overload)
+  // Menggunakan sistem penentuan rank baru secara dinamis
   const rank = getRankDetails(level)
   const rankLabel = rank.name
   const rankClasses = rank.color
+
+  // FIX: Mengambil nama format normal & warna dinamis kasta untuk efek visual premium profil
+  const tierName = getRankTier(level) 
+  const currentTierColor = getTitleTierColor(tierName)
+  const currentTierGlow = getTitleTierGlow(tierName)
 
   const dayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
   const spotifyEmbedUrl = getSpotifyEmbedUrl(profile?.spotify_link)
@@ -68,10 +73,11 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
       <div className="px-4 pb-4">
         <div className="flex items-start gap-3 mb-3">
           <div className="relative shrink-0 -mt-10">
+            {/* FIX: Efek glow bingkai foto sekarang berubah otomatis mengikuti warna kastamu */}
             <SystemFrame
               size={12}
               className="w-20 h-20 bg-panel shrink-0"
-              style={{ boxShadow: '0 0 12px #7C5CFF55' }}
+              style={{ boxShadow: currentTierGlow !== 'none' ? currentTierGlow : `0 0 12px ${currentTierColor}55` }}
             >
               {profile?.avatar_url ? (
                 <img
@@ -81,16 +87,17 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
                 />
               ) : (
                 <div
-                  className="w-full h-full flex items-center justify-center font-display font-bold text-3xl text-accent"
-                  style={{ background: '#7C5CFF22' }}
+                  className="w-full h-full flex items-center justify-center font-display font-bold text-3xl"
+                  style={{ background: `${currentTierColor}22`, color: currentTierColor }}
                 >
                   {(profile?.name || 'T')[0].toUpperCase()}
                 </div>
               )}
             </SystemFrame>
+            {/* FIX: Background angka level sekarang mengikuti warna kasta */}
             <div
-              className="absolute -bottom-1 -right-1 font-mono text-xs font-bold px-1.5 py-0.5 z-10"
-              style={{ background: '#7C5CFF', color: '#EDEAF6', fontSize: '10px' }}
+              className="absolute -bottom-1 -right-1 font-mono text-xs font-bold px-1.5 py-0.5 z-10 transition-colors duration-300"
+              style={{ background: currentTierColor, color: '#0A0A0E', fontSize: '10px' }}
             >
               {level}
             </div>
@@ -111,9 +118,10 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               </span>
             </div>
             {equippedAchievement && (
+              /* FIX: Warna teks Title yang terpasang otomatis sinkron 100% dengan warna aura kasta lu */
               <p
-                className="font-mono text-xs mt-0.5 tracking-wider uppercase opacity-90"
-                style={{ color: rankLabel === 'OVERLOAD' ? '#EF4444' : rankLabel === 'MYTHICAL' ? '#FBBF24' : '#A78BFA' }}
+                className="font-mono text-xs mt-0.5 tracking-wider uppercase opacity-90 transition-colors duration-300"
+                style={{ color: currentTierColor }}
               >
                 「{equippedAchievement.title}」
               </p>
