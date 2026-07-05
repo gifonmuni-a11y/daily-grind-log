@@ -10,18 +10,18 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
   { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
   { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
-  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pfecah.' },
+  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-// PEDOMAN DATA LAMA: Menggunakan ID Video yang terbukti 100% tembus dimainkan di PWA lu tanpa blokir
+// POOL DATABASE VIDEO SESUAI FORMAT URL TERBARU YANG DIINGINKAN USER (MENDUKUNG MULTI-VIDEO ARRAY)
 const VALID_YOUTUBE_POOL = {
-  mulai: '2MoGxae-zyo',
-  kardio: '2MoGxae-zyo',
-  latihan: '2MoGxae-zyo',
-  makanan: '2MoGxae-zyo',
-  tidur: 't0kACis_dJE',
-  kesalahan: '2MoGxae-zyo'
+  mulai: ['UItWltVZZmE', 'BGXGdUj93BM'],
+  kardio_angkat: ['Pv6NrM7fqHY', 'GY1JhB9BEkk'],
+  latihan: ['3EKcdVsYdk4', 'cbKkB3POqaY'],
+  makanan: ['mzpDEPg7-3E'],
+  tidur: ['-lu1Nmttz4w'],
+  kesalahan: ['rH447xP0INg']
 }
 
 export default function CompanionAI({ userStats, onClose }) {
@@ -89,6 +89,43 @@ export default function CompanionAI({ userStats, onClose }) {
     })
   }
 
+  const extractYoutubeId = (text) => {
+    if (!text) return null
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const matches = text.match(regExp)
+    if (matches && matches[2].length === 11) return matches[2]
+    const inlineReg = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    const inlineMatches = text.match(inlineReg)
+    return inlineMatches ? inlineMatches[1] : null
+  }
+
+  // LOGIKA SCANNER CERDAS: Otomatis mendeteksi kata kunci obrolan umum untuk mencocokkan video yang paling pas
+  const scanDynamicChatVideos = (userText, aiText) => {
+    const combined = `${userText} ${aiText}`.toLowerCase()
+    
+    // Jika user explicitly nanya "ada videonya ga" / "minta video" / "mana video"
+    if (combined.includes('video') || combined.includes('vidio') || combined.includes('tonton') || combined.includes('link')) {
+      if (combined.includes('tidur') || combined.includes('sleep') || combined.includes('recovery') || combined.includes('istirahat')) {
+        return VALID_YOUTUBE_POOL.tidur.map(id => ({ type: 'video', src: id }))
+      }
+      if (combined.includes('makan') || combined.includes('nutrisi') || combined.includes('diet') || combined.includes('kalori')) {
+        return VALID_YOUTUBE_POOL.makanan.map(id => ({ type: 'video', src: id }))
+      }
+      if (combined.includes('kardio') || combined.includes('cardio') || combined.includes('angkat') || combined.includes('beban')) {
+        return VALID_YOUTUBE_POOL.kardio_angkat.map(id => ({ type: 'video', src: id }))
+      }
+      if (combined.includes('salah') || combined.includes('fatal') || combined.includes('dosa')) {
+        return VALID_YOUTUBE_POOL.kesalahan.map(id => ({ type: 'video', src: id }))
+      }
+      if (combined.includes('jenis') || combined.includes('cara') || combined.includes('gerakan') || combined.includes('push up') || combined.includes('ringan')) {
+        return VALID_YOUTUBE_POOL.latihan.map(id => ({ type: 'video', src: id }))
+      }
+      // Default fallback video pengantar jika context umum
+      return VALID_YOUTUBE_POOL.mulai.map(id => ({ type: 'video', src: id }))
+    }
+    return null
+  }
+
   useEffect(() => {
     setMessages([
       { 
@@ -144,7 +181,6 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    // ATOMIC UPDATES: Mengunci input langsung untuk mencegah request ganda / spamming
     if (!customMsg) setInput('')
     const currentMessages = [...messages, { sender: 'user', text: msgToSend }]
     setMessages(currentMessages)
@@ -153,40 +189,40 @@ export default function CompanionAI({ userStats, onClose }) {
     if (isFaq) {
       const cleanMsg = msgToSend.toLowerCase()
       let faqReply = ''
-      let videoId = VALID_YOUTUBE_POOL.mulai
+      let videoIdsArray = []
 
       if (cleanMsg.includes('mulai dari mana')) {
-        videoId = VALID_YOUTUBE_POOL.mulai
+        videoIdsArray = VALID_YOUTUBE_POOL.mulai
         faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dasar dari Seolha:`
       } 
       else if (cleanMsg.includes('kardio atau angkat')) {
-        videoId = VALID_YOUTUBE_POOL.kardio
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
+        videoIdsArray = VALID_YOUTUBE_POOL.kardio_angkat
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
       }
       else if (cleanMsg.includes('latihan')) {
-        videoId = VALID_YOUTUBE_POOL.latihan
+        videoIdsArray = VALID_YOUTUBE_POOL.latihan
         faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
       else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) {
-        videoId = VALID_YOUTUBE_POOL.makanan
+        videoIdsArray = VALID_YOUTUBE_POOL.makanan
         faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
       else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) {
-        videoId = VALID_YOUTUBE_POOL.tidur
+        videoIdsArray = VALID_YOUTUBE_POOL.tidur
         faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
       else if (cleanMsg.includes('kesalahan')) {
-        videoId = VALID_YOUTUBE_POOL.kesalahan
+        videoIdsArray = VALID_YOUTUBE_POOL.kesalahan
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Langsung meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
-      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: { type: 'video', src: videoId } }])
+      const mappedMediaArray = videoIdsArray.map(id => ({ type: 'video', src: id }))
+      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mappedMediaArray }])
       setLoading(false)
       return
     }
 
     try {
-      // FIX ROLE MATRIX: Mengubah 'assistant' menjadi 'model' agar sinkron penuh dengan aturan internal Gemini API backend lu
       const formattedHistory = currentMessages
         .filter(m => !m.text.includes('Gagal mendapatkan respon'))
         .map(m => ({
@@ -202,8 +238,20 @@ export default function CompanionAI({ userStats, onClose }) {
 
       if (response.ok) {
         const resData = await response.json()
-        const replyText = resData.reply || 'Ada fokus rutinitas latihan lain yang mau diselaraskan?'
-        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: null }])
+        let replyText = resData.reply || 'Ada fokus rutinitas latihan lain yang mau diselaraskan?'
+        
+        // Ekstraksi inline Youtube link jika Gemini memuntahkan link mentah
+        let mediaPayload = null
+        const explicitId = extractYoutubeId(replyText)
+        if (explicitId) {
+          replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
+          mediaPayload = [{ type: 'video', src: explicitId }]
+        } else {
+          // Scan dinamis berdasarkan teks obrolan untuk ngerender video dari pool lokal
+          mediaPayload = scanDynamicChatVideos(msgToSend, replyText)
+        }
+
+        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: mediaPayload }])
         setDailyCount(prev => prev + 1)
       } else {
         setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
@@ -277,18 +325,22 @@ export default function CompanionAI({ userStats, onClose }) {
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
-            {m.sender === 'seolha' && m.media && m.media.type === 'video' && (
-              <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
-                <iframe
-                  className="w-full h-full rounded"
-                  src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0&modestbranding=1`}
-                  title="PWA Inline Stream"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            )}
+            
+            {/* MUTATION MAPPING FOR MULTI-VIDEO ARRAYS (Ngerender semua video sebaris ke bawah tanpa nge-bug) */}
+            {m.sender === 'seolha' && m.media && Array.isArray(m.media) && m.media.map((med, midx) => (
+              med.type === 'video' && (
+                <div key={midx} className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
+                  <iframe
+                    className="w-full h-full rounded"
+                    src={`https://www.youtube.com/embed/${med.src}?playsinline=1&enablejsapi=1&rel=0&modestbranding=1`}
+                    title={`PWA Inline Stream ${midx}`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              )
+            ))}
           </div>
         ))}
         {loading && (
