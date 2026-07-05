@@ -1,7 +1,7 @@
-import { X, Zap, Flame, TrendingUp, RefreshCw, Target, Award, Bot } from 'lucide-react'
+import { X, Zap, Flame, TrendingUp, RefreshCw, Target, Award, Bot, Lock, CheckCircle2 } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { getRankColor } from '../lib/rankColors'
-import { ACHIEVEMENTS } from '../lib/achievements'
+import { ACHIEVEMENTS, getUnlockedAchievements } from '../lib/achievements'
 
 const RANK_ROWS = [
   { rank: 'S', label: 'Legendary', exp: 100 },
@@ -12,14 +12,17 @@ const RANK_ROWS = [
   { rank: 'E', label: 'Failed', exp: 5 },
 ]
 
-export default function AboutModal({ onClose }) {
+export default function AboutModal({ onClose, entries = [], userId = '' }) {
+  // Ambil daftar achievement yang sudah berhasil di-unlock oleh user
+  const unlockedAchievements = getUnlockedAchievements(entries)
+  const unlockedIds = new Set(unlockedAchievements.map(a => a.id))
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
       style={{ background: 'rgba(10,10,14,0.85)', backdropFilter: 'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      {/* FIX: Mengubah max-h-[85vh] menjadi max-h-[93vh] agar kotak modal kembali tinggi ke atas seperti semula */}
       <SystemFrame className="bg-panel w-full max-w-lg max-h-[93vh] flex flex-col overflow-hidden" size={16}>
         
         <div
@@ -78,13 +81,22 @@ export default function AboutModal({ onClose }) {
           <section>
             <div className="flex items-center gap-2 mb-2">
               <Zap size={16} className="text-accent" />
-              <h3 className="font-display font-bold text-base text-text-high">Level</h3>
+              <h3 className="font-display font-bold text-base text-text-high">Level & Urutan Tier</h3>
             </div>
             <p className="font-body text-xs text-gray-400 leading-relaxed">
               Total EXP dari semua sesi menentukan level kamu. Semakin tinggi level, semakin besar
-              EXP yang dibutuhkan untuk naik ke level berikutnya. Gelar rank bertahap kamu 
-              (Bronze hingga Overload) akan naik secara otomatis mengikuti tingkat level saat ini.
+              EXP yang dibutuhkan untuk naik. Gelar rank kamu akan naik otomatis sesuai tingkatan level:
             </p>
+            <div className="mt-2 font-mono text-[11px] text-gray-300 bg-[#0A0A0E] p-3 border border-[#211D2C] leading-relaxed">
+              <div>• <span style={{ color: '#9CA3AF' }}>TRAINER</span> : Level 1+</div>
+              <div>• <span style={{ color: '#60A5FA' }}>ELITE TRAINER</span> : Level 5+</div>
+              <div>• <span style={{ color: '#F59E0B' }}>EXPERT TRAINER</span> : Level 12+</div>
+              <div>• <span style={{ color: '#2DD4BF' }}>CHALLENGER</span> : Level 20+</div>
+              <div>• <span style={{ color: '#7C5CFF' }}>MASTER</span> : Level 30+</div>
+              <div>• <span style={{ color: '#E14CE3' }}>GRAND MASTER</span> : Level 45+</div>
+              <div>• <span style={{ color: '#FF5C7A' }}>MYTHICAL</span> : Level 60+</div>
+              <div className="text-accent font-bold animate-pulse">• <span style={{ color: '#FFD24C' }}>OVERLOAD</span> : Level 80+</div>
+            </div>
           </section>
 
           <section>
@@ -111,33 +123,78 @@ export default function AboutModal({ onClose }) {
             </p>
           </section>
 
+          {/* VISUAL POP-UP & BADGE ACHIEVEMENT VFX SECTION */}
           <section>
             <div className="flex items-center gap-2 mb-3">
               <Award size={16} className="text-accent" />
               <h3 className="font-display font-bold text-base text-text-high">Achievements</h3>
             </div>
             <p className="font-body text-xs text-gray-400 mb-3">
-              Badge kebuka otomatis begitu syaratnya kepenuhi, and tetap kebuka selamanya walau
-              streak atau statistik kamu berubah lagi nantinya. Ketuk badge yang udah kebuka di
-              halaman utama untuk dijadiin title yang tampil di profil.
+              Badge kebuka otomatis begitu syaratnya kepenuhi. Ketuk badge yang udah kebuka di
+              halaman utama untuk dijadikan title profil kamu.
             </p>
-            <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-1 shrink-0">
-              {ACHIEVEMENTS.map(ach => (
-                <div
-                  key={ach.id}
-                  className="px-3 py-2 border-l-2"
-                  style={{ 
-                    background: '#0A0A0E', 
-                    borderColor: '#7C5CFF',
-                    borderTop: '1px solid #211D2C',
-                    borderRight: '1px solid #211D2C',
-                    borderBottom: '1px solid #211D2C'
-                  }}
-                >
-                  <p className="font-mono text-xs text-accent uppercase tracking-wide font-bold">{ach.title}</p>
-                  <p className="font-body text-[11px] text-gray-400 mt-0.5 leading-relaxed">{ach.desc}</p>
-                </div>
-              ))}
+            <div className="flex flex-col gap-3 max-h-[280px] overflow-y-auto pr-1 shrink-0 scrollbar-thin">
+              {ACHIEVEMENTS.map(ach => {
+                const isUnlocked = unlockedIds.has(ach.id)
+                // Deteksi achievement berstatus EPIC/HARDCORE (misal streak 30 hari atau 100 sesi)
+                const isEpic = ach.id === 'unstoppable' || ach.id === 'century'
+
+                // 1. TAMPILAN JIKA TERKUNCI (LOCKED)
+                if (!isUnlocked) {
+                  return (
+                    <div
+                      key={ach.id}
+                      className="flex items-start gap-3 px-3 py-2.5 border border-dashed border-gray-800 bg-[#07070a] opacity-40 select-none"
+                    >
+                      <Lock size={14} className="text-gray-500 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-mono text-xs text-gray-500 uppercase tracking-wide font-bold">{ach.title}</p>
+                        <p className="font-body text-[11px] text-gray-600 mt-0.5 leading-relaxed">{ach.desc}</p>
+                      </div>
+                    </div>
+                  )
+                }
+
+                // 2. TAMPILAN EPIC UNLOCKED (GOLD & CRIMSON LIGHT EXPLOSION TYPE)
+                if (isEpic) {
+                  return (
+                    <div
+                      key={ach.id}
+                      className="flex items-start gap-3 px-3 py-2.5 border border-rose-500 bg-gradient-to-r from-rose-950/30 via-[#0A0A0E] to-amber-950/20 shadow-[0_0_20px_rgba(244,63,94,0.4)] animate-pulse relative overflow-hidden"
+                    >
+                      {/* Efek Garis Menyala Cyber Fantasy */}
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-400 to-rose-500" />
+                      <CheckCircle2 size={14} className="text-amber-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-mono text-xs text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-400 uppercase tracking-wider font-extrabold">
+                            🔥 {ach.title}
+                          </p>
+                          <span className="text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1 font-mono uppercase font-bold tracking-tight">EPIC</span>
+                        </div>
+                        <p className="font-body text-[11px] text-gray-200 mt-0.5 leading-relaxed">{ach.desc}</p>
+                      </div>
+                    </div>
+                  )
+                }
+
+                // 3. TAMPILAN STANDARD UNLOCKED (GOLD & CYAN NEON UI TYPE)
+                return (
+                  <div
+                    key={ach.id}
+                    className="flex items-start gap-3 px-3 py-2.5 border border-cyan-500 bg-gradient-to-r from-cyan-950/20 via-[#0A0A0E] to-amber-950/10 shadow-[0_0_12px_rgba(6,182,212,0.3)] relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 left-0 w-0.5 h-full bg-cyan-400" />
+                    <CheckCircle2 size={14} className="text-cyan-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-mono text-xs text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-amber-300 uppercase tracking-wide font-bold">
+                        {ach.title}
+                      </p>
+                      <p className="font-body text-[11px] text-gray-300 mt-0.5 leading-relaxed">{ach.desc}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </section>
 
