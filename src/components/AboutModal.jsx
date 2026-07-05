@@ -19,9 +19,12 @@ export default function AboutModal({ onClose }) {
       style={{ background: 'rgba(10,10,14,0.85)', backdropFilter: 'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <SystemFrame className="bg-panel w-full max-w-lg max-h-[90vh] overflow-y-auto" size={16}>
+      {/* FIX: Ubah SystemFrame jadi flex container statis tanpa overflow langsung */}
+      <SystemFrame className="bg-panel w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden" size={16}>
+        
+        {/* HEADER: Sekarang fixed di atas, tidak akan ikut tergulung */}
         <div
-          className="flex items-center justify-between px-5 py-4"
+          className="flex items-center justify-between px-5 py-4 shrink-0"
           style={{ borderBottom: '1px solid #211D2C' }}
         >
           <h2 className="font-display font-bold text-xl text-text-high">TENTANG & BANTUAN</h2>
@@ -30,7 +33,8 @@ export default function AboutModal({ onClose }) {
           </button>
         </div>
 
-        <div className="p-5 flex flex-col gap-6">
+        {/* BODY CONTENT: Fitur scroll dipindah ke sini agar teks tidak menabrak siku bingkai */}
+        <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-6 scrollbar-thin">
           <section>
             <p className="font-body text-sm text-gray-300 leading-relaxed">
               Daily Grind Log adalah jurnal latihan dengan sistem RPG: setiap sesi yang kamu catat
@@ -105,7 +109,7 @@ export default function AboutModal({ onClose }) {
               Tiap hari muncul 3 dari 5 kemungkinan quest, dipilih otomatis dan konsisten sepanjang
               hari itu (gak akan sama persis dengan kombinasi kemarin, besok ganti lagi). Selesaikan
               syaratnya lewat sesi yang kamu log hari itu, lalu ketuk tombol klaim untuk dapat EXP
-              bonus — EXP ini langsung nambah ke total EXP dan level kamu.
+              bonus — EXP ini langsung nambah ke total EXP and level kamu.
             </p>
           </section>
 
@@ -119,7 +123,7 @@ export default function AboutModal({ onClose }) {
               streak atau statistik kamu berubah lagi nantinya. Ketuk badge yang udah kebuka di
               halaman utama untuk dijadiin title yang tampil di profil.
             </p>
-            <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-1 shrink-0">
               {ACHIEVEMENTS.map(ach => (
                 <div
                   key={ach.id}
@@ -153,7 +157,7 @@ export default function AboutModal({ onClose }) {
           </section>
 
           <section
-            className="p-3"
+            className="p-3 mb-2 shrink-0"
             style={{ background: '#7C5CFF11', border: '1px solid #7C5CFF33' }}
           >
             <div className="flex items-center gap-2 mb-2">
