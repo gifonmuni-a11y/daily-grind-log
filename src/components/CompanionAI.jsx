@@ -55,30 +55,23 @@ const LEGENDARY_QUOTES = [
 ]
 
 const SYSTEM_IMAGE_CARDS = {
-  beban: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>STRENGTH HYBRID PROTOCOL</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Target Sesi: Ledakan Daya & Kontraksi Sempurna</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='234' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>STRENGTH</text></svg>",
-  kardio: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ENDURANCE CARDIO SYSTEM</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Pembakaran Lemak Maksimal & Penguatan Jantung</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='239' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>ENDURE</text></svg>",
-  makanan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ANABOLIC KITCHEN MATRIX</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Rekomendasi Menu: Dada Ayam Panggang, Sayur Hijau</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='232' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>NUTRITION</text></svg>",
-  pemulihan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>RECOVERY & REST TIME</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='105' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Fokus Utama: Kualitas Tidur Lelap & Hidrasi Cairan</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='238' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>RECOVER</text></svg>"
+  beban: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>STRENGTH HYBRID PROTOCOL</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Target Sesi: Ledakan Daya &amp; Kontraksi Sempurna</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='234' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>STRENGTH</text></svg>",
+  kardio: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ENDURANCE CARDIO SYSTEM</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Pembakaran Lemak Maksimal &amp; Penguatan Jantung</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='239' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>ENDURE</text></svg>",
+  makanan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ANABOLIC KITCHEN MATRIX</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Rekomendasi Menu: Karbohidrat &amp; Protein Bersih</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='232' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>NUTRITION</text></svg>",
+  pemulihan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>RECOVERY &amp; REST TIME</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='105' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Kunci Utama: Regulasi Tidur Nyenyak &amp; Hidrasi</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='238' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>RECOVER</text></svg>"
 }
 
-// FIX VIDEO POOL: Menggunakan ID video global berstatus 'strictly embed-allowed' anti-blokir sepihak
+// Kumpulan ID Video Global Terbuka yang 100% Mengizinkan Pemutaran di PWA / Aplikasi Seluler
 const GRANULAR_VIDEO_POOL = [
-  { tokens: ['push up', 'push-up', 'pushup'], id: 'zkU6Dw6e4V4', category: 'beban' }, // Verified open embed pushup guide
-  { tokens: ['squat'], id: 'aclHkVaku9U', category: 'beban' }, // Verified open embed squat form
-  { tokens: ['plank'], id: 'pSHjTRCQxIw', category: 'beban' }, // Verified open embed plank form
+  { tokens: ['push up', 'push-up', 'pushup'], id: 'zkU6Dw6e4V4', category: 'beban' }, 
+  { tokens: ['squat'], id: 'aclHkVaku9U', category: 'beban' }, 
+  { tokens: ['plank'], id: 'pSHjTRCQxIw', category: 'beban' }, 
   { tokens: ['lunges', 'lunge'], id: 'QOVaHwmZ76c', category: 'beban' },
-  { tokens: ['dada ayam', 'makan', 'resep', 'murah', 'nutrisi', 'diet'], id: '7tU2-QeCjGg', category: 'makanan' }, // Safe embed fitness meal prep
+  { tokens: ['dada ayam', 'makan', 'resep', 'murah', 'nutrisi', 'diet'], id: '7tU2-QeCjGg', category: 'makanan' }, 
   { tokens: ['meditasi', 'mindfulness', 'tenang', 'stres', 'pikir', 'yoga', 'kasur'], id: 'ml6cT4AZFrI', category: 'pemulihan' },
-  { tokens: ['tidur', 'sleep', 'istirahat', 'recovery', 'rest'], id: 'qwz9z6q_JmY', category: 'pemulihan' }, // Safe embed sleep science
+  { tokens: ['tidur', 'sleep', 'istirahat', 'recovery', 'rest'], id: 'qwz9z6q_JmY', category: 'pemulihan' }, 
   { tokens: ['kardio', 'cardio', 'hiit', 'running', 'cycling', 'swimming'], id: 'ml6cT4AZFrI', category: 'kardio' }
 ]
-
-const BACKUP_CATEGORY_POOL = {
-  beban: ['zkU6Dw6e4V4', 'aclHkVaku9U'],
-  kardio: ['ml6cT4AZFrI', 'zkU6Dw6e4V4'],
-  makanan: ['7tU2-QeCjGg', '7tU2-QeCjGg'],
-  pemulihan: ['qwz9z6q_JmY', 'ml6cT4AZFrI']
-}
 
 export default function CompanionAI({ userStats, onClose }) {
   const [messages, setMessages] = useState([])
@@ -94,9 +87,7 @@ export default function CompanionAI({ userStats, onClose }) {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      setLiveTime(`${hours}:${minutes}`)
+      setLiveTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`)
     }
     updateTime()
     const interval = setInterval(updateTime, 1000)
@@ -157,23 +148,34 @@ export default function CompanionAI({ userStats, onClose }) {
     return inlineMatches ? inlineMatches[1] : null
   }
 
-  const resolveGranularMediaImmediate = (userText, aiText, explicitId) => {
+  // FIX MEDIA MATRIX LOGIC: Memastikan media video HANYA di-render jika ada link eksplisit YouTube atau pemicu FAQ!
+  const resolveGranularMediaImmediate = (userText, aiText, explicitId, isFaq = false) => {
     if (explicitId) return { type: 'video', src: explicitId }
 
     const combinedText = `${userText} ${aiText}`.toLowerCase()
-    for (const entry of GRANULAR_VIDEO_POOL) {
-      if (entry.tokens.some(t => combinedText.includes(t))) {
-        return { type: 'video', src: entry.id }
+    
+    // Jika dipicu via FAQ, utamakan pencarian token video
+    if (isFaq) {
+      for (const entry of GRANULAR_VIDEO_POOL) {
+        if (entry.tokens.some(t => combinedText.includes(t))) {
+          return { type: 'video', src: entry.id }
+        }
       }
     }
 
+    // Klasifikasi kategori untuk ngerender System Graphic Cards AMOLED (Anti-Layar Hitam Rusak)
     let category = 'beban'
     if (combinedText.includes('tidur') || combinedText.includes('sleep') || combinedText.includes('recovery')) category = 'pemulihan'
     else if (combinedText.includes('makan') || combinedText.includes('nutrisi') || combinedText.includes('resep') || combinedText.includes('murah')) category = 'makanan'
     else if (combinedText.includes('kardio') || combinedText.includes('cardio') || combinedText.includes('hiit')) category = 'kardio'
 
-    const fallbackPool = BACKUP_CATEGORY_POOL[category] || BACKUP_CATEGORY_POOL.beban
-    return { type: 'video', src: fallbackPool[0] }
+    // Jika chat biasa tanpa rekues FAQ/Link video, tampilkan Graphic Card rancangan lo yang aman terisolasi
+    if (!isFaq) {
+      return { type: 'image', src: SYSTEM_IMAGE_CARDS[category] || SYSTEM_IMAGE_CARDS.beban }
+    }
+
+    // Fallback FAQ aman jika token spesifik terlewat
+    return { type: 'video', src: 'zkU6Dw6e4V4' }
   }
 
   const getTodayDateStr = () => {
@@ -244,9 +246,9 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    const newMessages = [...messages, { sender: 'user', text: msgToSend }]
-    if (!customMsg) setInput('')
-    setMessages(newMessages)
+    // ATOMIC UPDATES: Mencegah penggandaan status pesan di layar HP
+    setInput('')
+    setMessages(prev => [...prev, { sender: 'user', text: msgToSend }])
     setLoading(true)
 
     if (isFaq) {
@@ -255,27 +257,27 @@ export default function CompanionAI({ userStats, onClose }) {
       let mediaAsset = null
 
       if (cleanMsg.includes('mulai dari mana')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'zkU6Dw6e4V4')
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form latihan dasar dari Seolha:`
+        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'zkU6Dw6e4V4', true)
+        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dari Seolha:`
       } 
       else if (cleanMsg.includes('kardio atau angkat')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'ml6cT4AZFrI')
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina kapasitas daya pompa jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
+        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'ml6cT4AZFrI', true)
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
       }
       else if (cleanMsg.includes('latihan')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'aclHkVaku9U')
+        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'aclHkVaku9U', true)
         faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
       else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', '7tU2-QeCjGg')
+        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', '7tU2-QeCjGg', true)
         faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
       else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'qwz9z6q_JmY')
+        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'qwz9z6q_JmY', true)
         faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
       else if (cleanMsg.includes('kesalahan')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'zkU6Dw6e4V4')
+        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'zkU6Dw6e4V4', true)
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Langsung meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
@@ -310,15 +312,16 @@ export default function CompanionAI({ userStats, onClose }) {
           replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
         }
 
-        const finalMedia = resolveGranularMediaImmediate(msgToSend, replyText, explicitId)
+        const finalMedia = resolveGranularMediaImmediate(msgToSend, replyText, explicitId, false)
         setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: finalMedia }])
         setDailyCount(prev => prev + 1)
       } else {
-        throw new Error('Server Down')
+        throw new Error('Endpoint Timeout')
       }
     } catch (err) {
-      const textResponse = "Siap, instruksi dimengerti! Tetap utamakan kestabilan form gerakan dasar yang aman, kunci bagian core otot inti, dan jaga pola pernapasan teratur sepanjang repetisi. Ada hal lain yang ingin didiskusikan?"
-      const finalMedia = resolveGranularMediaImmediate(msgToSend, textResponse, null)
+      // SAFE ISOLATED FALLBACK: Memberikan respon natural dengan Graphic Card AMOLED tanpa memicu error layar hitam
+      const textResponse = "Siap, instruksi dimengerti! Tetap utamakan kestabilan form gerakan dasar yang aman, kunci bagian core otot inti, dan jaga pola pernapasan teratur sepanjang repetisi. Ada hal lain yang ingin kamu diskusikan?"
+      const finalMedia = resolveGranularMediaImmediate(msgToSend, textResponse, null, false)
       setMessages(prev => [...prev, { sender: 'seolha', text: textResponse, media: finalMedia }])
     } finally {
       setLoading(false)
