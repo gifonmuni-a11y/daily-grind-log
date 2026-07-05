@@ -1,88 +1,43 @@
-import React, { useEffect } from 'react'
-import { Award } from 'lucide-react'
+import React from 'react'
+import { Award, Star, Crown, Flame, Rocket, Zap } from 'lucide-react'
 import SystemFrame from './SystemFrame'
-import { getTitleTierColor, getTitleTierGlow } from '../lib/rankColors'
 
 export default function LevelUpModal({ isOpen, oldTier, newTier, newLevel, onClose }) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => { document.body.style.overflow = '' }
-  }, [isOpen])
-
   if (!isOpen) return null
 
-  const tierColor = getTitleTierColor(newTier)
-  const tierGlow = getTitleTierGlow(newTier)
+  // VARIASI IKON MEGAH TIAP TIER KASTA
+  const getTierIcon = (tier) => {
+    const t = String(tier).toUpperCase()
+    if (t.includes('OVERLORD')) return <Crown size={52} className="text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]" />
+    if (t.includes('MYTHICAL')) return <Flame size={52} className="text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
+    if (t.includes('GRAND MASTER')) return <Rocket size={52} className="text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+    if (t.includes('MASTER')) return <Star size={52} className="text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.6)]" />
+    if (t.includes('CHALLENGER')) return <Zap size={52} className="text-teal-400 drop-shadow-[0_0_10px_rgba(45,212,191,0.6)]" />
+    return <Award size={52} className="text-blue-400" />
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A0A0E]/95 backdrop-blur-md">
-      <div className="absolute w-[350px] h-[350px] bg-rose-600/20 rounded-full filter blur-[80px] animate-pulse" />
-      <div className="absolute w-[200px] h-[200px] bg-amber-500/20 rounded-full filter blur-[60px] animate-ping" style={{ animationDuration: '3s' }} />
-
-      <SystemFrame 
-        className="w-full max-w-sm bg-[#0F0E17] p-6 flex flex-col items-center text-center relative overflow-hidden"
-        size={20}
-        style={{ 
-          border: `1px solid ${tierColor}66`,
-          boxShadow: `0 0 35px ${tierColor}44` 
-        }}
-      >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-rose-500" />
-        <p className="font-mono text-xs tracking-[0.2em] text-amber-400 font-extrabold uppercase animate-pulse mb-1">
-          ⚔️ PROMOSI PANGKAT ⚔️
-        </p>
-        <h1 className="font-display font-black text-3xl text-transparent bg-clip-text bg-gradient-to-b from-text-high via-gray-100 to-gray-400 tracking-wide mb-6">
-          TIER UP!
-        </h1>
-
-        <div className="relative my-4 flex items-center justify-center w-28 h-28">
-          <div 
-            className="absolute inset-0 rounded-full border border-dashed animate-spin" 
-            style={{ borderColor: `${tierColor}44`, animationDuration: '12s' }} 
-          />
-          <div 
-            className="w-20 h-20 rotate-45 flex items-center justify-center border-2 shadow-2xl"
-            style={{ 
-              background: 'linear-gradient(135deg, #1A1625 0%, #0A0A0E 100%)',
-              borderColor: tierColor,
-              boxShadow: tierGlow !== 'none' ? tierGlow : `0 0 20px ${tierColor}66`
-            }}
-          >
-            <div className="-rotate-45">
-              <Award size={36} style={{ color: tierColor }} className="animate-bounce" />
-            </div>
-          </div>
+      <div className="absolute w-[320px] h-[320px] bg-accent/10 rounded-full filter blur-[80px]" />
+      
+      <SystemFrame className="w-full max-w-sm bg-[#0F0E17] p-6 flex flex-col items-center text-center relative" size={20} style={{ border: '1px solid #211D2C' }}>
+        <h1 className="font-display font-black text-3xl text-transparent bg-clip-text bg-gradient-to-b from-text-high to-text-dim tracking-widest mb-6">TIER UP!</h1>
+        
+        <div className="w-28 h-28 rounded-full bg-[#100E16] border border-[#211D2C] flex items-center justify-center mb-4 shadow-inner">
+          {getTierIcon(newTier)}
         </div>
-
-        <div className="mt-4 w-full">
-          <p className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">GELAR BARU DICAPAI</p>
-          <h2 
-            className="font-display font-black text-2xl uppercase tracking-wider mt-1 filter drop-shadow-md"
-            style={{ color: tierColor }}
-          >
-            {newTier}
-          </h2>
-          <div className="mt-4 mb-6 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2 flex items-center justify-center gap-4 font-mono text-sm rounded">
-            <span className="text-gray-500 uppercase text-xs">{oldTier}</span>
-            <span className="text-amber-400 font-bold">➜</span>
-            <span className="text-text-high font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
-              LVL {newLevel}
-            </span>
-          </div>
+        
+        <span className="font-mono text-[10px] text-text-dim tracking-widest uppercase mb-1">GELAR BARU DICAPAI</span>
+        <h2 className="font-display font-black text-2xl uppercase tracking-wider text-accent">{newTier}</h2>
+        
+        <div className="mt-4 px-4 py-1.5 bg-[#100E16] border border-[#211D2C] font-mono text-xs text-text-high">
+          {oldTier || 'TRAINER'} ➔ <span className="text-accent font-bold">LVL {newLevel}</span>
         </div>
-
-        <button
-          onClick={onClose}
-          className="w-full py-2.5 font-mono text-xs font-bold tracking-widest uppercase border"
-          style={{ 
-            background: `linear-gradient(90deg, ${tierColor}22, transparent)`, 
-            borderColor: tierColor,
-            color: '#EDEAF6' 
-          }}
+        
+        <button 
+          onClick={onClose} 
+          className="mt-8 w-full py-3 font-display font-black text-sm tracking-wider text-white bg-accent hover:bg-accent-hover transition-colors"
+          style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}
         >
           KLAIM KEKUATAN
         </button>
