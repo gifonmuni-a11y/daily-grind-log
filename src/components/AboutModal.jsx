@@ -80,8 +80,8 @@ export default function AboutModal({ onClose }) {
             </div>
             <p className="font-body text-xs text-gray-400 leading-relaxed">
               Total EXP dari semua sesi menentukan level kamu. Semakin tinggi level, semakin besar
-              EXP yang dibutuhkan untuk naik ke level berikutnya. Gelar (Bronze, Silver, Gold,
-              Platinum, Diamond, Legend, Mythic) naik otomatis sesuai level.
+              EXP yang dibutuhkan untuk naik ke level berikutnya. Gelar rank bertahap kamu 
+              (Bronze hingga Overload) akan naik secara otomatis mengikuti tingkat level saat ini.
             </p>
           </section>
 
@@ -119,15 +119,21 @@ export default function AboutModal({ onClose }) {
               streak atau statistik kamu berubah lagi nantinya. Ketuk badge yang udah kebuka di
               halaman utama untuk dijadiin title yang tampil di profil.
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-1">
               {ACHIEVEMENTS.map(ach => (
                 <div
                   key={ach.id}
-                  className="px-3 py-2"
-                  style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}
+                  className="px-3 py-2 border-l-2"
+                  style={{ 
+                    background: '#0A0A0E', 
+                    borderColor: '#7C5CFF',
+                    borderTop: '1px solid #211D2C',
+                    borderRight: '1px solid #211D2C',
+                    borderBottom: '1px solid #211D2C'
+                  }}
                 >
-                  <p className="font-mono text-xs text-accent uppercase tracking-wide">{ach.title}</p>
-                  <p className="font-body text-xs text-gray-400 mt-0.5">{ach.desc}</p>
+                  <p className="font-mono text-xs text-accent uppercase tracking-wide font-bold">{ach.title}</p>
+                  <p className="font-body text-[11px] text-gray-400 mt-0.5 leading-relaxed">{ach.desc}</p>
                 </div>
               ))}
             </div>
