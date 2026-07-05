@@ -89,10 +89,10 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  // SISTEM TRIGGER BARU: Menggunakan Ref untuk mengunci deteksi level up & achievement secara instan
+  // SINKRONISASI EMIT TRIGGER: Mengunci nilai level asli dengan Ref untuk mencegah lag state React
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
-  
+
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [levelUpData, setLevelUpData] = useState({ oldTier: '', newTier: '', newLevel: 1 })
   const [showAchievementUnlock, setShowAchievementUnlock] = useState(false)
@@ -151,22 +151,24 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  // REAL-TIME ENGINE KOREKSI EVALUASI LEVEL UP & ACHIEVEMENTS
+  // ENGINE DETEKSI BAHAN REAL-TIME LEVEL UP & UNLOCK ACHIEVEMENT
   useEffect(() => {
     if (loading) return
 
     const currentIds = unlockedAchievements.map(a => a.id)
 
+    // Deteksi inisialisasi awal saat login pertama kali
     if (prevLevelRef.current === null) {
       prevLevelRef.current = level
       prevUnlockedIdsRef.current = currentIds
       return
     }
 
-    // Evaluasi Naik Kasta (Tier Up)
+    // 1. Cek Kenaikan Pangkat (Tier Up)
     if (level > prevLevelRef.current) {
       const oldTier = getRankTier(prevLevelRef.current)
       const newTier = getRankTier(level)
+      
       if (newTier !== oldTier) {
         setLevelUpData({ oldTier, newTier, newLevel: level })
         setShowLevelUp(true)
@@ -174,7 +176,7 @@ export default function Home({ session }) {
       prevLevelRef.current = level
     }
 
-    // Evaluasi Achievement Baru Terbuka
+    // 2. Cek Unlock Achievement
     if (prevUnlockedIdsRef.current) {
       const newlyUnlocked = unlockedAchievements.find(a => !prevUnlockedIdsRef.current.includes(a.id))
       if (newlyUnlocked) {
@@ -226,7 +228,6 @@ export default function Home({ session }) {
     const success = await claimQuest(userId, quest.id, quest.exp)
     if (success) {
       await fetchQuestClaimsData()
-      // Tarik ulang profil dan log agar EXP terhitung serentak
       await Promise.all([fetchProfile(), fetchEntries()])
     }
     setClaimingId(null)
@@ -539,8 +540,8 @@ export default function Home({ session }) {
         onClose={() => setShowLevelUp(false)}
       />
 
-      <AchievementUnlockModal
-   isOpen={showAchievementUnlock}
+       <AchievementUnlockModal
+        isOpen={showAchievementUnlock}
         achievement={activeUnlockAchievement}
         onClose={() => setShowAchievementUnlock(false)}
       />
