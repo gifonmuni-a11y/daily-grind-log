@@ -89,7 +89,6 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  // States untuk modal efek naik pangkat & unlock achievement otomatis
   const [prevLevel, setPrevLevel] = useState(null)
   const [prevUnlockedIds, setPrevUnlockedIds] = useState(null)
   const [showLevelUp, setShowLevelUp] = useState(false)
@@ -150,7 +149,6 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  // DETEKSI LEVEL UP & UNLOCK ACHIEVEMENT SECARA REAL-TIME
   useEffect(() => {
     if (loading) return
 
@@ -162,7 +160,6 @@ export default function Home({ session }) {
       return
     }
 
-    // 1. Deteksi Kenaikan Pangkat (Tier Up)
     const oldTier = getRankTier(prevLevel)
     const newTier = getRankTier(level)
     if (newTier !== oldTier && level > prevLevel) {
@@ -173,7 +170,6 @@ export default function Home({ session }) {
       setPrevLevel(level)
     }
 
-    // 2. Deteksi Achievement Baru yang Terbuka
     if (prevUnlockedIds) {
       const newlyUnlocked = getUnlockedAchievements(entries).find(a => !prevUnlockedIds.includes(a.id))
       if (newlyUnlocked) {
@@ -419,7 +415,7 @@ export default function Home({ session }) {
                   style={{
                     background: '#7C5CFF',
                     color: '#EDEAF6',
-                    clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+                    clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 10px, 10px 100%, 0 calc(100% - 10px))',
                   }}
                 >
                   LOG SESI PERTAMA
@@ -467,7 +463,7 @@ export default function Home({ session }) {
                 {compactEntries.map(entry => (
                   <CompactRow
                     key={entry.id}
-                    entry={handleEdit}
+                    entry={entry} {/* FIX UTAMA: Diubah dari entry={handleEdit} menjadi entry={entry} */}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                   />
@@ -547,5 +543,5 @@ export default function Home({ session }) {
         onClose={() => setShowAchievementUnlock(false)}
       />
     </div>
-  )
+    )
 }

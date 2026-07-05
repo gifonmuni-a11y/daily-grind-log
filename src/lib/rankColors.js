@@ -37,45 +37,46 @@ export function getAmbientAlpha(rank) {
 // 2. SISTEM GELAR & TIER LEVEL RPG (BARU)
 // ==========================================
 export const TITLE_TIER_ORDER = [
-  'Bronze', 'Silver', 'Gold', 'Platinum', 'Master', 'Grand Master', 'Mythical', 'Overload',
+  'Trainer', 'Elite Trainer', 'Expert Trainer', 'Challenger', 'Master', 'Grand Master', 'Mythical', 'Overload',
 ]
 
 export const TITLE_TIER_COLORS = {
-  Bronze: '#B08D57',
-  Silver: '#C7CDD6',
-  Gold: '#F4C542',
-  Platinum: '#8FE3D6',
+  Trainer: '#9CA3AF',
+  'Elite Trainer': '#60A5FA',
+  'Expert Trainer': '#F59E0B',
+  Challenger: '#2DD4BF',
   Master: '#7C5CFF',
   'Grand Master': '#E14CE3',
   Mythical: '#FF5C7A',
-  Overload: '#FFD24C',
+  Overload: '#F59E0B', // Base emas
 }
 
 export const TITLE_TIER_GLOW = {
-  Bronze: 'none',
-  Silver: 'none',
-  Gold: '0 0 8px #F4C54266',
-  Platinum: '0 0 10px #8FE3D677',
+  Trainer: 'none',
+  'Elite Trainer': 'none',
+  'Expert Trainer': '0 0 8px #F59E0B66',
+  Challenger: '0 0 10px #2DD4BF77',
   Master: '0 0 12px #7C5CFF88',
   'Grand Master': '0 0 14px #E14CE399',
   Mythical: '0 0 16px #FF5C7Aaa',
-  Overload: '0 0 20px #FFD24Ccc',
+  Overload: '0 0 25px #D946EFaa, 0 0 10px #F59E0B77', // Efek ledakan energi Ungu-Emas
 }
 
 export function getTitleTierColor(tier) {
-  return TITLE_TIER_COLORS[tier] || TITLE_TIER_COLORS.Bronze
+  return TITLE_TIER_COLORS[tier] || TITLE_TIER_COLORS.Trainer
 }
 
 export function getTitleTierGlow(tier) {
   return TITLE_TIER_GLOW[tier] || 'none'
 }
 
-// Fungsi utama yang dicari-cari oleh ProfileHeader agar build tidak eror
+// Logic penentuan nama rank otomatis berdasarkan tingkatan level
 export const getRankDetails = (level) => {
   if (level >= 80) {
     return { 
       name: 'OVERLOAD', 
-      color: 'text-red-500 border-red-500 bg-red-950/40 shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse' 
+      // FIX: Warna tag profil di-upgrade pakai gradasi Emas-Ungu berkilau + Animasi berdenyut pulse
+      color: 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-fuchsia-500 to-purple-500 border-fuchsia-500 bg-purple-950/40 shadow-[0_0_20px_rgba(217,70,239,0.6)] font-black animate-pulse' 
     };
   }
   if (level >= 60) {
@@ -98,24 +99,24 @@ export const getRankDetails = (level) => {
   }
   if (level >= 20) {
     return { 
-      name: 'PLATINUM', 
+      name: 'CHALLENGER', 
       color: 'text-teal-300 border-teal-300 bg-teal-950/40' 
     };
   }
   if (level >= 12) {
     return { 
-      name: 'GOLD', 
-      color: 'text-yellow-500 border-yellow-500 bg-yellow-950/20' 
+      name: 'EXPERT TRAINER', 
+      color: 'text-amber-400 border-amber-400 bg-amber-950/20' 
     };
   }
   if (level >= 5) {
     return { 
-      name: 'SILVER', 
-      color: 'text-slate-300 border-slate-300 bg-slate-800/40' 
+      name: 'ELITE TRAINER', 
+      color: 'text-blue-400 border-blue-400 bg-blue-950/40' 
     };
   }
   return { 
-    name: 'BRONZE', 
-    color: 'text-violet-400 border-violet-400 bg-violet-950/40' 
+    name: 'TRAINER', 
+    color: 'text-slate-400 border-slate-400 bg-slate-900/40' 
   };
 };

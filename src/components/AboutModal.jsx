@@ -13,7 +13,6 @@ const RANK_ROWS = [
 ]
 
 export default function AboutModal({ onClose, entries = [], userId = '' }) {
-  // Ambil daftar achievement yang sudah berhasil di-unlock oleh user
   const unlockedAchievements = getUnlockedAchievements(entries)
   const unlockedIds = new Set(unlockedAchievements.map(a => a.id))
 
@@ -87,7 +86,7 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               Total EXP dari semua sesi menentukan level kamu. Semakin tinggi level, semakin besar
               EXP yang dibutuhkan untuk naik. Gelar rank kamu akan naik otomatis sesuai tingkatan level:
             </p>
-            <div className="mt-2 font-mono text-[11px] text-gray-300 bg-[#0A0A0E] p-3 border border-[#211D2C] leading-relaxed">
+            <div className="mt-2 font-mono text-[11px] text-gray-300 bg-[#0A0A0E] p-3 border border-[#211D2C] leading-relaxed flex flex-col gap-0.5">
               <div>• <span style={{ color: '#9CA3AF' }}>TRAINER</span> : Level 1+</div>
               <div>• <span style={{ color: '#60A5FA' }}>ELITE TRAINER</span> : Level 5+</div>
               <div>• <span style={{ color: '#F59E0B' }}>EXPERT TRAINER</span> : Level 12+</div>
@@ -95,7 +94,10 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               <div>• <span style={{ color: '#7C5CFF' }}>MASTER</span> : Level 30+</div>
               <div>• <span style={{ color: '#E14CE3' }}>GRAND MASTER</span> : Level 45+</div>
               <div>• <span style={{ color: '#FF5C7A' }}>MYTHICAL</span> : Level 60+</div>
-              <div className="text-accent font-bold animate-pulse">• <span style={{ color: '#FFD24C' }}>OVERLOAD</span> : Level 80+</div>
+              {/* FIX: Mengubah warna teks panduan OVERLORD menjadi Emas-Ungu gradasi neon berkilau */}
+              <div className="font-bold flex items-center gap-1">
+                • <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-fuchsia-500 to-purple-500 font-black animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]">OVERLOAD</span> : Level 80+
+              </div>
             </div>
           </section>
 
@@ -117,13 +119,11 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
             </div>
             <p className="font-body text-xs text-gray-400 leading-relaxed">
               Tiap hari muncul 3 dari 5 kemungkinan quest, dipilih otomatis dan konsisten sepanjang
-              hari itu (gak akan sama persis dengan kombinasi kemarin, besok ganti lagi). Selesaikan
-              syaratnya lewat sesi yang kamu log hari itu, lalu ketuk tombol klaim untuk dapat EXP
-              bonus — EXP ini langsung nambah ke total EXP dan level kamu.
+              hari itu. Selesaikan syaratnya lewat sesi yang kamu log hari itu, lalu ketuk tombol klaim
+              untuk dapat EXP bonus.
             </p>
           </section>
 
-          {/* VISUAL POP-UP & BADGE ACHIEVEMENT VFX SECTION */}
           <section>
             <div className="flex items-center gap-2 mb-3">
               <Award size={16} className="text-accent" />
@@ -133,13 +133,12 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               Badge kebuka otomatis begitu syaratnya kepenuhi. Ketuk badge yang udah kebuka di
               halaman utama untuk dijadikan title profil kamu.
             </p>
-            <div className="flex flex-col gap-3 max-h-[280px] overflow-y-auto pr-1 shrink-0 scrollbar-thin">
+            {/* FIX: max-h dan overflow dicopot dari div list ini agar achievement mengalir penuh & TIDAK KEPOTONG lagi */}
+            <div className="flex flex-col gap-3 shrink-0">
               {ACHIEVEMENTS.map(ach => {
                 const isUnlocked = unlockedIds.has(ach.id)
-                // Deteksi achievement berstatus EPIC/HARDCORE (misal streak 30 hari atau 100 sesi)
                 const isEpic = ach.id === 'unstoppable' || ach.id === 'century'
 
-                // 1. TAMPILAN JIKA TERKUNCI (LOCKED)
                 if (!isUnlocked) {
                   return (
                     <div
@@ -155,14 +154,12 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
                   )
                 }
 
-                // 2. TAMPILAN EPIC UNLOCKED (GOLD & CRIMSON LIGHT EXPLOSION TYPE)
                 if (isEpic) {
                   return (
                     <div
                       key={ach.id}
                       className="flex items-start gap-3 px-3 py-2.5 border border-rose-500 bg-gradient-to-r from-rose-950/30 via-[#0A0A0E] to-amber-950/20 shadow-[0_0_20px_rgba(244,63,94,0.4)] animate-pulse relative overflow-hidden"
                     >
-                      {/* Efek Garis Menyala Cyber Fantasy */}
                       <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-400 to-rose-500" />
                       <CheckCircle2 size={14} className="text-amber-400 mt-0.5 shrink-0" />
                       <div>
@@ -178,7 +175,6 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
                   )
                 }
 
-                // 3. TAMPILAN STANDARD UNLOCKED (GOLD & CYAN NEON UI TYPE)
                 return (
                   <div
                     key={ach.id}
@@ -206,8 +202,7 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
             <p className="font-body text-xs text-gray-400 leading-relaxed">
               Seolha adalah pendamping AI yang tau progress asli kamu (level, streak, total EXP) dan
               bisa diajak diskusi soal latihan. Pertanyaan FAQ gratis (0 energi), sedangkan chat bebas
-              pakai energi — 5 energi per hari, reset tiap hari. Buka lewat tombol robot di pojok kanan
-              bawah layar.
+              pakai energi — 5 energi per hari, reset tiap hari.
             </p>
           </section>
 
@@ -220,9 +215,7 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               <h3 className="font-display font-bold text-sm text-text-high">Catatan Update App (PWA)</h3>
             </div>
             <p className="font-body text-xs text-gray-400 leading-relaxed">
-              App ini berjalan sebagai PWA (bisa di-install seperti app biasa). Setelah ada update
-              tampilan/fitur baru, browser/HP kamu mungkin masih menyimpan versi lama. Kalau tampilan
-              terasa tidak berubah atau ada yang aneh setelah update, coba{' '}
+              App ini berjalan sebagai PWA. Setelah ada update tampilan/fitur baru, coba{' '}
               <span className="text-text-high font-medium">refresh halaman</span> atau{' '}
               <span className="text-text-high font-medium">clear cache/data situs</span> ini di
               browser kamu.
