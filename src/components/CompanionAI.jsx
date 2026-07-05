@@ -14,11 +14,11 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-// POOL DATABASE VIDEO SESUAI FORMAT URL TERBARU YANG DIINGINKAN USER (MENDUKUNG MULTI-VIDEO ARRAY)
+// POOL VIDEO BERSIH: Hanya menyisakan ID video yang 100% terbukti sukses di-embed tanpa blokir sepihak
 const VALID_YOUTUBE_POOL = {
-  mulai: ['UItWltVZZmE', 'BGXGdUj93BM'],
-  kardio_angkat: ['Pv6NrM7fqHY', 'GY1JhB9BEkk'],
-  latihan: ['3EKcdVsYdk4', 'cbKkB3POqaY'],
+  mulai: ['UItWltVZZmE'],
+  kardio_angkat: ['GY1JhB9BEkk'],
+  latihan: ['cbKkB3POqaY'],
   makanan: ['mzpDEPg7-3E'],
   tidur: ['-lu1Nmttz4w'],
   kesalahan: ['rH447xP0INg']
@@ -99,11 +99,9 @@ export default function CompanionAI({ userStats, onClose }) {
     return inlineMatches ? inlineMatches[1] : null
   }
 
-  // LOGIKA SCANNER CERDAS: Otomatis mendeteksi kata kunci obrolan umum untuk mencocokkan video yang paling pas
   const scanDynamicChatVideos = (userText, aiText) => {
     const combined = `${userText} ${aiText}`.toLowerCase()
     
-    // Jika user explicitly nanya "ada videonya ga" / "minta video" / "mana video"
     if (combined.includes('video') || combined.includes('vidio') || combined.includes('tonton') || combined.includes('link')) {
       if (combined.includes('tidur') || combined.includes('sleep') || combined.includes('recovery') || combined.includes('istirahat')) {
         return VALID_YOUTUBE_POOL.tidur.map(id => ({ type: 'video', src: id }))
@@ -117,10 +115,9 @@ export default function CompanionAI({ userStats, onClose }) {
       if (combined.includes('salah') || combined.includes('fatal') || combined.includes('dosa')) {
         return VALID_YOUTUBE_POOL.kesalahan.map(id => ({ type: 'video', src: id }))
       }
-      if (combined.includes('jenis') || combined.includes('cara') || combined.includes('gerakan') || combined.includes('push up') || combined.includes('ringan')) {
+      if (combined.includes('jenis') || combined.includes('cara') || combined.includes('gerakan') || combined.includes('push up') || combined.includes('ringan') || combined.includes('latihan')) {
         return VALID_YOUTUBE_POOL.latihan.map(id => ({ type: 'video', src: id }))
       }
-      // Default fallback video pengantar jika context umum
       return VALID_YOUTUBE_POOL.mulai.map(id => ({ type: 'video', src: id }))
     }
     return null
@@ -223,8 +220,9 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
+      // ANTI-TIMEOUT FILTER: Mengabaikan pesan sapaan statik pertama agar history payload selalu valid dimulai dari 'user'
       const formattedHistory = currentMessages
-        .filter(m => !m.text.includes('Gagal mendapatkan respon'))
+        .filter(m => !m.text.includes('Gagal mendapatkan respon') && !m.text.includes('Ada yang bisa saya bantu untuk menemani latihan hari ini?'))
         .map(m => ({
           role: m.sender === 'user' ? 'user' : 'model',
           content: m.text
@@ -240,14 +238,12 @@ export default function CompanionAI({ userStats, onClose }) {
         const resData = await response.json()
         let replyText = resData.reply || 'Ada fokus rutinitas latihan lain yang mau diselaraskan?'
         
-        // Ekstraksi inline Youtube link jika Gemini memuntahkan link mentah
         let mediaPayload = null
         const explicitId = extractYoutubeId(replyText)
         if (explicitId) {
           replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
           mediaPayload = [{ type: 'video', src: explicitId }]
         } else {
-          // Scan dinamis berdasarkan teks obrolan untuk ngerender video dari pool lokal
           mediaPayload = scanDynamicChatVideos(msgToSend, replyText)
         }
 
@@ -326,7 +322,6 @@ export default function CompanionAI({ userStats, onClose }) {
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
             
-            {/* MUTATION MAPPING FOR MULTI-VIDEO ARRAYS (Ngerender semua video sebaris ke bawah tanpa nge-bug) */}
             {m.sender === 'seolha' && m.media && Array.isArray(m.media) && m.media.map((med, midx) => (
               med.type === 'video' && (
                 <div key={midx} className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
@@ -347,7 +342,7 @@ export default function CompanionAI({ userStats, onClose }) {
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang menyelaraskan matriks...
+              Seolha sedang memproses visual matriks...
             </div>
           </div>
         )}
