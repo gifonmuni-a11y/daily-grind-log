@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
-import { calcLevel } from '../lib/expSystem'
+import { calcLevel, getRankTier } from '../lib/expSystem'
 import { buildDummyEntries } from '../lib/dummyData'
 import {
   getTodaysQuests,
@@ -28,6 +28,8 @@ import CompactRow from '../components/CompactRow'
 import LogModal from '../components/LogModal'
 import AboutModal from '../components/AboutModal'
 import CompanionAI from '../components/CompanionAI'
+import LevelUpModal from '../components/LevelUpModal'
+import AchievementUnlockModal from '../components/AchievementUnlockModal'
 
 function filterEntries(entries, filter) {
   const now = new Date()
@@ -87,6 +89,14 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
+  // States untuk modal efek naik pangkat & unlock achievement otomatis
+  const [prevLevel, setPrevLevel] = useState(null)
+  const [prevUnlockedIds, setPrevUnlockedIds] = useState(null)
+  const [showLevelUp, setShowLevelUp] = useState(false)
+  const [levelUpData, setLevelUpData] = useState({ oldTier: '', newTier: '', newLevel: 1 })
+  const [showAchievementUnlock, setShowAchievementUnlock] = useState(false)
+  const [activeUnlockAchievement, setActiveUnlockAchievement] = useState(null)
+
   const fetchProfile = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
@@ -124,10 +134,70 @@ export default function Home({ session }) {
     Promise.all([fetchProfile(), fetchEntries(), fetchQuestClaimsData()]).finally(() => setLoading(false))
   }, [fetchProfile, fetchEntries, fetchQuestClaimsData])
 
+  const filteredEntries = filterEntries(entries, activeFilter)
+  const cardEntries = filteredEntries.slice(0, 3)
+  const compactEntries = filteredEntries.slice(3)
+  const streak = calcStreak(entries)
+  const entriesExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
+  const entriesToday = getEntriesToday(entries)
+  const todaysQuests = getTodaysQuests(userId)
+  const claimedTodayIds = getClaimedTodayIds(questClaims)
+  const questBonusExp = getTotalQuestExp(questClaims)
+  const totalExp = entriesExp + questBonusExp
+  const { level } = calcLevel(totalExp)
+  const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
+  const userStats = { totalDays: entries.length, streak, totalExp, level }
+  const unlockedAchievements = getUnlockedAchievements(entries)
+  const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
+
+  // FUNGSI UTAMA: DETEKSI LEVEL UP & UNLOCK ACHIEVEMENT SECARA REAL-TIME
+  useEffect(() => {
+    if (loading) return
+
+    const currentIds = getUnlockedAchievements(entries).map(a => a.id)
+
+    if (prevLevel === null) {
+      setPrevLevel(level)
+      setPrevUnlockedIds(currentIds)
+      return
+    }
+
+    // 1. Deteksi Kenaikan Pangkat (Tier Up)
+    const oldTier = getRankTier(prevLevel)
+    const newTier = getRankTier(level)
+    if (newTier !== oldTier && level > prevLevel) {
+      setLevelUpData({ oldTier, newTier, newLevel: level })
+      setShowLevelUp(true)
+    }
+    if (level !== prevLevel) {
+      setPrevLevel(level)
+    }
+
+    // 2. Deteksi Achievement Baru yang Terbuka
+    if (prevUnlockedIds) {
+      const newlyUnlocked = getUnlockedAchievements(entries).find(a => !prevUnlockedIds.includes(a.id))
+      if (newlyUnlocked) {
+        setActiveUnlockAchievement(newlyUnlocked)
+        setShowAchievementUnlock(true)
+      }
+    }
+
+    const currentIdsStr = JSON.stringify(currentIds)
+    const prevIdsStr = JSON.stringify(prevUnlockedIds)
+    if (currentIdsStr !== prevIdsStr) {
+      setPrevUnlockedIds(currentIds)
+    }
+  }, [loading, level, entries, prevLevel, prevUnlockedIds])
+
   async function handleDelete(id) {
     if (!window.confirm('Hapus entry ini?')) return
     await supabase.from('entries').delete().eq('id', id)
     await fetchEntries()
+  }
+
+  bin_ops handleEdit(entry) {
+    setEditEntry(entry)
+    setShowLogModal(true)
   }
 
   function handleEdit(entry) {
@@ -178,22 +248,6 @@ export default function Home({ session }) {
       setEquippedTitleId(achievementId)
     }
   }
-
-  const filteredEntries = filterEntries(entries, activeFilter)
-  const cardEntries = filteredEntries.slice(0, 3)
-  const compactEntries = filteredEntries.slice(3)
-  const streak = calcStreak(entries)
-  const entriesExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
-  const entriesToday = getEntriesToday(entries)
-  const todaysQuests = getTodaysQuests(userId)
-  const claimedTodayIds = getClaimedTodayIds(questClaims)
-  const questBonusExp = getTotalQuestExp(questClaims)
-  const totalExp = entriesExp + questBonusExp
-  const { level } = calcLevel(totalExp)
-  const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
-  const userStats = { totalDays: entries.length, streak, totalExp, level }
-  const unlockedAchievements = getUnlockedAchievements(entries)
-  const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
   if (loading) {
     return (
@@ -429,7 +483,6 @@ export default function Home({ session }) {
         )}
       </div>
 
-      {/* Tombol Log Baru digeser ke kiri (right-24) agar tidak menimpa tombol AI */}
       <button
         onClick={handleNewLog}
         className="fixed bottom-6 right-24 w-14 h-14 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 z-40"
@@ -442,7 +495,6 @@ export default function Home({ session }) {
         <Plus size={24} className="text-white" />
       </button>
 
-      {/* Tombol buka AI Companion. Panel-nya sendiri cuma dirender kalau showCompanion true */}
       <button
         onClick={() => setShowCompanion(true)}
         className="fixed bottom-6 right-6 w-14 h-14 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 z-40"
@@ -478,7 +530,28 @@ export default function Home({ session }) {
         />
       )}
 
-      {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} />}
+      {showAboutModal && (
+        <AboutModal 
+          onClose={() => setShowAboutModal(false)} 
+          entries={entries} 
+          userId={userId} 
+        />
+      )}
+
+      {/* RE-RENDER REAL-TIME POP-UP VFX UNTUK TIER UP DAN ACHIEVEMENT UNLOCK */}
+            <LevelUpModal
+        isOpen={showLevelUp}
+        oldTier={levelUpData.oldTier}
+        newTier={levelUpData.newTier}
+        newLevel={levelUpData.newLevel}
+        onClose={() => setShowLevelUp(false)}
+      />
+
+      <AchievementUnlockModal
+        isOpen={showAchievementUnlock}
+        achievement={activeUnlockAchievement}
+        onClose={() => setShowAchievementUnlock(false)}
+      />
     </div>
   )
 }
