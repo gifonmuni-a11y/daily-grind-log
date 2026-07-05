@@ -192,7 +192,7 @@ export default function Home({ session }) {
   const { level } = calcLevel(totalExp)
   const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
   const userStats = { totalDays: entries.length, streak, totalExp, level }
-  const unlockedAchievements = getUnlockedAchievements(entries, streak)
+  const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
   if (loading) {

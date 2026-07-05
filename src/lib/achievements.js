@@ -1,5 +1,11 @@
 export const ACHIEVEMENTS = [
   {
+    id: 'awakened',
+    title: 'Awakened',
+    desc: 'Pernah log latihan apapun 3 hari berturut-turut.',
+    check: (_entries, longest) => longest >= 3,
+  },
+  {
     id: 'striker',
     title: 'Striker',
     desc: 'Catat 10 sesi latihan Boxing/Combat.',
@@ -8,14 +14,14 @@ export const ACHIEVEMENTS = [
   {
     id: 'immortal',
     title: 'Immortal',
-    desc: 'Capai 7-day streak tanpa putus.',
-    check: (_entries, streak) => streak >= 7,
+    desc: 'Pernah capai 7-day streak tanpa putus.',
+    check: (_entries, longest) => longest >= 7,
   },
   {
     id: 'unstoppable',
     title: 'Unstoppable',
-    desc: 'Capai 30-day streak tanpa putus.',
-    check: (_entries, streak) => streak >= 30,
+    desc: 'Pernah capai 30-day streak tanpa putus.',
+    check: (_entries, longest) => longest >= 30,
   },
   {
     id: 'iron_grind',
@@ -55,8 +61,32 @@ export const ACHIEVEMENTS = [
   },
 ]
 
-export function getUnlockedAchievements(entries, streak) {
-  return ACHIEVEMENTS.filter(a => a.check(entries, streak))
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// Streak TERPANJANG sepanjang sejarah entries (bukan cuma yang jalan sekarang),
+// biar achievement streak gak "ilang" lagi kalau user break streak-nya.
+function longestStreak(entries) {
+  if (!entries || entries.length === 0) return 0
+  const dayKeys = [...new Set(entries.map(e => dateKey(new Date(e.entry_date))))].sort()
+  let longest = 1
+  let current = 1
+  for (let i = 1; i < dayKeys.length; i++) {
+    const diffDays = Math.round((new Date(dayKeys[i]) - new Date(dayKeys[i - 1])) / 86400000)
+    if (diffDays === 1) {
+      current += 1
+      longest = Math.max(longest, current)
+    } else if (diffDays > 1) {
+      current = 1
+    }
+  }
+  return longest
+}
+
+export function getUnlockedAchievements(entries) {
+  const longest = longestStreak(entries)
+  return ACHIEVEMENTS.filter(a => a.check(entries, longest))
 }
 
 function equippedTitleKey(userId) {
