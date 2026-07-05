@@ -94,7 +94,6 @@ export default function CompanionAI({ userStats, onClose }) {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
-      // Paksa separator menggunakan titik dua (HH:mm) agar universal di HP manapun
       const hours = String(now.getHours()).padStart(2, '0')
       const minutes = String(now.getMinutes()).padStart(2, '0')
       setLiveTime(`${hours}:${minutes}`)
@@ -104,7 +103,6 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // FIX PARSER: Mengonversi tanda ** dan * menjadi struktur HTML asli agar tidak bocor teks mentah
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -136,7 +134,7 @@ export default function CompanionAI({ userStats, onClose }) {
         return (
           <div key={idx} className="flex items-start gap-2 my-1 pl-1 font-body text-sm text-[#EDEAF6]">
             <span className="text-accent text-xs mt-1.5">•</span>
-            <p className="flex-1 whitespace-pre-wrap leading-relaxed">{content}</p>
+            <div className="flex-1 whitespace-pre-wrap leading-relaxed">{content}</div>
           </div>
         )
       }
@@ -273,32 +271,34 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
+    // FIX FAQ ENGINE: Pengecekan mutlak diubah menjadi case-insensitive (.toLowerCase()) agar anti-luput dari klik
     if (isFaq) {
+      const cleanMsg = msgToSend.toLowerCase()
       let faqReply = ''
       let mediaAsset = null
 
-      if (msgToSend.includes('Mulai dari mana')) {
+      if (cleanMsg.includes('mulai dari mana')) {
         mediaAsset = await resolveGranularMedia(msgToSend, '', '7K37eH7fG34')
         faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
       } 
-      else if (msgToSend.includes('Kardio atau angkat')) {
+      else if (cleanMsg.includes('kardio atau angkat')) {
         mediaAsset = await resolveGranularMedia(msgToSend, '', 'gcNh17CkW64')
         faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
       }
-      else if (msgToSend.includes('Jenis & Cara Latihan')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', 'UItWltVZZmE')
+      else if (cleanMsg.includes('latihan')) {
+        mediaAsset = await resolveGranularMedia(msgToSend, '', '7K37eH7fG34')
         faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
-      else if (msgToSend.includes('Pola Makan & Nutrisi')) {
+      else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) {
         mediaAsset = await resolveGranularMedia(msgToSend, '', '3_9yOQ83PjI')
         faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
-      else if (msgToSend.includes('Pola Tidur & Recovery')) {
+      else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) {
         mediaAsset = await resolveGranularMedia(msgToSend, '', 't0kACis_dJE')
         faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
-      else if (msgToSend.includes('Kesalahan Fatal Pemula')) {
-        mediaAsset = await resolveGranularMedia(msgToSend, '', 'ixkQaYn5eg0') // Mengunci video edukasi kesalahan fatal unik terpisah
+      else if (cleanMsg.includes('kesalahan')) {
+        mediaAsset = await resolveGranularMedia(msgToSend, '', 'ixkQaYn5eg0')
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Langsung meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
@@ -308,9 +308,9 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
-      // CLEAN ENGINE HISTORY CHAIN: Membersihkan total riwayat crash 'Gagal mendapatkan respon' agar format role berseling murni
+      // FIX CORE GEMINI ALIGNMENT: Jangan buang salam pembuka (idx > 0) agar payload history chat.js 100% utuh dan sinkron dari awal
       const formattedHistory = newMessages
-        .filter((m, idx) => idx > 0 && !m.text.includes('Gagal mendapatkan respon'))
+        .filter(m => !m.text.includes('Gagal mendapatkan respon') && !m.text.includes('Koneksi ke Seolha'))
         .map(m => ({
           role: m.sender === 'user' ? 'user' : 'assistant',
           content: m.text
@@ -369,7 +369,7 @@ export default function CompanionAI({ userStats, onClose }) {
           
           <div className="w-[1px] h-4 bg-[#211D2C]" />
           
-          {/* FIX UI TELEMETRI: Grid kotak solid terisolasi, font kompak anti-melar, dan baterai vector ungu */}
+          {/* TELEMETRI BOX SOLID DENGAN ICON BATTERY UNGU PREMIUM */}
           <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-text-high bg-[#100E16] border border-[#7C5CFF]/30 px-2 py-1 rounded shadow-[0_0_10px_rgba(124,92,255,0.05)]">
             <svg className="w-3.5 h-3.5 text-[#7C5CFF] fill-current" viewBox="0 0 24 24">
               <path d="M16 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm4 4h2v4h-2v-4z"/>
@@ -425,7 +425,7 @@ export default function CompanionAI({ userStats, onClose }) {
         {messages.map((m, i) => {
           return (
             <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
+              <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-bl-xl'}`}>
                 {m.sender === 'seolha' && (
                   <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1">
                     <Bot size={10} /> SEOLHA
@@ -460,7 +460,7 @@ export default function CompanionAI({ userStats, onClose }) {
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang memvalidasi kelayakan media...
+              Seolha sedang memproses visual matriks...
             </div>
           </div>
         )}
