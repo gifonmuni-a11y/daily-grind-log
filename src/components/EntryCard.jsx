@@ -1,11 +1,12 @@
-import React from 'react'
-import { Edit2, Trash2, Share2, Calendar, Clock } from 'lucide-react'
+import React, { useState } from 'react'
+import { Edit2, Trash2, Share2, Calendar, Clock, Loader2 } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { getRankColor, getRankGlow } from '../lib/rankColors'
-// Mengimpor utility share bawaan aplikasi lo untuk auto-download image
+// Mengimpor file generator kartu milik lu
 import * as shareUtils from '../lib/shareCard'
 
 export default function EntryCard({ entry, profile, level, streak, onEdit, onDelete }) {
+  const [isDownloading, setIsDownloading] = useState(false)
   
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Invalid Date'
@@ -30,13 +31,52 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
   const rankColor = getRankColor(entry.rank, true)
   const rankGlow = getRankGlow(entry.rank, true)
 
-  // Fungsi memicu otomatis download gambar share card dari lib bawaan lo
-  const handleShareClick = () => {
-    const shareFn = shareUtils.default || shareUtils.shareCard || shareUtils.downloadShareCard
-    if (typeof shareFn === 'function') {
-      shareFn(entry, profile, { level, streak })
-    } else {
-      alert('Sistem download share card sedang bersiap, coba sekali lagi.')
+  // FIX DURASI: Membaca teks bebas (seperti "3 jam 5 menit") langsung dari entry.duration
+  const displayDuration = entry.duration || entry.duration_minutes
+
+  // FIX SHARE ENGINE: Mengirimkan satu paket objek tunggal dan memicu unduhan otomatis berkas png
+  const handleShareClick = async () => {
+    if (isDownloading) return
+    setIsDownloading(true)
+
+    try {
+      // Mencari fungsi utama generateShareCard di dalam berkas lib lu
+      const generateFn = shareUtils.generateShareCard || shareUtils.default
+      
+      if (typeof generateFn === 'function') {
+        // Toleransi nama variabel catatan: duplikasi notes ke note agar terbaca oleh canvas generator lu
+        const customizedEntry = {
+          ...entry,
+          note: entry.note || entry.notes
+        }
+
+        // Mengirimkan satu paket objek tunggal sesuai syarat destructuring di shareCard.js lu
+        const result = await generateFn({ 
+          profile, 
+          entry: customizedEntry, 
+          level, 
+          streak 
+        })
+        
+        // Pemicu unduhan otomatis berkas gambar png ke HP lu
+        if (result && result.dataUrl) {
+          const downloadLink = document.createElement('a')
+          downloadLink.download = `grind-log-day-${entry.day_number || 'session'}.png`
+          downloadLink.href = result.dataUrl
+          document.body.appendChild(downloadLink)
+          downloadLink.click()
+          document.body.removeChild(downloadLink)
+        } else {
+          alert('Gagal mengambil data gambar share card.')
+        }
+      } else {
+        alert('Fungsi generator kartu tidak ditemukan di berkas lib.')
+      }
+    } catch (err) {
+      console.error('Error saat men-download share card:', err)
+      alert('Gagal memproses download share card. Periksa koneksi atau gambar ilustrasi Anda.')
+    } finally {
+      setIsDownloading(false)
     }
   }
 
@@ -48,7 +88,7 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
         style={{ border: '1px solid #211D2C' }}
       >
         
-        {/* LANDSCAPE IMAGE AT TOP (Hanya muncul jika ada foto latihan) */}
+        {/* LANDSCAPE IMAGE AT TOP */}
         {entry.image_url && (
           <div className="relative w-full h-44 bg-[#0A0A0E] border border-[#211D2C] mb-3 overflow-hidden z-10">
             <img
@@ -60,7 +100,7 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
           </div>
         )}
 
-        {/* MIDDLE SECTION: SPLIT LAYOUT (RANK BADGE LEFT, TEXT INFOS RIGHT) */}
+        {/* MIDDLE SECTION: CLASSIC SPLIT LAYOUT */}
         <div className="flex gap-4 items-start z-20">
           
           {/* LEFT SIDE: SQUARE RANK BADGE BOX */}
@@ -95,10 +135,11 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
                 <Calendar size={11} />
                 <span>{formatDate(entry.entry_date)}</span>
               </div>
-              {entry.duration_minutes && (
+              {/* MENAMPILKAN TEKS DURASI SECARA AKURAT */}
+              {displayDuration && (
                 <div className="flex items-center gap-1 text-text-dim">
                   <Clock size={11} />
-                  <span>{entry.duration_minutes} menit</span>
+                  <span>{displayDuration}</span>
                 </div>
               )}
             </div>
@@ -127,10 +168,15 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
           <div className="flex items-center gap-1">
             <button 
               onClick={handleShareClick}
-              className="p-1.5 hover:bg-border-hover text-text-dim hover:text-accent transition-colors"
+              disabled={isDownloading}
+              className="p-1.5 hover:bg-border-hover text-text-dim hover:text-accent transition-colors disabled:opacity-50"
               title="Otomatis Download Share Card"
             >
-              <Share2 size={14} />
+              {isDownloading ? (
+                <Loader2 size={14} className="animate-spin text-accent" />
+              ) : (
+                <Share2 size={14} />
+              )}
             </button>
             <button 
               onClick={() => onEdit(entry)} 
