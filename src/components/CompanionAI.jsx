@@ -68,7 +68,7 @@ const GRANULAR_VIDEO_POOL = [
   { tokens: ['plank'], id: 'ASV35q6m174', category: 'beban' },
   { tokens: ['lunges', 'lunge'], id: 'QOVaHwmZ76c', category: 'beban' },
   { tokens: ['dada ayam', 'makan', 'resep', 'murah', 'nutrisi', 'diet'], id: '3_9yOQ83PjI', category: 'makanan' },
-  { tokens: ['meditasi', 'mindfulness', 'tenang', 'stres', 'pikir'], id: 'inpokvFX0o8', category: 'fleksibilitas' },
+  { tokens: ['meditasi', 'mindfulness', 'tenang', 'stres', 'pikir', 'yoga'], id: 'inpokvFX0o8', category: 'pemulihan' },
   { tokens: ['tidur', 'sleep', 'istirahat', 'recovery', 'rest'], id: 't0kACis_dJE', category: 'pemulihan' },
   { tokens: ['kardio', 'cardio', 'hiit', 'running', 'cycling', 'swimming'], id: '2MoGxae-zyo', category: 'kardio' }
 ]
@@ -211,11 +211,12 @@ export default function CompanionAI({ userStats, onClose }) {
     return 'Selamat malam'
   }
 
+  // FIX INITIAL GREETING TEXT: Menghapus total kalimat "Paling susah itu bukan latihannya..." dari sapaan pembuka Seolha
   useEffect(() => {
     setMessages([
       { 
         sender: 'seolha', 
-        text: `${getGreeting()}, ${currentTier}. Paling susah itu bukan latihannya — tapi keluar pintu dan mulai.`,
+        text: `${getGreeting()}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
         media: null
       }
     ])
@@ -271,7 +272,6 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // FIX FAQ ENGINE: Pengecekan mutlak diubah menjadi case-insensitive (.toLowerCase()) agar anti-luput dari klik
     if (isFaq) {
       const cleanMsg = msgToSend.toLowerCase()
       let faqReply = ''
@@ -308,7 +308,6 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
-      // FIX CORE GEMINI ALIGNMENT: Jangan buang salam pembuka (idx > 0) agar payload history chat.js 100% utuh dan sinkron dari awal
       const formattedHistory = newMessages
         .filter(m => !m.text.includes('Gagal mendapatkan respon') && !m.text.includes('Koneksi ke Seolha'))
         .map(m => ({
@@ -369,7 +368,6 @@ export default function CompanionAI({ userStats, onClose }) {
           
           <div className="w-[1px] h-4 bg-[#211D2C]" />
           
-          {/* TELEMETRI BOX SOLID DENGAN ICON BATTERY UNGU PREMIUM */}
           <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-text-high bg-[#100E16] border border-[#7C5CFF]/30 px-2 py-1 rounded shadow-[0_0_10px_rgba(124,92,255,0.05)]">
             <svg className="w-3.5 h-3.5 text-[#7C5CFF] fill-current" viewBox="0 0 24 24">
               <path d="M16 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm4 4h2v4h-2v-4z"/>
@@ -460,25 +458,47 @@ export default function CompanionAI({ userStats, onClose }) {
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang memproses visual matriks...
+              Seolha sedang menyelaraskan matriks...
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* EXPANDED HORIZONTAL SCROLL FAQ CONTROLS */}
+      {/* CUSTOMIZED HORIZONTAL SCROLL FAQ AREA */}
       <div className="mb-2 bg-background pt-1.5">
-        <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
+        {/* GRADIENT SWIPE BADGE: Judul FAQ dengan tanda swipe warna gradasi ungu ke biru */}
+        <div className="font-mono text-[10px] font-bold uppercase tracking-wider mb-1.5 bg-gradient-to-r from-[#7C5CFF] to-[#3B82F6] bg-clip-text text-transparent">
+          0 ENERGI — SWIPE →
+        </div>
+        
         <div 
-          className="flex gap-2 overflow-x-auto pb-1 flex-nowrap scrollbar-none" 
-          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+          className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" 
+          style={{ 
+            scrollbarWidth: 'auto', 
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
+          {/* CUSTOM INLINE SCROLLBAR CSS FOR PWA UNGU AESTHETIC THEME */}
+          <style dangerouslySetInnerHTML={{__html: `
+            div::-webkit-scrollbar {
+              height: 4px !important;
+              background: #100E16 !important;
+            }
+            div::-webkit-scrollbar-thumb {
+              background: #7C5CFF !important;
+              border-radius: 2px !important;
+            }
+            div::-webkit-scrollbar-track {
+              background: #161420 !important;
+            }
+          `}} />
+
           <button 
             type="button" 
             onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
+            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
           >
             Mulai dari mana?
           </button>
@@ -486,7 +506,7 @@ export default function CompanionAI({ userStats, onClose }) {
             type="button" 
             onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
+            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
           >
             Kardio atau angkat?
           </button>
@@ -494,7 +514,7 @@ export default function CompanionAI({ userStats, onClose }) {
             type="button" 
             onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
+            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
           >
             Cara & Jenis Latihan
           </button>
@@ -502,7 +522,7 @@ export default function CompanionAI({ userStats, onClose }) {
             type="button" 
             onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
+            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
           >
             Nutrisi & Makan
           </button>
@@ -510,7 +530,7 @@ export default function CompanionAI({ userStats, onClose }) {
             type="button" 
             onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
+            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
           >
             Tidur & Recovery
           </button>
@@ -518,7 +538,7 @@ export default function CompanionAI({ userStats, onClose }) {
             type="button" 
             onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)}
             disabled={loading}
-            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
+            className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent transition-colors active:scale-[0.98]"
           >
             Kesalahan Fatal
           </button>
