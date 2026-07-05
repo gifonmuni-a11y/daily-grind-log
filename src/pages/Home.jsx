@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
@@ -89,8 +89,10 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  const [prevLevel, setPrevLevel] = useState(null)
-  const [prevUnlockedIds, setPrevUnlockedIds] = useState(null)
+  // SISTEM TRIGGER BARU: Menggunakan Ref untuk mengunci deteksi level up & achievement secara instan
+  const prevLevelRef = useRef(null)
+  const prevUnlockedIdsRef = useRef(null)
+  
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [levelUpData, setLevelUpData] = useState({ oldTier: '', newTier: '', newLevel: 1 })
   const [showAchievementUnlock, setShowAchievementUnlock] = useState(false)
@@ -149,41 +151,39 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
+  // REAL-TIME ENGINE KOREKSI EVALUASI LEVEL UP & ACHIEVEMENTS
   useEffect(() => {
     if (loading) return
 
-    const currentIds = getUnlockedAchievements(entries).map(a => a.id)
+    const currentIds = unlockedAchievements.map(a => a.id)
 
-    if (prevLevel === null) {
-      setPrevLevel(level)
-      setPrevUnlockedIds(currentIds)
+    if (prevLevelRef.current === null) {
+      prevLevelRef.current = level
+      prevUnlockedIdsRef.current = currentIds
       return
     }
 
-    const oldTier = getRankTier(prevLevel)
-    const newTier = getRankTier(level)
-    if (newTier !== oldTier && level > prevLevel) {
-      setLevelUpData({ oldTier, newTier, newLevel: level })
-      setShowLevelUp(true)
-    }
-    if (level !== prevLevel) {
-      setPrevLevel(level)
+    // Evaluasi Naik Kasta (Tier Up)
+    if (level > prevLevelRef.current) {
+      const oldTier = getRankTier(prevLevelRef.current)
+      const newTier = getRankTier(level)
+      if (newTier !== oldTier) {
+        setLevelUpData({ oldTier, newTier, newLevel: level })
+        setShowLevelUp(true)
+      }
+      prevLevelRef.current = level
     }
 
-    if (prevUnlockedIds) {
-      const newlyUnlocked = getUnlockedAchievements(entries).find(a => !prevUnlockedIds.includes(a.id))
+    // Evaluasi Achievement Baru Terbuka
+    if (prevUnlockedIdsRef.current) {
+      const newlyUnlocked = unlockedAchievements.find(a => !prevUnlockedIdsRef.current.includes(a.id))
       if (newlyUnlocked) {
         setActiveUnlockAchievement(newlyUnlocked)
         setShowAchievementUnlock(true)
       }
+      prevUnlockedIdsRef.current = currentIds
     }
-
-    const currentIdsStr = JSON.stringify(currentIds)
-    const prevIdsStr = JSON.stringify(prevUnlockedIds)
-    if (currentIdsStr !== prevIdsStr) {
-      setPrevUnlockedIds(currentIds)
-    }
-  }, [loading, level, entries, prevLevel, prevUnlockedIds])
+  }, [loading, level, unlockedAchievements])
 
   async function handleDelete(id) {
     if (!window.confirm('Hapus entry ini?')) return
@@ -226,6 +226,8 @@ export default function Home({ session }) {
     const success = await claimQuest(userId, quest.id, quest.exp)
     if (success) {
       await fetchQuestClaimsData()
+      // Tarik ulang profil dan log agar EXP terhitung serentak
+      await Promise.all([fetchProfile(), fetchEntries()])
     }
     setClaimingId(null)
   }
@@ -538,7 +540,7 @@ export default function Home({ session }) {
       />
 
       <AchievementUnlockModal
-        isOpen={showAchievementUnlock}
+   isOpen={showAchievementUnlock}
         achievement={activeUnlockAchievement}
         onClose={() => setShowAchievementUnlock(false)}
       />

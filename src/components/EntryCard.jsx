@@ -1,183 +1,139 @@
 import { useState } from 'react'
-import { Calendar, Clock, ChevronDown, Share2, Edit2, Trash2 } from 'lucide-react'
+import { Edit2, Trash2, Share2, Calendar, Clock, Eye } from 'lucide-react'
 import SystemFrame from './SystemFrame'
-import { generateShareCard } from '../lib/shareCard'
-import { getRankColor, getRankGlow, getAmbientAlpha } from '../lib/rankColors'
-
-const RANK_LABELS = {
-  S: 'LEGENDARY', A: 'EXCELLENT', B: 'GOOD', C: 'AVERAGE', D: 'POOR', E: 'FAILED'
-}
+import { getRankColor, getRankGlow } from '../lib/rankColors'
 
 export default function EntryCard({ entry, profile, level, streak, onEdit, onDelete }) {
-  const [expanded, setExpanded] = useState(false)
-  const [sharing, setSharing] = useState(false)
+  // State interaktif lokal untuk memindahkan titik potong gambar secara real-time
+  const [cropPosition, setCropPosition] = useState('object-center')
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Invalid Date'
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return 'Invalid Date'
+    return d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
   const rankColor = getRankColor(entry.rank, true)
   const rankGlow = getRankGlow(entry.rank, true)
-  const ambientAlpha = getAmbientAlpha(entry.rank)
-  const exp = { S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[entry.rank] || 0
 
-  const dateStr = new Date(entry.entry_date).toLocaleDateString('id-ID', {
-    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
-  })
+  const cycleCrop = () => {
+    if (cropPosition === 'object-center') setCropPosition('object-top')
+    else if (cropPosition === 'object-top') setCropPosition('object-bottom')
+    else setCropPosition('object-center')
+  }
 
-  async function handleShare() {
-    setSharing(true)
-    try {
-      const { dataUrl, imageLoadFailed } = await generateShareCard({ profile, entry, level, streak })
-      const link = document.createElement('a')
-      link.href = dataUrl
-      link.download = `grind-day-${entry.day_number}.png`
-      link.click()
-      if (imageLoadFailed) {
-        window.alert(
-          'Kartu share berhasil dibuat, tapi foto entry gagal dimuat (kemungkinan bucket Supabase Storage belum public atau CORS belum diizinkan). Kartu tetap didownload tanpa foto.'
-        )
-      }
-    } catch (e) {
-      console.error('Share error', e)
-      window.alert('Gagal membuat kartu share. Coba lagi atau periksa koneksi/gambar entry.')
-    }
-    setSharing(false)
+  const getCropLabel = () => {
+    if (cropPosition === 'object-top') return 'Fokus: Atas'
+    if (cropPosition === 'object-bottom') return 'Fokus: Bawah'
+    return 'Fokus: Tengah'
   }
 
   return (
-    <SystemFrame
-      className="bg-panel mx-4 mb-3 overflow-hidden animate-fade-in"
-      cornerColor={rankColor}
-      size={14}
-      style={{ boxShadow: `inset 0 -3px 16px -6px ${rankColor}${ambientAlpha}` }}
-    >
-      {entry.image_url && (
-        <div className="relative w-full h-40 overflow-hidden">
-          <img
-            src={entry.image_url}
-            alt="entry"
-            crossOrigin="anonymous"
-            className="w-full h-full object-cover"
-          />
-          <div
-            className="absolute inset-0"
-            style={{ background: 'linear-gradient(to bottom, transparent 50%, #100E16)' }}
-          />
-          <div
-            className="absolute bottom-2 left-2 px-2 py-1 font-mono text-xs font-bold"
-            style={{
-              background: '#0A0A0Ecc',
-              color: rankColor,
-              border: `1px solid ${rankColor}66`,
-            }}
+    <div className="mx-4 mb-4 relative group">
+      <SystemFrame
+        className="bg-panel p-4 flex flex-col relative overflow-hidden"
+        size={14}
+        style={{ border: '1px solid #211D2C' }}
+      >
+        {/* ACTION BUTTONS (TOP RIGHT) */}
+        <div className="absolute top-3 right-3 flex items-center gap-1 z-30">
+          <button
+            onClick={() => onEdit(entry)}
+            className="p-1.5 hover:bg-border-hover text-text-dim hover:text-text-high transition-colors"
+            title="Edit Sesi"
           >
-            +{exp} EXP
-          </div>
+            <Edit2 size={13} />
+          </button>
+          <button
+            onClick={() => onDelete(entry.id)}
+            className="p-1.5 hover:bg-border-hover text-text-dim hover:text-danger transition-colors"
+            title="Hapus Sesi"
+          >
+            <Trash2 size={13} />
+          </button>
         </div>
-      )}
 
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div
-            className="flex flex-col items-center justify-center w-14 h-14 shrink-0 font-display font-bold text-3xl"
-            style={{
-              background: rankColor + '22',
-              border: `2px solid ${rankColor}66`,
-              color: rankColor,
-              boxShadow: rankGlow,
-            }}
-          >
-            {entry.rank}
-            <span className="font-mono text-xs font-normal" style={{ color: rankColor + 'cc', fontSize: '9px', lineHeight: 1 }}>
-              {RANK_LABELS[entry.rank]}
+        {/* METADATA HEADER */}
+        <div className="flex items-center gap-2 flex-wrap mb-3 pr-16">
+          <span className="font-mono text-[10px] bg-accent/10 border border-accent/30 text-accent px-2 py-0.5 tracking-wider uppercase">
+            DAY #{entry.day_number}
+          </span>
+          {entry.category && (
+            <span className="font-mono text-[10px] bg-border-hover border border-text-dim/20 text-text-dim px-2 py-0.5 tracking-wider uppercase">
+              {entry.category}
             </span>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="font-mono text-xs text-gray-400">DAY #{entry.day_number}</span>
-              <span
-                className="font-mono text-xs px-1.5 py-0.5"
-                style={{ background: '#211D2C', color: '#D1D5DB' }}
-              >
-                {entry.category}
-              </span>
-            </div>
-            <h3 className="font-display font-semibold text-lg text-text-high leading-tight">
-              {entry.title}
-            </h3>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="font-mono text-xs text-gray-400 flex items-center gap-1">
-                <Calendar size={10} />
-                {dateStr}
-              </span>
-              {entry.duration && (
-                <span className="font-mono text-xs text-gray-400 flex items-center gap-1">
-                  <Clock size={10} />
-                  {entry.duration}
-                </span>
-              )}
-            </div>
+          )}
+          <div className="flex items-center gap-1 text-text-dim font-mono text-[11px] ml-1">
+            <Calendar size={11} />
+            <span>{formatDate(entry.entry_date)}</span>
           </div>
         </div>
 
-        {entry.note && (
-          <div className="mt-3">
-            <p
-              className={`font-body text-sm text-gray-300 leading-relaxed ${!expanded ? 'line-clamp-2' : ''}`}
-            >
-              {entry.note}
+        {/* TITLE & CONTENT CONTAINER */}
+        <div className="flex flex-col gap-2">
+          <h3 className="font-display font-black text-lg text-text-high tracking-wide uppercase leading-tight">
+            {entry.title || 'Untitled Session'}
+          </h3>
+          
+          {entry.notes && (
+            <p className="font-body text-xs text-text-muted leading-relaxed whitespace-pre-wrap bg-[#0A0A0E]/60 p-2.5 border border-[#211D2C]/40 mb-2">
+              {entry.notes}
             </p>
-            {entry.note.length > 100 && (
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="font-mono text-xs text-accent mt-1 flex items-center gap-1"
-              >
-                {expanded ? 'Tutup' : 'Baca selengkapnya'}
-                <ChevronDown
-                  size={12}
-                  className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
-                />
-              </button>
-            )}
+          )}
+        </div>
+
+        {/* PREMIUM 3:4 ASPECT RATIO IMAGE CONTAINER WITH CROP POSITION SELECTOR */}
+        {entry.image_url && (
+          <div className="relative w-full aspect-[3/4] bg-[#0A0A0E] border border-[#211D2C] my-2 overflow-hidden z-10 group/img">
+            <img
+              src={entry.image_url}
+              alt={entry.title}
+              className={`w-full h-full object-cover transition-all duration-300 ${cropPosition}`}
+            />
+            
+            {/* BUTTON INTERAKTIF UNTUK PILIH CROP DI HP */}
+            <button
+              onClick={cycleCrop}
+              className="absolute bottom-3 left-3 bg-[#0F0E17]/90 border border-[#3A3548] text-text-high font-mono text-[10px] px-2 py-1 flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity shadow-xl"
+            >
+              <Eye size={10} className="text-accent" />
+              {getCropLabel()}
+            </button>
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0F0E17] via-transparent to-transparent opacity-40 pointer-events-none" />
           </div>
         )}
 
-        <div
-          className="flex items-center justify-between mt-4 pt-3"
-          style={{ borderTop: '1px solid #211D2C' }}
-        >
-          <div className="flex items-center gap-1">
-            <span className="font-mono text-xs text-gray-400">+</span>
-            <span
-              className="font-mono text-sm font-bold"
-              style={{ color: rankColor }}
-            >
-              {exp} EXP
-            </span>
+        {/* METRICS & RANK BADGE LOWER BOX */}
+        <div className="mt-2 pt-3 border-t border-[#211D2C]/60 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-text-dim font-mono text-xs">
+            {entry.duration_minutes && (
+              <div className="flex items-center gap-1">
+                <Clock size={12} className="text-text-muted" />
+                <span>{entry.duration_minutes} mnt</span>
+              </div>
+            )}
           </div>
+
+          {/* DYNAMIC GLOWING RANK CREST */}
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleShare}
-              disabled={sharing}
-              className="p-1.5 hover:bg-border-hover transition-colors"
-              title="Share"
+            <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">RANK</span>
+            <div
+              className="w-9 h-9 flex items-center justify-center font-display font-black text-sm border transition-all duration-300 shadow-md"
+              style={{
+                color: rankColor,
+                borderColor: rankColor,
+                boxShadow: rankGlow,
+                background: `linear-gradient(135deg, #100E16 0%, #0A0A0E 100%)`
+              }}
             >
-              <Share2 size={14} className="text-gray-400" />
-            </button>
-            <button
-              onClick={() => onEdit(entry)}
-              className="p-1.5 hover:bg-border-hover transition-colors"
-              title="Edit"
-            >
-              <Edit2 size={14} className="text-gray-400" />
-            </button>
-            <button
-              onClick={() => onDelete(entry.id)}
-              className="p-1.5 hover:bg-border-hover transition-colors"
-              title="Hapus"
-            >
-              <Trash2 size={14} className="text-danger" />
-            </button>
+              {entry.rank}
+            </div>
           </div>
         </div>
-      </div>
-    </SystemFrame>
+
+      </SystemFrame>
+    </div>
   )
 }
