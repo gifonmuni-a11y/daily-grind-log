@@ -4,74 +4,25 @@ import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
 
 const LEGENDARY_QUOTES = [
-  {
-    id: 'legend_1',
-    name: 'ADE RAI',
-    quote: 'Kesehatan dan otot kuat bukan tujuan utama, melainkan modal dasar paling berharga untuk mencapai semua impian raksasamu.',
-    mission: 'Latihan beban intens & jaga porsi makan hari ini tanpa jebol.'
-  },
-  {
-    id: 'legend_2',
-    name: 'ARNOLD SCHWARZENEGGER',
-    quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.',
-    mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.'
-  },
-  {
-    id: 'legend_3',
-    name: 'DAVID GOGGINS',
-    quote: 'Saat pikiranmu berkata sudah selesai, sebenarnya fisikmu baru menggunakan 40 persen kekuatan aslinya. Tetap keras!',
-    mission: 'Selesaikan sesi latihan penuh hari ini tanpa menyerah di tengah jalan.'
-  },
-  {
-    id: 'legend_4',
-    name: 'DEDDY CORBUZIER',
-    quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!',
-    mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.'
-  },
-  {
-    id: 'legend_5',
-    name: 'CRISTIANO RONALDO',
-    quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.',
-    mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.'
-  },
-  {
-    id: 'legend_6',
-    name: 'DENNY SUMARGO',
-    quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.',
-    mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.'
-  },
-  {
-    id: 'legend_7',
-    name: 'THE ROCK',
-    quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.',
-    mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.'
-  },
-  {
-    id: 'legend_8',
-    name: 'BUNG KARNO',
-    quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.',
-    mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.'
-  }
+  { id: 'legend_1', name: 'ADE RAI', quote: 'Kesehatan dan otot kuat bukan tujuan utama, melainkan modal dasar paling berharga untuk mencapai semua impian raksasamu.', mission: 'Latihan beban intens & jaga porsi makan hari ini tanpa jebol.' },
+  { id: 'legend_2', name: 'ARNOLD SCHWARZENEGGER', quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.', mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.' },
+  { id: 'legend_3', name: 'DAVID GOGGINS', quote: 'Saat pikiranmu berkata sudah selesai, sebenarnya fisikmu baru menggunakan 40 persen kekuatan aslinya. Tetap keras!', mission: 'Selesaikan sesi latihan penuh hari ini tanpa menyerah di tengah jalan.' },
+  { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
+  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
+  { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
+  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
+  { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-const SYSTEM_IMAGE_CARDS = {
-  beban: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>STRENGTH HYBRID PROTOCOL</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Target Sesi: Ledakan Daya &amp; Kontraksi Sempurna</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='234' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>STRENGTH</text></svg>",
-  kardio: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ENDURANCE CARDIO SYSTEM</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Pembakaran Lemak Maksimal &amp; Penguatan Jantung</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='239' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>ENDURE</text></svg>",
-  makanan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ANABOLIC KITCHEN MATRIX</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Rekomendasi Menu: Karbohidrat &amp; Protein Bersih</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='232' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>NUTRITION</text></svg>",
-  pemulihan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>RECOVERY &amp; REST TIME</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='105' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Kunci Utama: Regulasi Tidur Nyenyak &amp; Hidrasi</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='238' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>RECOVER</text></svg>"
+// DATA ASLI PERTAMA YANG TERBUKTI BISA DI-EMBED DAN JALAN LANCAR DI PWA LU
+const VALID_YOUTUBE_POOL = {
+  mulai: '7K37eH7fG34',
+  kardio: '2MoGxae-zyo',
+  latihan: '7K37eH7fG34',
+  makanan: '3_9yOQ83PjI',
+  tidur: 't0kACis_dJE',
+  kesalahan: '7K37eH7fG34'
 }
-
-// Kumpulan ID Video Global Terbuka yang 100% Mengizinkan Pemutaran di PWA / Aplikasi Seluler
-const GRANULAR_VIDEO_POOL = [
-  { tokens: ['push up', 'push-up', 'pushup'], id: 'zkU6Dw6e4V4', category: 'beban' }, 
-  { tokens: ['squat'], id: 'aclHkVaku9U', category: 'beban' }, 
-  { tokens: ['plank'], id: 'pSHjTRCQxIw', category: 'beban' }, 
-  { tokens: ['lunges', 'lunge'], id: 'QOVaHwmZ76c', category: 'beban' },
-  { tokens: ['dada ayam', 'makan', 'resep', 'murah', 'nutrisi', 'diet'], id: '7tU2-QeCjGg', category: 'makanan' }, 
-  { tokens: ['meditasi', 'mindfulness', 'tenang', 'stres', 'pikir', 'yoga', 'kasur'], id: 'ml6cT4AZFrI', category: 'pemulihan' },
-  { tokens: ['tidur', 'sleep', 'istirahat', 'recovery', 'rest'], id: 'qwz9z6q_JmY', category: 'pemulihan' }, 
-  { tokens: ['kardio', 'cardio', 'hiit', 'running', 'cycling', 'swimming'], id: 'ml6cT4AZFrI', category: 'kardio' }
-]
 
 export default function CompanionAI({ userStats, onClose }) {
   const [messages, setMessages] = useState([])
@@ -94,6 +45,7 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
+  // PARSER BERSIH: Mengonversi tanda ** dan * jadi teks tebal warna ungu cyberpunk tanpa bocor mentah
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -138,64 +90,11 @@ export default function CompanionAI({ userStats, onClose }) {
     })
   }
 
-  const extractYoutubeId = (text) => {
-    if (!text) return null
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
-    const matches = text.match(regExp)
-    if (matches && matches[2].length === 11) return matches[2]
-    const inlineReg = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-    const inlineMatches = text.match(inlineReg)
-    return inlineMatches ? inlineMatches[1] : null
-  }
-
-  // FIX MEDIA MATRIX LOGIC: Memastikan media video HANYA di-render jika ada link eksplisit YouTube atau pemicu FAQ!
-  const resolveGranularMediaImmediate = (userText, aiText, explicitId, isFaq = false) => {
-    if (explicitId) return { type: 'video', src: explicitId }
-
-    const combinedText = `${userText} ${aiText}`.toLowerCase()
-    
-    // Jika dipicu via FAQ, utamakan pencarian token video
-    if (isFaq) {
-      for (const entry of GRANULAR_VIDEO_POOL) {
-        if (entry.tokens.some(t => combinedText.includes(t))) {
-          return { type: 'video', src: entry.id }
-        }
-      }
-    }
-
-    // Klasifikasi kategori untuk ngerender System Graphic Cards AMOLED (Anti-Layar Hitam Rusak)
-    let category = 'beban'
-    if (combinedText.includes('tidur') || combinedText.includes('sleep') || combinedText.includes('recovery')) category = 'pemulihan'
-    else if (combinedText.includes('makan') || combinedText.includes('nutrisi') || combinedText.includes('resep') || combinedText.includes('murah')) category = 'makanan'
-    else if (combinedText.includes('kardio') || combinedText.includes('cardio') || combinedText.includes('hiit')) category = 'kardio'
-
-    // Jika chat biasa tanpa rekues FAQ/Link video, tampilkan Graphic Card rancangan lo yang aman terisolasi
-    if (!isFaq) {
-      return { type: 'image', src: SYSTEM_IMAGE_CARDS[category] || SYSTEM_IMAGE_CARDS.beban }
-    }
-
-    // Fallback FAQ aman jika token spesifik terlewat
-    return { type: 'video', src: 'zkU6Dw6e4V4' }
-  }
-
-  const getTodayDateStr = () => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }
-
-  const getGreeting = () => {
-    const hr = new Date().getHours()
-    if (hr >= 5 && hr < 11) return 'Selamat pagi'
-    if (hr >= 11 && hr < 15) return 'Selamat siang'
-    if (hr >= 15 && hr < 18) return 'Selamat sore'
-    return 'Selamat malam'
-  }
-
   useEffect(() => {
     setMessages([
       { 
         sender: 'seolha', 
-        text: `${getGreeting()}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
+        text: `Selamat malam, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
         media: null
       }
     ])
@@ -209,7 +108,7 @@ export default function CompanionAI({ userStats, onClose }) {
 
   const fetchDailyLimit = async () => {
     try {
-      const today = getTodayDateStr()
+      const today = new Date().toISOString().split('T')[0]
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
       const { data } = await supabase.from('ai_usage').select('count').eq('user_id', session.user.id).eq('date', today).single()
@@ -220,14 +119,14 @@ export default function CompanionAI({ userStats, onClose }) {
   }
 
   const checkQuestPersistence = () => {
-    const today = getTodayDateStr()
+    const today = new Date().toISOString().split('T')[0]
     const savedClaim = localStorage.getItem(`claim_${today}_${LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].id}`)
     if (savedClaim === 'true') setIsQuestClaimed(true)
   }
 
   const handleClaimLegendQuest = () => {
     if (isQuestClaimed) return
-    const today = getTodayDateStr()
+    const today = new Date().toISOString().split('T')[0]
     localStorage.setItem(`claim_${today}_${LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].id}`, 'true')
     setIsQuestClaimed(true)
   }
@@ -246,7 +145,6 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    // ATOMIC UPDATES: Mencegah penggandaan status pesan di layar HP
     setInput('')
     setMessages(prev => [...prev, { sender: 'user', text: msgToSend }])
     setLoading(true)
@@ -254,41 +152,41 @@ export default function CompanionAI({ userStats, onClose }) {
     if (isFaq) {
       const cleanMsg = msgToSend.toLowerCase()
       let faqReply = ''
-      let mediaAsset = null
+      let videoId = VALID_YOUTUBE_POOL.mulai
 
       if (cleanMsg.includes('mulai dari mana')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'zkU6Dw6e4V4', true)
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dari Seolha:`
+        videoId = VALID_YOUTUBE_POOL.mulai
+        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
       } 
       else if (cleanMsg.includes('kardio atau angkat')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'ml6cT4AZFrI', true)
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
+        videoId = VALID_YOUTUBE_POOL.kardio
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
       }
       else if (cleanMsg.includes('latihan')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'aclHkVaku9U', true)
+        videoId = VALID_YOUTUBE_POOL.latihan
         faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
       else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', '7tU2-QeCjGg', true)
+        videoId = VALID_YOUTUBE_POOL.makanan
         faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
       else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'qwz9z6q_JmY', true)
+        videoId = VALID_YOUTUBE_POOL.tidur
         faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
       else if (cleanMsg.includes('kesalahan')) {
-        mediaAsset = resolveGranularMediaImmediate(msgToSend, '', 'zkU6Dw6e4V4', true)
+        videoId = VALID_YOUTUBE_POOL.kesalahan
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Langsung meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
-      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mediaAsset }])
+      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: { type: 'video', src: videoId } }])
       setLoading(false)
       return
     }
 
     try {
-      const formattedHistory = newMessages
-        .filter(m => !m.text.includes('Gagal mendapatkan respon') && !m.text.includes('Koneksi ke Seolha'))
+      const formattedHistory = [...messages, { sender: 'user', text: msgToSend }]
+        .filter(m => !m.text.includes('Gagal mendapatkan respon'))
         .map(m => ({
           role: m.sender === 'user' ? 'user' : 'assistant',
           content: m.text
@@ -297,39 +195,23 @@ export default function CompanionAI({ userStats, onClose }) {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages: formattedHistory,
-          userStats: userStats
-        })
+        body: JSON.stringify({ messages: formattedHistory, userStats })
       })
 
       if (response.ok) {
         const resData = await response.json()
-        let replyText = resData.reply || 'Ada lagi fokus latihan yang perlu kita selaraskan hari ini?'
-        
-        const explicitId = extractYoutubeId(replyText)
-        if (explicitId) {
-          replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
-        }
-
-        const finalMedia = resolveGranularMediaImmediate(msgToSend, replyText, explicitId, false)
-        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: finalMedia }])
+        const replyText = resData.reply || 'Ada fokus rutinitas latihan lain yang mau diselaraskan?'
+        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: null }])
         setDailyCount(prev => prev + 1)
       } else {
-        throw new Error('Endpoint Timeout')
+        setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
       }
     } catch (err) {
-      // SAFE ISOLATED FALLBACK: Memberikan respon natural dengan Graphic Card AMOLED tanpa memicu error layar hitam
-      const textResponse = "Siap, instruksi dimengerti! Tetap utamakan kestabilan form gerakan dasar yang aman, kunci bagian core otot inti, dan jaga pola pernapasan teratur sepanjang repetisi. Ada hal lain yang ingin kamu diskusikan?"
-      const finalMedia = resolveGranularMediaImmediate(msgToSend, textResponse, null, false)
-      setMessages(prev => [...prev, { sender: 'seolha', text: textResponse, media: finalMedia }])
+      setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
     } finally {
       setLoading(false)
     }
   }
-
-  const dayQuoteIndex = new Date().getDate() % LEGENDARY_QUOTES.length
-  const todayQuote = LEGENDARY_QUOTES[dayQuoteIndex]
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md p-4 max-w-lg mx-auto select-none">
@@ -347,18 +229,14 @@ export default function CompanionAI({ userStats, onClose }) {
             <Clock size={11} className="text-accent" />
             <span>{liveTime || '00:00'}</span>
           </div>
-          
           <div className="w-[1px] h-4 bg-[#211D2C]" />
-          
           <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-text-high bg-[#100E16] border border-[#7C5CFF]/30 px-2 py-1 rounded shadow-[0_0_10px_rgba(124,92,255,0.05)]">
             <svg className="w-3.5 h-3.5 text-[#7C5CFF] fill-current" viewBox="0 0 24 24">
               <path d="M16 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm4 4h2v4h-2v-4z"/>
             </svg>
             <span>{5 - dailyCount}/5 Energi</span>
           </div>
-          
           <div className="w-[1px] h-4 bg-[#211D2C]" />
-
           <button onClick={onClose} className="p-1 hover:bg-border-hover rounded text-text-dim transition-colors">
             <X size={18} />
           </button>
@@ -369,34 +247,23 @@ export default function CompanionAI({ userStats, onClose }) {
       <div className="mt-2.5 p-2.5 bg-[#100E16] border border-[#211D2C] flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5">
           <Quote size={11} className="text-accent" />
-          <span className="font-mono text-[10px] text-accent font-bold tracking-wider uppercase">DAILY QUOTE: {todayQuote.name}</span>
+          <span className="font-mono text-[10px] text-accent font-bold tracking-wider uppercase">DAILY QUOTE: {LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].name}</span>
         </div>
         <p className="font-body text-xs text-text-high italic leading-relaxed pl-1.5 border-l-2 border-[#211D2C]">
-          "{todayQuote.quote}"
+          "{LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].quote}"
         </p>
-        
         <button 
           type="button"
           onClick={handleClaimLegendQuest}
           disabled={isQuestClaimed}
           className={`mt-1 w-full p-2 border text-left flex items-start gap-2.5 transition-all ${isQuestClaimed ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80' : 'bg-[#0A0A0E] border-accent/30 hover:border-accent active:scale-[0.99]'}`}
         >
-          {isQuestClaimed ? (
-            <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" />
-          ) : (
-            <div className="w-3.5 h-3.5 rounded-full border border-accent/60 shrink-0 mt-0.5 flex items-center justify-center font-mono text-[8px] text-accent font-bold">!</div>
-          )}
+          {isQuestClaimed ? <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-accent/60 shrink-0 mt-0.5 flex items-center justify-center font-mono text-[8px] text-accent font-bold">!</div>}
           <div className="flex-1 min-w-0 font-mono text-[11px] leading-tight text-left">
-            <div className={`font-bold mb-0.5 ${isQuestClaimed ? 'text-emerald-400' : 'text-text-high'}`}>
-              {isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}
-            </div>
-            <p className="whitespace-normal break-words font-body text-[11px] leading-normal text-text-dim">
-              Misi: {todayQuote.mission}
-            </p>
+            <div className={`font-bold mb-0.5 ${isQuestClaimed ? 'text-emerald-400' : 'text-text-high'}`}>{isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}</div>
+            <p className="whitespace-normal break-words font-body text-[11px] leading-normal text-text-dim">Misi: {LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].mission}</p>
           </div>
-          <span className={`shrink-0 font-bold text-[11px] ${isQuestClaimed ? 'text-emerald-400' : 'text-accent'}`}>
-            {isQuestClaimed ? 'DONE' : '+50 EXP'}
-          </span>
+          <span className={`shrink-0 font-bold text-[11px] ${isQuestClaimed ? 'text-emerald-400' : 'text-accent'}`}>{isQuestClaimed ? 'DONE' : '+50 EXP'}</span>
         </button>
       </div>
 
@@ -405,30 +272,19 @@ export default function CompanionAI({ userStats, onClose }) {
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
             <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-xl'}`}>
-              {m.sender === 'seolha' && (
-                <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1">
-                  <Bot size={10} /> SEOLHA
-                </div>
-              )}
+              {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
-            
-            {m.sender === 'seolha' && m.media && (
+            {m.sender === 'seolha' && m.media && m.media.type === 'video' && (
               <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
-                {m.media.type === 'video' ? (
-                  <iframe
-                    className="w-full h-full rounded"
-                    src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0&modestbranding=1`}
-                    title="PWA Inline Stream"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="w-full h-full rounded overflow-hidden flex items-center justify-center bg-[#0A0A0E]">
-                    <img src={m.media.src} alt="Graphics Matrix" className="w-full h-full object-contain" />
-                  </div>
-                )}
+                <iframe
+                  className="w-full h-full rounded"
+                  src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&modestbranding=1&rel=0`}
+                  title="PWA Inline Stream"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
             )}
           </div>
@@ -437,7 +293,7 @@ export default function CompanionAI({ userStats, onClose }) {
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang memproses visual matriks...
+              Seolha sedang menyelaraskan matriks...
             </div>
           </div>
         )}
@@ -450,10 +306,7 @@ export default function CompanionAI({ userStats, onClose }) {
           0 ENERGI — SWIPE →
         </div>
         
-        <div 
-          className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" 
-          style={{ scrollbarWidth: 'auto', WebkitOverflowScrolling: 'touch' }}
-        >
+        <div className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ scrollbarWidth: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <style dangerouslySetInnerHTML={{__html: `
             div::-webkit-scrollbar { height: 4px !important; background: #100E16 !important; }
             div::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 2px !important; }
