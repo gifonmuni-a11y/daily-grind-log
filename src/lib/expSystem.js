@@ -4,7 +4,9 @@ export function calcLevel(totalExp) {
   let level = 1
   let expSpentOnPrevLevels = 0
   while (true) {
-    const maxExpThisLevel = Math.round(100 * Math.pow(level, 1.5))
+    // RUMUS BARU: Disesuaikan agar Level 80 tercapai dalam ~1 tahun (365 hari)
+    const maxExpThisLevel = Math.round(50 + (level * 15)) 
+    
     if (totalExp - expSpentOnPrevLevels < maxExpThisLevel) {
       return {
         level,
@@ -46,23 +48,23 @@ export function getEffectiveTotalExp(entries, userId) {
 }
 
 export function getRankLabel(level) {
-  if (level >= 50) return 'OVERLOAD'
-  if (level >= 40) return 'MYTHICAL'
-  if (level >= 30) return 'GRAND MASTER'
-  if (level >= 25) return 'MASTER'
-  if (level >= 20) return 'PLATINUM'
-  if (level >= 10) return 'GOLD'
-  if (level >= 5) return 'SILVER'
-  return 'BRONZE'
+  if (level >= 80) return 'OVERLOAD'
+  if (level >= 60) return 'MYTHICAL'
+  if (level >= 45) return 'GRAND MASTER'
+  if (level >= 30) return 'MASTER'
+  if (level >= 20) return 'CHALLENGER'
+  if (level >= 12) return 'EXPERT TRAINER'
+  if (level >= 5) return 'ELITE TRAINER'
+  return 'TRAINER'
 }
 
 export function getRankTier(level) {
-  if (level >= 50) return 'Overload'
-  if (level >= 40) return 'Mythical'
-  if (level >= 30) return 'Grand Master'
-  if (level >= 25) return 'Master'
-  if (level >= 20) return 'Platinum'
-  if (level >= 10) return 'Gold'
-  if (level >= 5) return 'Silver'
-  return 'Bronze'
+  if (level >= 80) return 'Overload'
+  if (level >= 60) return 'Mythical'
+  if (level >= 45) return 'Grand Master'
+  if (level >= 30) return 'Master'
+  if (level >= 20) return 'Challenger'
+  if (level >= 12) return 'Expert Trainer'
+  if (level >= 5) return 'Elite Trainer'
+  return 'Trainer'
 }
