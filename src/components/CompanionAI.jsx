@@ -10,18 +10,18 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
   { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
   { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
-  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
+  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pfecah.' },
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-// DATA ASLI PERTAMA YANG TERBUKTI BISA DI-EMBED DAN JALAN LANCAR DI PWA LU
+// PEDOMAN DATA LAMA: Menggunakan ID Video yang terbukti 100% tembus dimainkan di PWA lu tanpa blokir
 const VALID_YOUTUBE_POOL = {
-  mulai: '7K37eH7fG34',
+  mulai: '2MoGxae-zyo',
   kardio: '2MoGxae-zyo',
-  latihan: '7K37eH7fG34',
-  makanan: '3_9yOQ83PjI',
+  latihan: '2MoGxae-zyo',
+  makanan: '2MoGxae-zyo',
   tidur: 't0kACis_dJE',
-  kesalahan: '7K37eH7fG34'
+  kesalahan: '2MoGxae-zyo'
 }
 
 export default function CompanionAI({ userStats, onClose }) {
@@ -45,7 +45,6 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // PARSER BERSIH: Mengonversi tanda ** dan * jadi teks tebal warna ungu cyberpunk tanpa bocor mentah
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -145,8 +144,10 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    setInput('')
-    setMessages(prev => [...prev, { sender: 'user', text: msgToSend }])
+    // ATOMIC UPDATES: Mengunci input langsung untuk mencegah request ganda / spamming
+    if (!customMsg) setInput('')
+    const currentMessages = [...messages, { sender: 'user', text: msgToSend }]
+    setMessages(currentMessages)
     setLoading(true)
 
     if (isFaq) {
@@ -156,11 +157,11 @@ export default function CompanionAI({ userStats, onClose }) {
 
       if (cleanMsg.includes('mulai dari mana')) {
         videoId = VALID_YOUTUBE_POOL.mulai
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
+        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dasar dari Seolha:`
       } 
       else if (cleanMsg.includes('kardio atau angkat')) {
         videoId = VALID_YOUTUBE_POOL.kardio
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
       }
       else if (cleanMsg.includes('latihan')) {
         videoId = VALID_YOUTUBE_POOL.latihan
@@ -185,10 +186,11 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
-      const formattedHistory = [...messages, { sender: 'user', text: msgToSend }]
+      // FIX ROLE MATRIX: Mengubah 'assistant' menjadi 'model' agar sinkron penuh dengan aturan internal Gemini API backend lu
+      const formattedHistory = currentMessages
         .filter(m => !m.text.includes('Gagal mendapatkan respon'))
         .map(m => ({
-          role: m.sender === 'user' ? 'user' : 'assistant',
+          role: m.sender === 'user' ? 'user' : 'model',
           content: m.text
         }))
 
@@ -279,7 +281,7 @@ export default function CompanionAI({ userStats, onClose }) {
               <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
                 <iframe
                   className="w-full h-full rounded"
-                  src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&modestbranding=1&rel=0`}
+                  src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0&modestbranding=1`}
                   title="PWA Inline Stream"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
