@@ -96,7 +96,7 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               <div>• <span style={{ color: '#FF5C7A' }}>MYTHICAL</span> : Level 60+</div>
               {/* FIX: Mengubah warna teks panduan OVERLORD menjadi Emas-Ungu gradasi neon berkilau */}
               <div className="font-bold flex items-center gap-1">
-                • <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-fuchsia-500 to-purple-500 font-black animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]">OVERLOAD</span> : Level 80+
+                • <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-fuchsia-500 to-purple-500 font-black animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]">OVERLORD</span> : Level 80+
               </div>
             </div>
           </section>
