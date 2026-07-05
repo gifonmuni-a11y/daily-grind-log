@@ -463,7 +463,7 @@ export default function Home({ session }) {
                 {compactEntries.map(entry => (
                   <CompactRow
                     key={entry.id}
-                    entry={entry} {/* FIX UTAMA: Diubah dari entry={handleEdit} menjadi entry={entry} */}
+                    entry={entry}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                   />
@@ -543,5 +543,5 @@ export default function Home({ session }) {
         onClose={() => setShowAchievementUnlock(false)}
       />
     </div>
-    )
+  )
 }
