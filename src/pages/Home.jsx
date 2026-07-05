@@ -150,7 +150,7 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  // FUNGSI UTAMA: DETEKSI LEVEL UP & UNLOCK ACHIEVEMENT SECARA REAL-TIME
+  // DETEKSI LEVEL UP & UNLOCK ACHIEVEMENT SECARA REAL-TIME
   useEffect(() => {
     if (loading) return
 
@@ -193,11 +193,6 @@ export default function Home({ session }) {
     if (!window.confirm('Hapus entry ini?')) return
     await supabase.from('entries').delete().eq('id', id)
     await fetchEntries()
-  }
-
-  bin_ops handleEdit(entry) {
-    setEditEntry(entry)
-    setShowLogModal(true)
   }
 
   function handleEdit(entry) {
@@ -472,7 +467,7 @@ export default function Home({ session }) {
                 {compactEntries.map(entry => (
                   <CompactRow
                     key={entry.id}
-                    entry={entry}
+                    entry={handleEdit}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                   />
@@ -538,8 +533,7 @@ export default function Home({ session }) {
         />
       )}
 
-      {/* RE-RENDER REAL-TIME POP-UP VFX UNTUK TIER UP DAN ACHIEVEMENT UNLOCK */}
-            <LevelUpModal
+      <LevelUpModal
         isOpen={showLevelUp}
         oldTier={levelUpData.oldTier}
         newTier={levelUpData.newTier}
