@@ -3,93 +3,43 @@ import { X, Send, Bot, Loader2, Quote, CheckCircle2, Clock } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
 
+const ScrollbarStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    .faq-slider-container::-webkit-scrollbar { height: 4px !important; background: #100E16 !important; }
+    .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 2px !important; }
+  `}} />
+)
+
 const LEGENDARY_QUOTES = [
-  {
-    id: 'legend_1',
-    name: 'ADE RAI',
-    quote: 'Kesehatan dan otot kuat bukan tujuan utama, melainkan modal dasar paling berharga untuk mencapai semua impian raksasamu.',
-    mission: 'Latihan beban intens & jaga porsi makan hari ini tanpa jebol.'
-  },
-  {
-    id: 'legend_2',
-    name: 'ARNOLD SCHWARZENEGGER',
-    quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.',
-    mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.'
-  },
-  {
-    id: 'legend_3',
-    name: 'DAVID GOGGINS',
-    quote: 'Saat pikiranmu berkata sudah selesai, sebenarnya fisikmu baru menggunakan 40 persen kekuatan aslinya. Tetap keras!',
-    mission: 'Selesaikan sesi latihan penuh hari ini tanpa menyerah di tengah jalan.'
-  },
-  {
-    id: 'legend_4',
-    name: 'DEDDY CORBUZIER',
-    quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!',
-    mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.'
-  },
-  {
-    id: 'legend_5',
-    name: 'CRISTIANO RONALDO',
-    quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.',
-    mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.'
-  },
-  {
-    id: 'legend_6',
-    name: 'DENNY SUMARGO',
-    quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.',
-    mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.'
-  },
-  {
-    id: 'legend_7',
-    name: 'THE ROCK',
-    quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.',
-    mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.'
-  },
-  {
-    id: 'legend_8',
-    name: 'BUNG KARNO',
-    quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.',
-    mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.'
-  }
+  { id: 'legend_1', name: 'ADE RAI', quote: 'Kesehatan dan otot kuat bukan tujuan utama, melainkan modal dasar paling berharga untuk mencapai semua impian raksasamu.', mission: 'Latihan beban intens & jaga porsi makan hari ini tanpa jebol.' },
+  { id: 'legend_2', name: 'ARNOLD SCHWARZENEGGER', quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.', mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.' },
+  { id: 'legend_3', name: 'DAVID GOGGINS', quote: 'Saat pikiranmu berkata sudah selesai, sebenarnya fisikmu baru menggunakan 40 persen kekuatan aslinya. Tetap keras!', mission: 'Selesaikan sesi latihan penuh hari ini tanpa menyerah di tengah jalan.' },
+  { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
+  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
+  { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
+  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
+  { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-const SYSTEM_IMAGE_CARDS = {
-  beban: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>STRENGTH HYBRID PROTOCOL</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Target Sesi: Ledakan Daya & Kontraksi Sempurna</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='234' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>STRENGTH</text></svg>",
-  kardio: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ENDURANCE CARDIO SYSTEM</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Pembakaran Lemak Maksimal & Penguatan Jantung</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='239' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>ENDURE</text></svg>",
-  makanan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>ANABOLIC KITCHEN MATRIX</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='85' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Rekomendasi Menu: Dada Ayam Panggang, Sayur Hijau</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='232' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>NUTRITION</text></svg>",
-  pemulihan: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>RECOVERY & REST TIME</text><line x1='30' y1='55' x2='290' y2='55' stroke='%23211D2C' stroke-width='1'/><text x='35' y='105' fill='%23EDEAF6' font-family='sans-serif' font-size='11'>• Fokus Utama: Kualitas Tidur Lelap & Hidrasi Cairan</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='238' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>RECOVER</text></svg>",
-  lainnya: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'><rect width='320' height='180' fill='%230F0E17'/><rect x='10' y='10' width='300' height='160' rx='6' fill='%23161420' stroke='%23211D2C' stroke-width='1'/><text x='30' y='45' fill='%237C5CFF' font-family='monospace' font-size='12' font-weight='bold'>CUSTOM HYBRID MATRIX</text><rect x='220' y='140' width='70' height='14' rx='2' fill='%237C5CFF' opacity='0.2'/><text x='238' y='151' fill='%237C5CFF' font-family='monospace' font-size='9' font-weight='bold'>CUSTOM</text></svg>"
+const VALID_YOUTUBE_POOL = {
+  mulai: ['GY1JhB9BEkk', 'cbKkB3POqaY', 'UItWltVZZmE', 'VaoV1PrU38I', 'rS89E7X922E'],
+  kardio_angkat: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'xY9mE_B2ZpM', '958b9Oun_Mo', 'UItWltVZZmE'],
+  latihan: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'UItWltVZZmE', 'OQz76N3SGoA', 'j68bWf6yG_Y'],
+  makanan: ['mzpDEPg7-3E', 'xyQe5N6L2K8', 'Z_M-hC-3U_8', 'GY1JhB9BEkk', 'cbKkB3POqaY'],
+  tidur: ['-lu1Nmttz4w', 't0kACis_dJE', '3e_tS3GZfH0', 'UItWltVZZmE', 'GY1JhB9BEkk'],
+  kesalahan: ['rH447xP0INg', 'E3_vE68g0Gk', 'bI6Gg9rKNFY', 'cbKkB3POqaY', 'GY1JhB9BEkk']
 }
 
-const GRANULAR_VIDEO_POOL = [
-  { tokens: ['push up', 'push-up', 'pushup'], id: 'r3o1kOaG4P4', category: 'beban' },
-  { tokens: ['squat'], id: 'Gc9m0sQ8Sxk', category: 'beban' },
-  { tokens: ['plank'], id: 'ASV35q6m174', category: 'beban' },
-  { tokens: ['lunges', 'lunge'], id: 'QOVaHwmZ76c', category: 'beban' },
-  { tokens: ['dada ayam', 'makan', 'resep', 'murah', 'nutrisi', 'diet'], id: '3_9yOQ83PjI', category: 'makanan' },
-  { tokens: ['meditasi', 'mindfulness', 'tenang', 'stres', 'pikir'], id: 'inpokvFX0o8', category: 'fleksibilitas' },
-  { tokens: ['tidur', 'sleep', 'istirahat', 'recovery', 'rest'], id: 't0kACis_dJE', category: 'pemulihan' },
-  { tokens: ['kardio', 'cardio', 'hiit', 'running', 'cycling', 'swimming'], id: '2MoGxae-zyo', category: 'kardio' }
-]
-
-const BACKUP_CATEGORY_POOL = {
-  beban: ['7K37eH7fG34', 'UItWltVZZmE'],
-  kardio: ['2MoGxae-zyo', 'unV8VdfR4bE'],
-  makanan: ['3_9yOQ83PjI', '7tU2-QeCjGg'],
-  pemulihan: ['t0kACis_dJE', 'qwz9z6q_JmY']
-}
-
-// 🔥 LIST MASTER 34 KATEGORI LENGKAP: Terdiri dari nama, manfaat, risiko, dan ID Video Youtube murni
+// 🔥 LIST DATA AMAN MASTER 34 KATEGORI UTUH TANPA POTONGAN
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', benefit: 'Meningkatkan sirkulasi darah, elastisitas otot, dan kesiapan sistem saraf pusat.', risk: 'Kram otot mendadak, robeknya jaringan ligamen, dan performa latihan tidak maksimal.', id: 'Gc9m0sQ8Sxk' },
   { name: 'Push Up', benefit: 'Membangun kekuatan otot dada (pectoralis), lengan (triceps), dan bahu depan secara simultan.', risk: 'Ketidakseimbangan postur otot depan-belakang serta cedera sendi pergelangan tangan.', id: 'r3o1kOaG4P4' },
   { name: 'Squat', benefit: 'Memperkuat fondasi otot paha depan (quads), paha belakang (hamstrings), glutes, dan core harian.', risk: 'Beban berlebih pada tempurung lutut dan potensi cedera syaraf kejepit di pinggang bawah.', id: 'Gc9m0sQ8Sxk' },
   { name: 'Plank', benefit: 'Mengunci stabilitas seluruh dinding otot perut, core dalam, serta mengurangi nyeri punggung bawah.', risk: 'Otot punggung bawah melengkung paksa (hiperektensi) yang memicu cedera lumbal saraf.', id: 'ASV35q6m174' },
   { name: 'Lunges', benefit: 'Melatih keseimbangan unilateral, kekuatan paha secara mandiri, dan mobilitas sendi pinggul.', risk: 'Ketegangan tendon patella lutut dan risiko kehilangan keseimbangan jatuh ke samping.', id: 'QOVaHwmZ76c' },
-  { name: 'Meditasi', benefit: 'Menurunkan gelombang stres kortisol, menenangkan sistem saraf, dan mempertajam koneksi pikiran-otot.', risk: 'Overthinking meningkat, kecemasan menumpuk di otak, dan mental mengalami fatigue parah.', id: 'inpokvFX0o8' },
+  { name: 'Meditasi', benefit: 'Menurunkan gelombang stres kortisol, menenangkan sistem saraf, dan mempertajam koneksi pikiran-otot.', risk: 'Overthinking meningkat, kecemasan menumpuk di otak, dan mental mengalami fatigue parah.', id: '2sJyBfDZpe4' },
   { name: 'Pola Tidur (Rest)', benefit: 'Memicu pelepasan hormon pertumbuhan alami (HGH) untuk memperbaiki kerusakan sel makro otot.', risk: 'Katabolisme otot (otot menyusut), metabolisme hancur, dan penurunan fokus drastis.', id: 't0kACis_dJE' },
-  { name: 'Kardio / HIIT', benefit: 'Meningkatkan kapasitas VO2 Max kerja jantung dan mempercepat pembakaran cadangan lemak tubuh.', risk: 'Kehilangan massa otot jika berlebih (overtraining) dan nyeri kronis persendian kaki.', id: '2MoGxae-zyo' },
+  { name: 'Kardio / HIIT', benefit: 'Meningkatkan kapasitas VO2 Max kerja jantung dan mempercepat pembakaran cadangan lemak tubuh.', risk: 'Kehilangan massa otot jika berlebih (overtraining) dan nyeri kronis persendian kaki.', id: 'kZDvg92tTMc' },
   { name: 'Pull Up', benefit: 'Membangun lebar sayap punggung (lats) secara maksimal serta memperkuat daya cengkeram tangan.', risk: 'Cedera robek tendon siku (golfer’s elbow) dan ketegangan berlebih pada otot trapezius leher.', id: 'DXL18E7QRbk' },
   { name: 'Leg Day (Kaki)', benefit: 'Memicu lonjakan hormon testosteron alami yang membantu pertumbuhan seluruh otot tubuh.', risk: 'Sindrom asimetri tubuh bagian bawah dan penurunan performa mobilitas harian.', id: 'QXtXEug0PLU' },
   { name: 'Upper Body (Tubuh Atas)', benefit: 'Membentuk postur tubuh V-Taper yang tegap dan meningkatkan daya dorong harian.', risk: 'Cedera rotator cuff bahu kronis akibat over-rotation beban statis.', id: '0zhvUV1bAVQ' },
@@ -109,7 +59,7 @@ const MASTER_34_CATEGORIES = [
   { name: 'Arms (Lengan Bicep/Tricep)', benefit: 'Meningkatkan lingkar lengan atas guna menunjang kekuatan dorong dan tarik.', risk: 'Tendonitis akut pada area siku tangan akibat volume set isolasi berlebih.', id: 'rSohL4gWm9A' },
   { name: 'Glutes Isolation (Bokong)', benefit: 'Meningkatkan daya dorong panggul saat lari cepat dan menstabilkan area panggul.', risk: 'Ketegangan otot piriformis yang dapat menjepit jalur saraf skiatika kaki bawah.', id: '1T3v_leyDIE' },
   { name: 'Mobility Drills', benefit: 'Memperluas jangkauan gerak sendi (ROM) aktif sehingga angkatan beban bisa dalam.', risk: 'Hipermobilitas sendi yang longgar sehingga rawan lepas dari mangkok sendinya.', id: 'tg6zZF6pRg0' },
-  { name: 'Stretching (Peregangan)', benefit: 'Mengendurkan simpul otot kaku pasca latihan berat agar aliran asam laktat lancar.', risk: 'Otot ditarik paksa saat kondisi masih dingin dingin memicu robek mikroskopis.', id: 'itJE4neqDJw' },
+  { name: 'Stretching (Peregangan)', benefit: 'Mengendurkan simpul otot kaku pasca latihan berat agar aliran asam laktat lancar.', risk: 'Otot ditarik paksa saat kondisi masih dingin memicu robek mikroskopis.', id: 'itJE4neqDJw' },
   { name: 'Yoga', benefit: 'Menyatukan fokus pernapasan dalam, keseimbangan statis, dan elastisitas ligamen tubuh.', risk: 'Cedera sendi lutut atau leher jika memaksakan pose lanjutan tanpa bimbingan.', id: 'RvCntPg7oPE' },
   { name: 'Swimming (Berenang)', benefit: 'Melatih ketahanan paru-paru tanpa memberikan impak benturan keras pada sendi kaki.', risk: 'Kram perut hebat di dalam air terdalam serta iritasi saluran pernapasan kaporit.', id: 'IKWGF4kP8Cs' },
   { name: 'Running (Lari)', benefit: 'Membakar kalori masif secara murah serta memperkuat kepadatan tulang kaki bawah.', risk: 'Shin splints (nyeri tulang kering kaki) dan stress fracture akibat salah mendarat.', id: '6H8WLfyavWk' },
@@ -141,7 +91,7 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // 🛡️ LOGIKA ASLI DARI REFERENSI LU: Mengonversi tanda ** menjadi HTML asli tanpa bocor teks mentah
+  // 🛡️ RE-IMPLEMENTASI FILTRASI REFERENSI LU: Bintang ilang & teks di dalam ** jadi ungu premium
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -192,33 +142,6 @@ export default function CompanionAI({ userStats, onClose }) {
     const matches = text.match(regExp)
     if (matches && matches[2].length === 11) return matches[2]
     return null
-  }
-
-  const validateVideoId = async (id) => {
-    if (!id || id.length !== 11) return false
-    try {
-      const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`)
-      const data = await res.json()
-      return !data.error && data.title
-    } catch {
-      return false
-    }
-  }
-
-  const resolveGranularMedia = async (userText, aiText, explicitId) => {
-    if (explicitId) {
-      const isOk = await validateVideoId(explicitId)
-      if (isOk) return { type: 'video', src: explicitId }
-    }
-    const combinedText = `${userText} ${aiText}`.toLowerCase()
-    for (const entry of GRANULAR_VIDEO_POOL) {
-      const match = entry.tokens.some(t => combinedText.includes(t))
-      if (match) {
-        const isOk = await validateVideoId(entry.id)
-        if (isOk) return { type: 'video', src: entry.id }
-      }
-    }
-    return { type: 'video', src: 'UItWltVZZmE' }
   }
 
   const getTodayDateStr = () => {
@@ -284,7 +207,7 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // 🔥 JALUR PENANGANAN UNTUK 34 KATEGORI MATRIX LENGKAP
+    // 🔥 BLOK GENERATOR MATRIX: Loop teks deskripsi + nempel iFrame di bawah masing-masing item
     if (isAllCategories) {
       let bulkReply = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP** beserta manfaat, risiko, dan video panduan eksekusinya, Trainer:\n\n"
       
@@ -292,7 +215,7 @@ export default function CompanionAI({ userStats, onClose }) {
         bulkReply += `${index + 1}. **${cat.name.toUpperCase()}**\n* **Manfaat:** ${cat.benefit}\n* **Risiko Jika Absen:** ${cat.risk}\n\n`
       })
 
-      const videoPayloads = MASTER_34_CATEGORIES.map(cat => ({ type: 'video', src: cat.id }))
+      const videoPayloads = MASTER_34_CATEGORIES.map(cat => ({ name: cat.name, id: cat.id, benefit: cat.benefit, risk: cat.risk }))
 
       setTimeout(() => {
         setMessages(prev => [...prev, { 
@@ -332,7 +255,7 @@ export default function CompanionAI({ userStats, onClose }) {
       }
       else if (msgToSend.includes('Kesalahan Fatal Pemula')) {
         mediaAsset = { type: 'video', src: 'ixkQaYn5eg0' }
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Langsung meniru program latihan atlet profesional tanpa fondasi dasar.`
+        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
       setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mediaAsset }])
@@ -341,6 +264,9 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
+      const cleanInput = msgToSend.toLowerCase()
+      const foundMatch = MASTER_34_CATEGORIES.find(cat => cleanInput.includes(cat.name.split(' ')[0].toLowerCase()))
+      
       const formattedHistory = newMessages
         .filter((m, idx) => idx > 0 && !m.text.includes('Gagal mendapatkan respon'))
         .map(m => ({
@@ -356,12 +282,19 @@ export default function CompanionAI({ userStats, onClose }) {
 
       if (response.ok) {
         const resData = await response.json()
-        let replyText = resData.reply || 'Maaf, sinyal pikiran aku terganggu.'
+        let replyText = resData.reply || 'Ada progres lain yang mau kita diskusikan?'
         const explicitId = extractYoutubeId(replyText)
         if (explicitId) {
           replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
         }
-        const finalMedia = await resolveGranularMedia(msgToSend, replyText, explicitId)
+        
+        let finalMedia = null
+        if (explicitId) {
+          finalMedia = { type: 'video', src: explicitId }
+        } else if (foundMatch) {
+          finalMedia = { type: 'video', src: foundMatch.id }
+        }
+        
         setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: finalMedia }])
         setDailyCount(prev => prev + 1)
       } else {
@@ -369,7 +302,7 @@ export default function CompanionAI({ userStats, onClose }) {
       }
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke Seolha terputus.', media: null }])
-    } finally { setLoading(false) }
+    } final { setLoading(false) }
   }
 
   const dayQuoteIndex = new Date().getDate() % LEGENDARY_QUOTES.length
@@ -378,15 +311,12 @@ export default function CompanionAI({ userStats, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md p-4 max-w-lg mx-auto select-none">
       <ScrollbarStyles />
-      
-      {/* HEADER TOP BAR PANEL */}
       <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
           <span className="font-display font-bold text-text-high tracking-wider">Seolha</span>
           <span className="font-mono text-[10px] text-text-dim uppercase">AI Companion</span>
         </div>
-        
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 font-mono text-xs text-text-high bg-[#100E16] px-2 py-0.5 border border-[#211D2C]">
             <Clock size={11} className="text-accent" />
@@ -400,75 +330,51 @@ export default function CompanionAI({ userStats, onClose }) {
             <span>{5 - dailyCount}/5 Energi</span>
           </div>
           <div className="w-[1px] h-4 bg-[#211D2C]" />
-          <button onClick={onClose} className="p-1 hover:bg-border-hover rounded text-text-dim transition-colors">
-            <X size={18} />
-          </button>
+          <button onClick={onClose} className="p-1 hover:bg-border-hover rounded text-text-dim transition-colors"><X size={18} /></button>
         </div>
       </div>
 
-      {/* COMPACT DAILY QUOTE COMPONENT */}
       <div className="mt-2.5 p-2.5 bg-[#100E16] border border-[#211D2C] flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5">
           <Quote size={11} className="text-accent" />
           <span className="font-mono text-[10px] text-accent font-bold tracking-wider uppercase">DAILY QUOTE: {todayQuote.name}</span>
         </div>
-        <p className="font-body text-xs text-text-high italic leading-relaxed pl-1.5 border-l-2 border-[#211D2C]">
-          "{todayQuote.quote}"
-        </p>
-        <button 
-          type="button"
-          onClick={handleClaimLegendQuest}
-          disabled={isQuestClaimed}
-          className={`mt-1 w-full p-2 border text-left flex items-start gap-2.5 transition-all ${isQuestClaimed ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80' : 'bg-[#0A0A0E] border-accent/30 hover:border-accent active:scale-[0.99]'}`}
-        >
-          {isQuestClaimed ? (
-            <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" />
-          ) : (
-            <div className="w-3.5 h-3.5 rounded-full border border-accent/60 shrink-0 mt-0.5 flex items-center justify-center font-mono text-[8px] text-accent font-bold">!</div>
-          )}
+        <p className="font-body text-xs text-text-high italic leading-relaxed pl-1.5 border-l-2 border-[#211D2C]">"{todayQuote.quote}"</p>
+        <button type="button" onClick={handleClaimLegendQuest} disabled={isQuestClaimed} className={`mt-1 w-full p-2 border text-left flex items-start gap-2.5 transition-all ${isQuestClaimed ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80' : 'bg-[#0A0A0E] border-accent/30 hover:border-accent'}`}>
+          {isQuestClaimed ? <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-accent/60 shrink-0 mt-0.5 flex items-center justify-center font-mono text-[8px] text-accent font-bold">!</div>}
           <div className="flex-1 min-w-0 font-mono text-[11px] leading-tight text-left">
-            <div className={`font-bold mb-0.5 ${isQuestClaimed ? 'text-emerald-400' : 'text-text-high'}`}>
-              {isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}
-            </div>
+            <div className={`font-bold mb-0.5 ${isQuestClaimed ? 'text-emerald-400' : 'text-text-high'}`}>{isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}</div>
             <p className="whitespace-normal break-words font-body text-[11px] leading-normal text-text-dim">Misi: {todayQuote.mission}</p>
           </div>
           <span className={`shrink-0 font-bold text-[11px] ${isQuestClaimed ? 'text-emerald-400' : 'text-accent'}`}>{isQuestClaimed ? 'DONE' : '+50 EXP'}</span>
         </button>
       </div>
 
-      {/* INTERACTIVE CHAT SCREEN VIEWPORT */}
       <div className="flex-1 overflow-y-auto py-3 space-y-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
             <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
-              {m.sender === 'seolha' && (
-                <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1">
-                  <Bot size={10} /> SEOLHA
-                </div>
-              )}
+              {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
             
-            {/* SINGLE MEDIA RENDERING LINK */}
             {m.sender === 'seolha' && m.media && (
               <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
-                {m.media.type === 'video' ? (
-                  <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0`} title="Inline Stream Guide" frameBorder="0" allowFullScreen />
-                ) : (
-                  <div className="w-full h-full rounded flex items-center justify-center bg-[#0A0A0E]">
-                    <img src={m.media.src} alt="System framework" className="w-full h-full object-contain" />
-                  </div>
-                )}
+                <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0`} title="Inline Stream Guide" frameBorder="0" allowFullScreen />
               </div>
             )}
 
-            {/* 🔥 MULTIPLE INLINE VIDEO MATRIX RENDERER FOR "SEMUA KATEGORI" */}
+            {/* 🔥 LOOP EMBED MULTI-VIDEO PENJELASAN MATRIX 34 KATEGORI TANPA STUCK */}
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
-              <div className="w-[85%] space-y-4 mt-2">
+              <div className="w-[85%] space-y-6 mt-3 max-h-[360px] overflow-y-auto p-2 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
                 {m.multiMedia.map((vid, vIdx) => (
-                  <div key={vIdx} className="p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
-                    <div className="font-mono text-[9px] text-text-dim px-1 mb-0.5">PANDUAN VIDEO #{vIdx + 1}</div>
-                    <iframe className="w-full h-36 rounded" src={`https://www.youtube.com/embed/${vid.src}?playsinline=1&enablejsapi=1&rel=0`} title={`Matrix Clip ${vIdx}`} frameBorder="0" allowFullScreen />
+                  <div key={vIdx} className="border-b border-[#211D2C]/60 pb-4 last:border-0 flex flex-col gap-1.5">
+                    <div className="font-mono text-xs text-accent font-black uppercase tracking-wider">{vIdx + 1}. {vid.name}</div>
+                    <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Manfaat:</strong> {vid.benefit}</p>
+                    <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Risiko Jika Absen:</strong> {vid.risk}</p>
+                    <div className="w-full mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg overflow-hidden aspect-video">
+                      <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${vid.id}?playsinline=1&enablejsapi=1&rel=0`} title={vid.name} frameBorder="0" allowFullScreen />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -479,30 +385,26 @@ export default function CompanionAI({ userStats, onClose }) {
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang menyusun daftar komponen video...
+              Seolha sedang memvalidasi komponen video...
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* EXPANDED HORIZONTAL SCROLL FAQ CONTROLS */}
       <div className="mb-2 bg-background pt-1.5">
         <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
         <div className="faq-slider-container flex gap-2 overflow-x-auto pb-1 flex-nowrap" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Mulai dari mana?</button>
-          <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Kardio atau angkat?</button>
-          <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Cara & Jenis Latihan</button>
-          <button type="button" onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Nutrisi & Makan</button>
-          <button type="button" onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Tidur & Recovery</button>
-          <button type="button" onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Kesalahan Fatal</button>
-          
-          {/* 🔥 TOMBOL KENDALI BARU PESANAN LU */}
-          <button type="button" onClick={() => handleSend(null, 'Semua Kategori Matrix Latihan', false, true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2 py-2 bg-accent/20 border border-accent text-accent font-mono tracking-wide uppercase font-black hover:bg-accent hover:text-white transition-all">SEMUA KATEGORI</button>
+          <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Mulai dari mana?</button>
+          <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Kardio atau angkat?</button>
+          <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Cara & Jenis Latihan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Nutrisi & Makan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Tidur & Recovery</button>
+          <button type="button" onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Kesalahan Fatal</button>
+          <button type="button" onClick={() => handleSend(null, 'Semua Kategori Matrix Latihan', false, true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-accent/20 border border-accent text-accent font-mono tracking-wide uppercase font-black hover:bg-accent hover:text-white transition-all">SEMUA KATEGORI</button>
         </div>
       </div>
 
-      {/* INPUT CONTROLLER FIELD */}
       <form onSubmit={(e) => handleSend(e)} className="pt-2 border-t border-[#211D2C] flex gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2.5 text-sm text-text-high focus:outline-none focus:border-accent" />
         <button type="submit" disabled={loading || !input.trim()} className="w-11 h-11 bg-accent flex items-center justify-center text-white"><Send size={16} /></button>
