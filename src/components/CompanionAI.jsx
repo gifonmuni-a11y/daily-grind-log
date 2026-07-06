@@ -30,7 +30,6 @@ const VALID_YOUTUBE_POOL = {
   kesalahan: ['rH447xP0INg', 'E3_vE68g0Gk', 'bI6Gg9rKNFY', 'cbKkB3POqaY', 'GY1JhB9BEkk']
 }
 
-// 🔥 LIST DATA AMAN MASTER 34 KATEGORI UTUH TANPA POTONGAN
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', benefit: 'Meningkatkan sirkulasi darah, elastisitas otot, dan kesiapan sistem saraf pusat.', risk: 'Kram otot mendadak, robeknya jaringan ligamen, dan performa latihan tidak maksimal.', id: 'Gc9m0sQ8Sxk' },
   { name: 'Push Up', benefit: 'Membangun kekuatan otot dada (pectoralis), lengan (triceps), dan bahu depan secara simultan.', risk: 'Ketidakseimbangan postur otot depan-belakang serta cedera sendi pergelangan tangan.', id: 'r3o1kOaG4P4' },
@@ -58,7 +57,7 @@ const MASTER_34_CATEGORIES = [
   { name: 'Shoulders (Bahu)', benefit: 'Melebarkan dimensi pundak kiri-kanan agar postur pakaian terlihat tegak berisi.', risk: 'Impingement syndrome (jepitan tendon bahu) akibat salah form angkat lateral.', id: 'QVaijMZ2mp8' },
   { name: 'Arms (Lengan Bicep/Tricep)', benefit: 'Meningkatkan lingkar lengan atas guna menunjang kekuatan dorong dan tarik.', risk: 'Tendonitis akut pada area siku tangan akibat volume set isolasi berlebih.', id: 'rSohL4gWm9A' },
   { name: 'Glutes Isolation (Bokong)', benefit: 'Meningkatkan daya dorong panggul saat lari cepat dan menstabilkan area panggul.', risk: 'Ketegangan otot piriformis yang dapat menjepit jalur saraf skiatika kaki bawah.', id: '1T3v_leyDIE' },
-  { name: 'Mobility Drills', benefit: 'Memperluas jangkauan gerak sendi (ROM) aktif sehingga angkatan beban bisa dalam.', risk: 'Hipermobilitas sendi yang longgar sehingga rawan lepas dari mangkok sendinya.', id: 'tg6zZF6pRg0' },
+  { name: 'Mobility Drills', benefit: 'Meningkatkan jangkauan gerak sendi (ROM) aktif sehingga angkatan beban bisa dalam.', risk: 'Hipermobilitas sendi yang longgar sehingga rawan lepas dari mangkok sendinya.', id: 'tg6zZF6pRg0' },
   { name: 'Stretching (Peregangan)', benefit: 'Mengendurkan simpul otot kaku pasca latihan berat agar aliran asam laktat lancar.', risk: 'Otot ditarik paksa saat kondisi masih dingin memicu robek mikroskopis.', id: 'itJE4neqDJw' },
   { name: 'Yoga', benefit: 'Menyatukan fokus pernapasan dalam, keseimbangan statis, dan elastisitas ligamen tubuh.', risk: 'Cedera sendi lutut atau leher jika memaksakan pose lanjutan tanpa bimbingan.', id: 'RvCntPg7oPE' },
   { name: 'Swimming (Berenang)', benefit: 'Melatih ketahanan paru-paru tanpa memberikan impak benturan keras pada sendi kaki.', risk: 'Kram perut hebat di dalam air terdalam serta iritasi saluran pernapasan kaporit.', id: 'IKWGF4kP8Cs' },
@@ -91,7 +90,6 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // 🛡️ RE-IMPLEMENTASI FILTRASI REFERENSI LU: Bintang ilang & teks di dalam ** jadi ungu premium
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -207,7 +205,6 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // 🔥 BLOK GENERATOR MATRIX: Loop teks deskripsi + nempel iFrame di bawah masing-masing item
     if (isAllCategories) {
       let bulkReply = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP** beserta manfaat, risiko, dan video panduan eksekusinya, Trainer:\n\n"
       
@@ -302,7 +299,9 @@ export default function CompanionAI({ userStats, onClose }) {
       }
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke Seolha terputus.', media: null }])
-    } final { setLoading(false) }
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   const dayQuoteIndex = new Date().getDate() % LEGENDARY_QUOTES.length
@@ -364,7 +363,6 @@ export default function CompanionAI({ userStats, onClose }) {
               </div>
             )}
 
-            {/* 🔥 LOOP EMBED MULTI-VIDEO PENJELASAN MATRIX 34 KATEGORI TANPA STUCK */}
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
               <div className="w-[85%] space-y-6 mt-3 max-h-[360px] overflow-y-auto p-2 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
                 {m.multiMedia.map((vid, vIdx) => (
