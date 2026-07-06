@@ -11,7 +11,7 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
   { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
   { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
-  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
+  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pcah.' },
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
@@ -63,7 +63,7 @@ export default function CompanionAI({ userStats, onClose }) {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
       let processedLine = line
-      const boldRegex = /\*\*(.*?)\*\*/g
+      const boldRegex = /\*\*(.*?)\*\//g
       const parts = []
       let lastIndex = 0
       let match
@@ -118,7 +118,9 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages([
       { 
         sender: 'seolha', 
+        role: 'assistant',
         text: `${greetingText}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
+        content: `${greetingText}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
         media: null
       }
     ])
@@ -174,15 +176,15 @@ export default function CompanionAI({ userStats, onClose }) {
 
     if (!isFaq && dailyCount >= 5) {
       setMessages(prev => [...prev, 
-        { sender: 'user', text: msgToSend },
-        { sender: 'seolha', text: 'Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya!', media: null }
+        { sender: 'user', role: 'user', text: msgToSend, content: msgToSend },
+        { sender: 'seolha', role: 'assistant', text: 'Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya!', content: 'Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya!', media: null }
       ])
       if (!customMsg) setInput('')
       return
     }
 
     if (!customMsg) setInput('')
-    const currentMessages = [...messages, { sender: 'user', text: msgToSend }]
+    const currentMessages = [...messages, { sender: 'user', role: 'user', text: msgToSend, content: msgToSend }]
     setMessages(currentMessages)
     setLoading(true)
 
@@ -212,15 +214,18 @@ export default function CompanionAI({ userStats, onClose }) {
       }
 
       const mappedMediaArray = videoIdsArray.map(id => ({ type: 'video', src: id }))
-      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mappedMediaArray }])
+      setMessages(prev => [...prev, { sender: 'seolha', role: 'assistant', text: faqReply, content: faqReply, media: mappedMediaArray }])
       setLoading(false)
       return
     }
 
     try {
+      // 🟢 VALIDASI SILANG DATA BARU & DATA LAMA: Mengirimkan seluruh properti gabungan secara utuh dan lengkap
       const formattedHistory = currentMessages.map(m => ({
-        role: m.sender === 'user' ? 'user' : 'assistant',
-        content: m.text
+        role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
+        sender: m.sender || (m.role === 'assistant' ? 'seolha' : 'user'),
+        content: m.content || m.text || '',
+        text: m.text || m.content || ''
       }))
 
       const response = await fetch('/api/chat', {
@@ -240,13 +245,13 @@ export default function CompanionAI({ userStats, onClose }) {
         } else {
           mediaPayload = scanDynamicChatVideos(msgToSend, replyText)
         }
-        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: mediaPayload }])
+        setMessages(prev => [...prev, { sender: 'seolha', role: 'assistant', text: replyText, content: replyText, media: mediaPayload }])
         setDailyCount(prev => prev + 1)
       } else {
-        setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
+        setMessages(prev => [...prev, { sender: 'seolha', role: 'assistant', text: 'Gagal mendapatkan respon dari engine chat.', content: 'Gagal mendapatkan respon dari engine chat.', media: null }])
       }
     } catch (err) {
-      setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
+      setMessages(prev => [...prev, { sender: 'seolha', role: 'assistant', text: 'Gagal mendapatkan respon dari engine chat.', content: 'Gagal mendapatkan respon dari engine chat.', media: null }])
     } finally { setLoading(false) }
   }
 
@@ -321,7 +326,6 @@ export default function CompanionAI({ userStats, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* FULL RESPONSIVE INTERFACE FAQ SLIDER */}
       <div className="mb-2 bg-background pt-1.5">
         <div className="font-mono text-[10px] font-bold uppercase tracking-wider mb-1.5 text-accent">0 ENERGI — SWIPE →</div>
         <div className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ scrollbarWidth: 'auto', WebkitOverflowScrolling: 'touch' }}>

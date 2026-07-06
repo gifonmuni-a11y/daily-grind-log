@@ -28,30 +28,58 @@ export default async function handler(req, res) {
 
   if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
 
+  // 🛡️ PARSER STRUKTUR VALIDASI DATA LAMA + BARU SECARA TOTAL
+  const normalizedMessages = messages.map(m => ({
+    role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
+    sender: m.sender || (m.role === 'assistant' ? 'seolha' : 'user'),
+    content: m.content || m.text || '',
+    text: m.text || m.content || ''
+  }));
+
   const systemPrompt = `Kamu adalah Seolha, AI Companion di Daily Grind Log, fitness tracker bergaya manhwa RPG. Persona: tenang, tajam, seperti mentor manhwa. Data user: hari latihan ${userStats?.totalDays||0}, streak ${userStats?.streak||0} hari, level ${userStats?.level||1}, EXP ${userStats?.totalExp||0}. Jawab soal latihan, nutrisi, recovery dalam bahasa Indonesia. Untuk pertanyaan singkat, jawab maks 4 kalimat. Kalau user minta rencana, saran, atau tips latihan, jawab lebih lengkap (maks 8 kalimat) mencakup jadwal latihan mingguan, pola makan, pola tidur, dan target realistis dalam sebulan biar progresnya kelihatan.`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: systemPrompt });
 
-    // PEMETAAN HISTORY ASLI BAWAN LU
-    const history = messages.slice(0, -1).map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content || '' }]
-    }));
+    // 🔒 PROFIL FILTER UKURAN STRUKTUR RIWAYAT OBROLAN ANTI-CRASH
+    const history = [];
+    const historyMessages = normalizedMessages.slice(0, -1);
 
-    // 🔒 ANTI-CRASH LOCK: Jika index chat pertama di history adalah pesan otomatis Seolha (model), 
-    // buang turn itu dari array biar Gemini API gak ngamuk nge-block respons turn kedua lo!
-    while (history.length > 0 && history[0].role === 'model') {
-      history.shift();
-    }
+    historyMessages.forEach(m => {
+      const geminiRole = (m.role === 'assistant' || m.sender === 'seolha') ? 'model' : 'user';
+      const txt = m.content || '';
+
+      if (!txt.trim()) return;
+
+      // Aturan mutlak Gemini: Riwayat tidak boleh diawali oleh pesan otomatis model (Seolha)
+      if (history.length === 0 && geminiRole === 'model') {
+        return; // skip leading model greeting
+      }
+
+      // Aturan mutlak Gemini: Peran role user dan model harus selalu bergantian (alternate)
+      if (history.length > 0 && history[history.length - 1].role === geminiRole) {
+        history[history.length - 1].parts[0].text += '\n' + txt;
+      } else {
+        history.push({
+          role: geminiRole,
+          parts: [{ text: txt }]
+        });
+      }
+    });
 
     const chat = model.startChat({ history });
-    const last = messages[messages.length - 1];
-    const result = await chat.sendMessage(last.content || '');
+    const last = normalizedMessages[normalizedMessages.length - 1];
+    const currentInputText = last?.content || '';
+
+    if (!currentInputText.trim()) {
+      return res.status(400).json({ error: 'Konten pesan terakhir kosong.' });
+    }
+
+    const result = await chat.sendMessage(currentInputText);
     const text = result.response.text();
     return res.status(200).json({ reply: text });
   } catch(err) {
-    return res.status(500).json({ error: 'Gagal: ' + err.message });
+    return res.status(500).json({ error: 'Gagal memproses engine AI: ' + err.message });
   }
 }
