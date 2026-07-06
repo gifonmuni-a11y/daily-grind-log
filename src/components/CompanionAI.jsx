@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { X, Send, Bot, Loader2, Quote, CheckCircle2, Clock } from 'lucide-react'
+import { X, Send, Bot, Loader2, Quote, Clock } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
-import { claimQuest } from '../lib/dailyQuests'
 
-// 🧠 STATIC SCROLLBAR FIX: Mencegah teks duplikat / ghosting di mobile browser saat melakukan scrolling
+// 🧠 STATIC SCROLLBAR FIX: Menghindari GPU redraw bug/duplikasi teks rendering di browser seluler
 const ScrollbarStyles = () => (
   <style dangerouslySetInnerHTML={{__html: `
     .faq-slider-container::-webkit-scrollbar { height: 4px !important; background: #100E16 !important; }
@@ -23,7 +22,7 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-// 🟢 TETAP DI-PRESERVE: Pool bawaan asli khusus menu FAQ 0 Energi (Tidak Diubah)
+// 🟢 WORKOUT POOL FAQ 0 ENERGI: Di-preserve asli bawaan aplikasi lo (Jangan diubah)
 const VALID_YOUTUBE_POOL = {
   mulai: ['GY1JhB9BEkk', 'cbKkB3POqaY', 'UItWltVZZmE', 'VaoV1PrU38I', 'rS89E7X922E'],
   kardio_angkat: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'xY9mE_B2ZpM', '958b9Oun_Mo', 'UItWltVZZmE'],
@@ -105,7 +104,7 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // 🛡️ CHARACTER TOGGLE PARSER: Bintang (**) TIDAK DIHAPUS, tapi dibungkus span hidden agar tidak kelihatan di PWA. Teks didalamnya otomatis ungu (text-accent).
+  // 🛡️ CHARACTER TOGGLE PARSER: Sembunyikan tanda bintang secara visual tanpa merusak DOM Tree Node, teks didalamnya otomatis dikunci warna text-accent (ungu)
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -125,7 +124,6 @@ export default function CompanionAI({ userStats, onClose }) {
             )
             currentChunk = ''
           }
-          // Menyembunyikan tanda bintang tanpa menghapusnya dari DOM Node Tree
           parts.push(<span key={`ast-${i}`} className="hidden">**</span>)
           isInsideBold = !isInsideBold
           i++ 
@@ -156,7 +154,7 @@ export default function CompanionAI({ userStats, onClose }) {
     return null
   }
 
-  // 🛡️ TRIGGER INSTAN ABSOLUT: Cukup sebut kategori kata kunci saja langsung memunculkan video tanpa syarat kata 'video' atau 'latihan'
+  // 🛡️ TRIGGER INSTAN ROUTING: Deteksi instan tanpa mewajibkan kata kunci 'video' atau 'latihan'
   const scanDynamicChatVideos = (userText, aiText) => {
     const cleanInput = userText.toLowerCase()
     
@@ -369,13 +367,16 @@ export default function CompanionAI({ userStats, onClose }) {
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
-            {m.sender === 'seolha' && m.media && Array.isArray(m.media) && m.media.map((med, midx) => (
-              med.type === 'video' && (
-                <div key={midx} className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
-                  <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${med.src}`} title={`Video ${midx}`} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; allowFullScreen />
-                </div>
-              )
-            ))}
+            {m.sender === 'seolha' && m.media && Array.isArray(m.media) && m.media.map((med, midx) => {
+              if (med.type === 'video') {
+                return (
+                  <div key={midx} className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
+                    <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${med.src}`} title={`Video ${midx}`} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  </div>
+                )
+              }
+              return null
+            })}
           </div>
         ))}
         
