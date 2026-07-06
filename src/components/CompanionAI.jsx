@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { X, Send, Bot, Loader2, Quote, CheckCircle2, Clock } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
+import { claimQuest } from '../lib/dailyQuests'
 
 const LEGENDARY_QUOTES = [
   { id: 'legend_1', name: 'ADE RAI', quote: 'Kesehatan dan otot kuat bukan tujuan utama, melainkan modal dasar paling berharga untuk mencapai semua impian raksasamu.', mission: 'Latihan beban intens & jaga porsi makan hari ini tanpa jebol.' },
@@ -34,7 +35,6 @@ export default function CompanionAI({ userStats, onClose }) {
 
   const currentTier = getRankTier(userStats?.level || 1)
   
-  // 🕒 IMPLEMENTASI DETEKSI JAM SAPAAN SEOLHA BERDASARKAN PARAMETER WAKTU USER
   const getDynamicGreeting = () => {
     const now = new Date()
     const hrs = now.getHours()
@@ -208,7 +208,7 @@ export default function CompanionAI({ userStats, onClose }) {
         faqReply = `Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak, ${currentTier}.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH).`
       } else if (cleanMsg.includes('kesalahan')) {
         videoIdsArray = VALID_YOUTUBE_POOL.kesalahan
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat.\n2. **Kurangampun Konsisten:** Berhenti latihan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Pola makan berantakan.\n4. **Asal Tiru:** Meniru program atlet pro.`
+        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat.\n2. **Kurang Konsisten:** Berhenti latihan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Pola makan berantakan.\n4. **Asal Tiru:** Meniru program atlet pro.`
       }
 
       const mappedMediaArray = videoIdsArray.map(id => ({ type: 'video', src: id }))
@@ -252,7 +252,6 @@ export default function CompanionAI({ userStats, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md p-4 max-w-lg mx-auto select-none">
-      {/* PANEL UTAMA ATAS */}
       <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
@@ -278,7 +277,6 @@ export default function CompanionAI({ userStats, onClose }) {
         </div>
       </div>
 
-      {/* COMPACT DAILY QUOTE COMPONENT */}
       <div className="mt-2.5 p-2.5 bg-[#100E16] border border-[#211D2C] flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5">
           <Quote size={11} className="text-accent" />
@@ -287,12 +285,7 @@ export default function CompanionAI({ userStats, onClose }) {
         <p className="font-body text-xs text-text-high italic leading-relaxed pl-1.5 border-l-2 border-[#211D2C]">
           "{LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].quote}"
         </p>
-        <button 
-          type="button" 
-          onClick={handleClaimLegendQuest} 
-          disabled={isQuestClaimed} 
-          className={`mt-1 w-full p-2 border text-left flex items-start gap-2.5 transition-all ${isQuestClaimed ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80 text-emerald-400' : 'bg-[#0A0A0E] border-accent/30 text-text-high hover:border-accent'}`}
-        >
+        <button type="button" onClick={handleClaimLegendQuest} disabled={isQuestClaimed} className={`mt-1 w-full p-2 border text-left flex items-start gap-2.5 transition-all ${isQuestClaimed ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80 text-emerald-400' : 'bg-[#0A0A0E] border-accent/30 text-text-high hover:border-accent'}`}>
           <div className="flex-1 font-mono text-[11px] leading-tight">
             <div className="font-bold mb-0.5">{isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}</div>
             <p className="whitespace-normal break-words font-body text-[11px] text-text-dim">Misi: {LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].mission}</p>
@@ -301,7 +294,6 @@ export default function CompanionAI({ userStats, onClose }) {
         </button>
       </div>
 
-      {/* INTERACTIVE CHAT SCREEN VIEWPORT */}
       <div className="flex-1 overflow-y-auto py-3 space-y-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
@@ -329,7 +321,7 @@ export default function CompanionAI({ userStats, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* CUSTOMIZED HORIZONTAL SCROLL FAQ AREA */}
+      {/* FULL RESPONSIVE INTERFACE FAQ SLIDER */}
       <div className="mb-2 bg-background pt-1.5">
         <div className="font-mono text-[10px] font-bold uppercase tracking-wider mb-1.5 text-accent">0 ENERGI — SWIPE →</div>
         <div className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ scrollbarWidth: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -340,10 +332,12 @@ export default function CompanionAI({ userStats, onClose }) {
           <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Mulai dari mana?</button>
           <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Kardio atau angkat?</button>
           <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Cara & Jenis Latihan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Nutrisi & Makan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Tidur & Recovery</button>
+          <button type="button" onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Kesalahan Fatal</button>
         </div>
       </div>
 
-      {/* INPUT CONTROLLER FIELD */}
       <form onSubmit={(e) => handleSend(e)} className="pt-2 border-t border-[#211D2C] flex gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2.5 text-sm text-text-high focus:outline-none" />
         <button type="submit" className="w-11 h-11 bg-accent flex items-center justify-center text-white"><Send size={16} /></button>

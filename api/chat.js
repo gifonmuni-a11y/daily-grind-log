@@ -33,20 +33,22 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: systemPrompt });
-    
-    // Filter history agar terbebas dari sapaan selamat malam bawaan awal sistem
-    const cleanHistory = messages.filter(m => !m.content?.includes('Ada yang bisa saya bantu') && !m.text?.includes('Ada yang bisa saya bantu'));
 
-    const history = cleanHistory.slice(0, -1).map(m => ({
+    // PEMETAAN HISTORY ASLI BAWAN LU
+    const history = messages.slice(0, -1).map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content || m.text || '' }]
+      parts: [{ text: m.content || '' }]
     }));
+
+    // 🔒 ANTI-CRASH LOCK: Jika index chat pertama di history adalah pesan otomatis Seolha (model), 
+    // buang turn itu dari array biar Gemini API gak ngamuk nge-block respons turn kedua lo!
+    while (history.length > 0 && history[0].role === 'model') {
+      history.shift();
+    }
 
     const chat = model.startChat({ history });
     const last = messages[messages.length - 1];
-    const currentInputText = last.content || last.text || '';
-
-    const result = await chat.sendMessage(currentInputText);
+    const result = await chat.sendMessage(last.content || '');
     const text = result.response.text();
     return res.status(200).json({ reply: text });
   } catch(err) {
