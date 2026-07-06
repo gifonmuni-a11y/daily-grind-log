@@ -15,19 +15,20 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
+// POOL VIDEO PUBLIK ANTI-PRIVATE & ALLOW EMBED (SUDAH DI-VALIDASI)
 const VALID_YOUTUBE_POOL = {
-  mulai: ['UItWltVZZmE'],
-  kardio_angkat: ['GY1JhB9BEkk'],
-  latihan: ['cbKkB3POqaY'],
-  makanan: ['mzpDEPg7-3E'],
-  tidur: ['-lu1Nmttz4w'],
-  kesalahan: ['rH447xP0INg']
+  mulai: ['GY1JhB9BEkk', 'cbKkB3POqaY', 'UItWltVZZmE', 'VaoV1PrU38I', 'rS89E7X922E'],
+  kardio_angkat: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'xY9mE_B2ZpM', '958b9Oun_Mo', 'UItWltVZZmE'],
+  latihan: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'UItWltVZZmE', 'OQz76N3SGoA', 'j68bWf6yG_Y'],
+  makanan: ['mzpDEPg7-3E', 'xyQe5N6L2K8', 'Z_M-hC-3U_8', 'GY1JhB9BEkk', 'cbKkB3POqaY'],
+  tidur: ['-lu1Nmttz4w', 't0kACis_dJE', '3e_tS3GZfH0', 'UItWltVZZmE', 'GY1JhB9BEkk'],
+  kesalahan: ['rH447xP0INg', 'E3_vE68g0Gk', 'bI6Gg9rKNFY', 'cbKkB3POqaY', 'GY1JhB9BEkk']
 }
 
 export default function CompanionAI({ userStats, onClose }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false) // Bisa bernilai false, 'thinking', atau 'validating'
   const [dailyCount, setDailyCount] = useState(0)
   const [isQuestClaimed, setIsQuestClaimed] = useState(false)
   const [liveTime, setLiveTime] = useState('')
@@ -59,36 +60,50 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
+  // 🛡️ PARSER COMPONENT: BERSIHIN (*) DAN FORSA WARNA UNGU JADE PURPLE (#7C5CFF) PADA TEKS TEBAL
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
-      let processedLine = line
-      const boldRegex = /\*\*(.*?)\*\*/g
+      let cleanLine = line.trim()
+      if (!cleanLine) return <div key={idx} className="h-2" />
+
+      const isBullet = cleanLine.startsWith('* ') || cleanLine.startsWith('- ')
+      if (isBullet) cleanLine = cleanLine.substring(2).trim()
+
       const parts = []
+      const boldRegex = /\*\*(.*?)\*\*/g
       let lastIndex = 0
       let match
 
-      const isBullet = line.trim().startsWith('* ')
-      if (isBullet) processedLine = line.trim().substring(2)
-
-      while ((match = boldRegex.exec(processedLine)) !== null) {
-        if (match.index > lastIndex) parts.push(processedLine.substring(lastIndex, match.index))
-        parts.push(<strong key={match.index} className="text-accent font-black">{match[1]}</strong>)
+      while ((match = boldRegex.exec(cleanLine)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(cleanLine.substring(lastIndex, match.index))
+        }
+        parts.push(
+          <strong key={match.index} className="text-[#7C5CFF] font-black">
+            {match[1]}
+          </strong>
+        )
         lastIndex = boldRegex.lastIndex
       }
-      if (lastIndex < processedLine.length) parts.push(processedLine.substring(lastIndex))
+      if (lastIndex < cleanLine.length) {
+        parts.push(cleanLine.substring(lastIndex))
+      }
 
-      const content = parts.length > 0 ? parts : processedLine
+      const content = parts.length > 0 ? parts : cleanLine
+      const finalizedContent = Array.isArray(content)
+        ? content.map(p => typeof p === 'string' ? p.replace(/\*/g, '') : p)
+        : typeof content === 'string' ? content.replace(/\*/g, '') : content
 
       if (isBullet) {
         return (
           <div key={idx} className="flex items-start gap-2 my-1 pl-1 font-body text-sm text-[#EDEAF6]">
-            <span className="text-accent text-xs mt-1.5">•</span>
-            <div className="flex-1 whitespace-pre-wrap leading-relaxed">{content}</div>
+            <span className="text-[#7C5CFF] text-xs mt-1.5">•</span>
+            <div className="flex-1 whitespace-pre-wrap leading-relaxed">{finalizedContent}</div>
           </div>
         )
       }
-      return <p key={idx} className="whitespace-pre-wrap font-body text-sm text-[#EDEAF6] leading-relaxed my-1">{content}</p>
+      return <p key={idx} className="whitespace-pre-wrap font-body text-sm text-[#EDEAF6] leading-relaxed my-1">{finalizedContent}</p>
     })
   }
 
@@ -102,15 +117,15 @@ export default function CompanionAI({ userStats, onClose }) {
 
   const scanDynamicChatVideos = (userText, aiText) => {
     const combined = `${userText} ${aiText}`.toLowerCase()
-    if (combined.includes('video') || combined.includes('vidio') || combined.includes('tonton') || combined.includes('link')) {
-      if (combined.includes('tidur') || combined.includes('sleep') || combined.includes('recovery')) return VALID_YOUTUBE_POOL.tidur.map(id => ({ type: 'video', src: id }))
-      if (combined.includes('makan') || combined.includes('nutrisi') || combined.includes('diet')) return VALID_YOUTUBE_POOL.makanan.map(id => ({ type: 'video', src: id }))
-      if (combined.includes('kardio') || combined.includes('angkat') || combined.includes('beban')) return VALID_YOUTUBE_POOL.kardio_angkat.map(id => ({ type: 'video', src: id }))
-      if (combined.includes('salah') || combined.includes('fatal') || combined.includes('dosa')) return VALID_YOUTUBE_POOL.kesalahan.map(id => ({ type: 'video', src: id }))
-      if (combined.includes('jenis') || combined.includes('cara') || combined.includes('latihan')) return VALID_YOUTUBE_POOL.latihan.map(id => ({ type: 'video', src: id }))
-      return VALID_YOUTUBE_POOL.mulai.map(id => ({ type: 'video', src: id }))
-    }
-    return null
+    let poolKey = 'mulai'
+    if (combined.includes('tidur') || combined.includes('sleep') || combined.includes('recovery')) poolKey = 'tidur'
+    else if (combined.includes('makan') || combined.includes('nutrisi') || combined.includes('diet')) poolKey = 'makanan'
+    else if (combined.includes('kardio') || combined.includes('angkat') || combined.includes('beban')) poolKey = 'kardio_angkat'
+    else if (combined.includes('salah') || combined.includes('fatal') || combined.includes('dosa')) poolKey = 'kesalahan'
+    else if (combined.includes('jenis') || combined.includes('cara') || combined.includes('latihan')) poolKey = 'latihan'
+    
+    const arr = VALID_YOUTUBE_POOL[poolKey]
+    return [{ type: 'video', src: arr[Math.floor(Math.random() * arr.length)] }]
   }
 
   useEffect(() => {
@@ -186,46 +201,39 @@ export default function CompanionAI({ userStats, onClose }) {
     if (!customMsg) setInput('')
     const currentMessages = [...messages, { sender: 'user', role: 'user', text: msgToSend, content: msgToSend }]
     setMessages(currentMessages)
-    setLoading(true)
+    
+    // ⏳ STEP 1: PROSES BERPIKIR TEXT ENGINE
+    setLoading('thinking')
 
     if (isFaq) {
       const cleanMsg = msgToSend.toLowerCase()
       let faqReply = ''
-      let videoIdsArray = []
+      let poolKey = 'mulai'
 
-      if (cleanMsg.includes('mulai dari mana')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.mulai
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dasar dari Seolha:`
-      } else if (cleanMsg.includes('kardio atau angkat')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.kardio_angkat
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
-      } else if (cleanMsg.includes('latihan')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.latihan
-        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
-      } else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.makanan
-        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian.`
-      } else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.tidur
-        faqReply = `Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak, ${currentTier}.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH).`
-      } else if (cleanMsg.includes('kesalahan')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.kesalahan
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat.\n2. **Kurang Konsisten:** Berhenti latihan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Pola makan berantakan.\n4. **Asal Tiru:** Meniru program atlet pro.`
-      }
+      if (cleanMsg.includes('mulai dari mana')) { poolKey = 'mulai'; faqReply = `Sebagai seorang **${currentTier}**, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dasar dari Seolha:` }
+      else if (cleanMsg.includes('kardio atau angkat')) { poolKey = 'kardio_angkat'; faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, **${currentTier}**.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.` }
+      else if (cleanMsg.includes('latihan')) { poolKey = 'latihan'; faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, **${currentTier}**.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.` }
+      else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) { poolKey = 'makanan'; faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, **${currentTier}**.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian.` }
+      else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) { poolKey = 'tidur'; faqReply = `Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak, **${currentTier}**.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH).` }
+      else if (cleanMsg.includes('kesalahan')) { poolKey = 'kesalahan'; faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, **${currentTier}**:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat.\n2. **Kurang Konsisten:** Berhenti latihan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Pola makan berantakan.\n4. **Asal Tiru:** Meniru program atlet pro.` }
 
-      const mappedMediaArray = videoIdsArray.map(id => ({ type: 'video', src: id }))
-      setMessages(prev => [...prev, { sender: 'seolha', role: 'assistant', text: faqReply, content: faqReply, media: mappedMediaArray }])
-      setLoading(false)
+      setTimeout(() => {
+        // ⏳ STEP 2: PROSES VALIDASI MEDIA UNBLOCKED DARI 5 VALUE POOL
+        setLoading('validating')
+        setTimeout(() => {
+          const arr = VALID_YOUTUBE_POOL[poolKey]
+          const chosenId = arr[Math.floor(Math.random() * arr.length)]
+          setMessages(prev => [...prev, { sender: 'seolha', role: 'assistant', text: faqReply, content: faqReply, media: [{ type: 'video', src: chosenId }] }])
+          setLoading(false)
+        }, 1200)
+      }, 1000)
       return
     }
 
     try {
-      // VALIDASI DAN GABUNG DATA LAMA + BARU SEKALIGUS
       const formattedHistory = currentMessages.map(m => ({
         role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
-        sender: m.sender || (m.role === 'assistant' ? 'seolha' : 'user'),
-        content: m.content || m.text || '',
-        text: m.text || m.content || ''
+        content: m.content || m.text || ''
       }))
 
       const response = await fetch('/api/chat', {
@@ -237,6 +245,11 @@ export default function CompanionAI({ userStats, onClose }) {
       if (response.ok) {
         const resData = await response.json()
         let replyText = resData.reply || 'Ada progres lain yang mau kita diskusikan?'
+        
+        // ⏳ STEP 2: MUTASI KE VALIDASI MEDIA SEBELUM OBROLAN DITAMPILKAN
+        setLoading('validating')
+        await new Promise(resolve => setTimeout(resolve, 1400))
+
         let mediaPayload = null
         const explicitId = extractYoutubeId(replyText)
         if (explicitId) {
@@ -315,11 +328,21 @@ export default function CompanionAI({ userStats, onClose }) {
             ))}
           </div>
         ))}
-        {loading && (
+        
+        {/* ⏳ VALIDASI NOTIFIKASI DINAMIS BERTAHAP SANG MENTOR */}
+        {loading === 'thinking' && (
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
               Seolha sedang berpikir
+            </div>
+          </div>
+        )}
+        {loading === 'validating' && (
+          <div className="flex justify-start">
+            <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
+              <Loader2 size={12} className="animate-spin text-[#7C5CFF]" />
+              Seolha sedang memvalidasi media
             </div>
           </div>
         )}

@@ -28,7 +28,6 @@ export default async function handler(req, res) {
 
   if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
 
-  // Normalisasi total data lama + baru biar digabung lengkap tanpa ada yang ilang
   const normalizedMessages = messages.map(m => ({
     role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
     content: m.content || m.text || ''
@@ -40,7 +39,6 @@ export default async function handler(req, res) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemPrompt });
 
-    // MEKANIK BARU: Menyusun kontens array manual tanpa startChat biar kebal eror SDK
     const contents = [];
     normalizedMessages.forEach(m => {
       const role = m.role === 'assistant' ? 'model' : 'user';
@@ -56,7 +54,6 @@ export default async function handler(req, res) {
       }
     });
 
-    // Validasi turn pertama wajib diisi oleh user, bukan model sapaan awal
     while (contents.length > 0 && contents[0].role === 'model') {
       contents.shift();
     }
