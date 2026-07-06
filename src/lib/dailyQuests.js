@@ -124,7 +124,6 @@ export function getTotalQuestExp(claims) {
 }
 
 export async function claimQuest(userId, questId, expAwarded) {
-  // 1. Insert ke quest_claims
   const { error: insertError } = await supabase
     .from('quest_claims')
     .insert({
@@ -134,14 +133,22 @@ export async function claimQuest(userId, questId, expAwarded) {
       exp_awarded: expAwarded,
     })
   if (insertError) {
-    if (insertError.code !== '23505') console.error('Gagal klaim quest:', insertError.message)
+    if (insertError.code !== '23505') {
+      console.error('Gagal klaim quest:', insertError.message)
+    }
     return false
   }
 
-  // 2. Update EXP ke user_stats langsung
-  const { data: stats } = await supabase.from('user_stats').select('total_exp').eq('user_id', userId).single()
-  const newExp = (stats?.total_exp || 0) + expAwarded
-  await supabase.from('user_stats').update({ total_exp: newExp }).eq('user_id', userId)
-  
+  // Menambahkan kalkulasi pengiriman poin EXP baru secara real-time ke user_stats database
+  try {
+    const { data: stats } = await supabase.from('user_stats').select('total_exp').eq('user_id', userId).single()
+    const currentExp = stats?.total_exp || 0
+    const newExp = currentExp + expAwarded
+    
+    await supabase.from('user_stats').update({ total_exp: newExp }).eq('user_id', userId)
+  } catch (e) {
+    console.error('Gagal update database EXP:', e.message)
+  }
+
   return true
 }
