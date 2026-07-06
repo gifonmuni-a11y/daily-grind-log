@@ -63,7 +63,7 @@ export default function CompanionAI({ userStats, onClose }) {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
       let processedLine = line
-      const boldRegex = /\*\*(.*?)\*\//g
+      const boldRegex = /\*\*(.*?)\*\*/g
       const parts = []
       let lastIndex = 0
       let match
@@ -220,7 +220,7 @@ export default function CompanionAI({ userStats, onClose }) {
     }
 
     try {
-      // 🟢 VALIDASI SILANG DATA BARU & DATA LAMA: Mengirimkan seluruh properti gabungan secara utuh dan lengkap
+      // VALIDASI DAN GABUNG DATA LAMA + BARU SEKALIGUS
       const formattedHistory = currentMessages.map(m => ({
         role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
         sender: m.sender || (m.role === 'assistant' ? 'seolha' : 'user'),

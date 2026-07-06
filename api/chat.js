@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
   if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
 
-  // 🛡️ PARSER STRUKTUR VALIDASI DATA LAMA + BARU SECARA TOTAL
+  // VALIDASI MUTLAK: Mengunci keselarasan data lama dan data baru secara bersamaan agar tidak ada data yang hilang
   const normalizedMessages = messages.map(m => ({
     role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
     sender: m.sender || (m.role === 'assistant' ? 'seolha' : 'user'),
@@ -40,9 +40,9 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: systemPrompt });
+    // Menggunakan gemini-1.5-flash untuk menjamin backward-compatibility penuh dengan SDK versi lama lo
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemPrompt });
 
-    // 🔒 PROFIL FILTER UKURAN STRUKTUR RIWAYAT OBROLAN ANTI-CRASH
     const history = [];
     const historyMessages = normalizedMessages.slice(0, -1);
 
@@ -52,12 +52,12 @@ export default async function handler(req, res) {
 
       if (!txt.trim()) return;
 
-      // Aturan mutlak Gemini: Riwayat tidak boleh diawali oleh pesan otomatis model (Seolha)
+      // Aturan mutlak Gemini: Chat history tidak boleh diawali oleh greeting otomatis milik model (AI)
       if (history.length === 0 && geminiRole === 'model') {
-        return; // skip leading model greeting
+        return; 
       }
 
-      // Aturan mutlak Gemini: Peran role user dan model harus selalu bergantian (alternate)
+      // Aturan mutlak Gemini: Role history harus selalu berselang-seling (alternate)
       if (history.length > 0 && history[history.length - 1].role === geminiRole) {
         history[history.length - 1].parts[0].text += '\n' + txt;
       } else {
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
     const currentInputText = last?.content || '';
 
     if (!currentInputText.trim()) {
-      return res.status(400).json({ error: 'Konten pesan terakhir kosong.' });
+      return res.status(400).json({ error: 'Pesan input kosong.' });
     }
 
     const result = await chat.sendMessage(currentInputText);
