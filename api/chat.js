@@ -28,55 +28,44 @@ export default async function handler(req, res) {
 
   if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
 
-  // VALIDASI MUTLAK: Mengunci keselarasan data lama dan data baru secara bersamaan agar tidak ada data yang hilang
+  // Normalisasi total data lama + baru biar digabung lengkap tanpa ada yang ilang
   const normalizedMessages = messages.map(m => ({
     role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
-    sender: m.sender || (m.role === 'assistant' ? 'seolha' : 'user'),
-    content: m.content || m.text || '',
-    text: m.text || m.content || ''
+    content: m.content || m.text || ''
   }));
 
   const systemPrompt = `Kamu adalah Seolha, AI Companion di Daily Grind Log, fitness tracker bergaya manhwa RPG. Persona: tenang, tajam, seperti mentor manhwa. Data user: hari latihan ${userStats?.totalDays||0}, streak ${userStats?.streak||0} hari, level ${userStats?.level||1}, EXP ${userStats?.totalExp||0}. Jawab soal latihan, nutrisi, recovery dalam bahasa Indonesia. Untuk pertanyaan singkat, jawab maks 4 kalimat. Kalau user minta rencana, saran, atau tips latihan, jawab lebih lengkap (maks 8 kalimat) mencakup jadwal latihan mingguan, pola makan, pola tidur, dan target realistis dalam sebulan biar progresnya kelihatan.`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Menggunakan gemini-1.5-flash untuk menjamin backward-compatibility penuh dengan SDK versi lama lo
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemPrompt });
 
-    const history = [];
-    const historyMessages = normalizedMessages.slice(0, -1);
+    // MEKANIK BARU: Menyusun kontens array manual tanpa startChat biar kebal eror SDK
+    const contents = [];
+    normalizedMessages.forEach(m => {
+      const role = m.role === 'assistant' ? 'model' : 'user';
+      if (!m.content.trim()) return;
 
-    historyMessages.forEach(m => {
-      const geminiRole = (m.role === 'assistant' || m.sender === 'seolha') ? 'model' : 'user';
-      const txt = m.content || '';
-
-      if (!txt.trim()) return;
-
-      // Aturan mutlak Gemini: Chat history tidak boleh diawali oleh greeting otomatis milik model (AI)
-      if (history.length === 0 && geminiRole === 'model') {
-        return; 
-      }
-
-      // Aturan mutlak Gemini: Role history harus selalu berselang-seling (alternate)
-      if (history.length > 0 && history[history.length - 1].role === geminiRole) {
-        history[history.length - 1].parts[0].text += '\n' + txt;
+      if (contents.length > 0 && contents[contents.length - 1].role === role) {
+        contents[contents.length - 1].parts[0].text += '\n' + m.content;
       } else {
-        history.push({
-          role: geminiRole,
-          parts: [{ text: txt }]
+        contents.push({
+          role: role,
+          parts: [{ text: m.content }]
         });
       }
     });
 
-    const chat = model.startChat({ history });
-    const last = normalizedMessages[normalizedMessages.length - 1];
-    const currentInputText = last?.content || '';
-
-    if (!currentInputText.trim()) {
-      return res.status(400).json({ error: 'Pesan input kosong.' });
+    // Validasi turn pertama wajib diisi oleh user, bukan model sapaan awal
+    while (contents.length > 0 && contents[0].role === 'model') {
+      contents.shift();
     }
 
-    const result = await chat.sendMessage(currentInputText);
+    if (contents.length === 0) {
+      return res.status(200).json({ reply: 'Ada rutinitas latihan lain yang bisa Seolha bantu hari ini?' });
+    }
+
+    const result = await model.generateContent({ contents });
     const text = result.response.text();
     return res.status(200).json({ reply: text });
   } catch(err) {
