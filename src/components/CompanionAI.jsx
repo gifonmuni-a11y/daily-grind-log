@@ -1,4 +1,8 @@
-immport ../lib/expSystem'
+import React, { useState, useEffect, useRef } from 'react'
+import { X, Send, Bot, Loader2, Quote, CheckCircle2, Clock } from 'lucide-react'
+import { supabase } from '../lib/supabaseClient'
+import { getRankTier } from '../lib/expSystem'
+import { claimQuest } from '../lib/dailyQuests' // Import fungsi claim yang baru
 
 const LEGENDARY_QUOTES = [
   { id: 'legend_1', name: 'ADE RAI', quote: 'Kesehatan dan otot kuat bukan tujuan utama, melainkan modal dasar paling berharga untuk mencapai semua impian raksasamu.', mission: 'Latihan beban intens & jaga porsi makan hari ini tanpa jebol.' },
@@ -7,7 +11,7 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
   { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
   { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
-  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pcah.' },
+  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
@@ -31,18 +35,20 @@ export default function CompanionAI({ userStats, onClose }) {
 
   const currentTier = getRankTier(userStats?.level || 1)
   
-  // 🕒 MATRIX WAKTU SEOLHA (Sesuai Request Akurat Lu)
+  // 🕒 LOGIKA WAKTU BARU
   const getDynamicGreeting = () => {
     const now = new Date()
     const hrs = now.getHours()
-    
-    if (hrs >= 0 && hrs < 4) return "Selamat pagi"
-    if (hrs >= 4 && hrs < 8) return "Bangun dan waktunya bersinar"
-    if (hrs >= 8 && hrs < 11) return "Selamat beraktivitas"
-    if (hrs === 11) return "Selamat siang"
-    if (hrs === 12) return "Selamat istirahat"
-    if (hrs >= 13 && hrs < 15) return "Selamat siang"
-    if (hrs >= 15 && hrs < 18) return "Selamat sore"
+    const min = now.getMinutes()
+    const time = hrs * 100 + min
+
+    if (time >= 0 && time <= 359) return "Selamat pagi"
+    if (time >= 400 && time <= 759) return "Bangun dan waktunya bersinar"
+    if (time >= 800 && time <= 1059) return "Selamat beraktivitas"
+    if (time >= 1100 && time <= 1159) return "Selamat siang"
+    if (time >= 1200 && time <= 1259) return "Selamat istirahat"
+    if (time >= 1300 && time <= 1459) return "Selamat siang"
+    if (time >= 1500 && time <= 1759) return "Selamat sore"
     return "Selamat malam"
   }
 
@@ -89,14 +95,6 @@ export default function CompanionAI({ userStats, onClose }) {
     })
   }
 
-  const extractYoutubeId = (text) => {
-    if (!text) return null
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
-    const matches = text.match(regExp)
-    if (matches && matches[2].length === 11) return matches[2]
-    return null
-  }
-
   const scanDynamicChatVideos = (userText, aiText) => {
     const combined = `${userText} ${aiText}`.toLowerCase()
     if (combined.includes('video') || combined.includes('vidio') || combined.includes('tonton') || combined.includes('link')) {
@@ -112,57 +110,21 @@ export default function CompanionAI({ userStats, onClose }) {
 
   useEffect(() => {
     const greetingText = getDynamicGreeting()
-    setMessages([
-      { 
-        sender: 'seolha', 
-        text: `${greetingText}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
-        media: null
-      }
-    ])
+    setMessages([{ sender: 'seolha', text: `${greetingText}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`, media: null }])
     fetchDailyLimit()
     checkQuestPersistence()
   }, [currentTier])
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const fetchDailyLimit = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0]
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-      const { data } = await supabase.from('ai_usage').select('count').eq('user_id', session.user.id).eq('date', today).single()
-      if (data) setDailyCount(data.count)
-    } catch (e) { console.error(e) }
-  }
-
-  const checkQuestPersistence = () => {
-    const today = new Date().toISOString().split('T')[0]
-    const savedClaim = localStorage.getItem(`claim_${today}_${LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].id}`)
-    if (savedClaim === 'true') setIsQuestClaimed(true)
-  }
-
-  // 💎 FIX QUEST EXP SYNC: Tambah +50 EXP langsung ke tabel database user_stats Supabase lu
   const handleClaimLegendQuest = async () => {
     if (isQuestClaimed) return
-    const today = new Date().toISOString().split('T')[0]
-    const quoteId = LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].id
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const { data: currentStats } = await supabase.from('user_stats').select('total_exp').eq('user_id', session.user.id).single()
-      const currentExp = currentStats?.total_exp || userStats?.totalExp || 0
-      const newExp = currentExp + 50
-
-      await supabase.from('user_stats').update({ total_exp: newExp }).eq('user_id', session.user.id)
-      localStorage.setItem(`claim_${today}_${quoteId}`, 'true')
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const quest = LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length]
+    const success = await claimQuest(session.user.id, quest.id, 50)
+    if (success) {
       setIsQuestClaimed(true)
-      
-      if (typeof window !== 'undefined') window.location.reload()
-    } catch (e) { console.error(e) }
+      window.location.reload()
+    }
   }
 
   const handleSend = async (e, customMsg = null, isFaq = false) => {
@@ -171,160 +133,52 @@ export default function CompanionAI({ userStats, onClose }) {
     if (!msgToSend.trim() || loading) return
 
     if (!isFaq && dailyCount >= 5) {
-      setMessages(prev => [...prev, 
-        { sender: 'user', text: msgToSend },
-        { sender: 'seolha', text: 'Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya!', media: null }
-      ])
+      setMessages(prev => [...prev, { sender: 'user', text: msgToSend }, { sender: 'seolha', text: 'Energi aku sudah habis untuk hari ini.', media: null }])
       if (!customMsg) setInput('')
       return
     }
 
     if (!customMsg) setInput('')
-    const currentMessages = [...messages, { sender: 'user', text: msgToSend }]
-    setMessages(currentMessages)
+    setMessages(prev => [...prev, { sender: 'user', text: msgToSend }])
     setLoading(true)
 
-    if (isFaq) {
-      const cleanMsg = msgToSend.toLowerCase()
-      let faqReply = ''
-      let videoIdsArray = []
-
-      if (cleanMsg.includes('mulai dari mana')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.mulai
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dasar dari Seolha:`
-      } else if (cleanMsg.includes('kardio atau angkat')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.kardio_angkat
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
-      } else if (cleanMsg.includes('latihan')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.latihan
-        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
-      } else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.makanan
-        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian.`
-      } else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.tidur
-        faqReply = `Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak, ${currentTier}.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH).`
-      } else if (cleanMsg.includes('kesalahan')) {
-        videoIdsArray = VALID_YOUTUBE_POOL.kesalahan
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat.\n2. **Kurang Konsisten:** Berhenti latihan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Pola makan berantakan.\n4. **Asal Tiru:** Meniru program atlet pro.`
-      }
-
-      const mappedMediaArray = videoIdsArray.map(id => ({ type: 'video', src: id }))
-      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mappedMediaArray }])
-      setLoading(false)
-      return
-    }
-
     try {
-      // Mengirimkan data history murni apa adanya sesuai struktur komponen lama lu
-      const formattedHistory = currentMessages.map(m => ({
-        role: m.sender === 'user' ? 'user' : 'assistant',
-        content: m.text
-      }))
-
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: formattedHistory, userStats })
+        body: JSON.stringify({ messages: [...messages, { role: 'user', content: msgToSend }], userStats })
       })
-
-      if (response.ok) {
-        const resData = await response.json()
-        let replyText = resData.reply || 'Ada progres lain yang mau kita diskusikan?'
-        let mediaPayload = null
-        const explicitId = extractYoutubeId(replyText)
-        if (explicitId) {
-          replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
-          mediaPayload = [{ type: 'video', src: explicitId }]
-        } else {
-          mediaPayload = scanDynamicChatVideos(msgToSend, replyText)
-        }
-        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: mediaPayload }])
-        setDailyCount(prev => prev + 1)
-      } else {
-        setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
-      }
-    } catch (err) {
-      setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
+      const resData = await response.json()
+      setMessages(prev => [...prev, { sender: 'seolha', text: resData.reply, media: scanDynamicChatVideos(msgToSend, resData.reply) }])
+    } catch(err) {
+      setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon.', media: null }])
     } finally { setLoading(false) }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md p-4 max-w-lg mx-auto select-none">
+      {/* HEADER */}
       <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
-          <span className="font-display font-bold text-text-high tracking-wider">Seolha</span>
-          <span className="font-mono text-[10px] text-text-dim uppercase">AI Companion</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 font-mono text-xs text-text-high bg-[#100E16] px-2 py-0.5 border border-[#211D2C]">
-            <Clock size={11} className="text-accent" />
-            <span>{liveTime || '00:00'}</span>
-          </div>
-          <div className="w-[1px] h-4 bg-[#211D2C]" />
-          <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-text-high bg-[#100E16] border border-[#7C5CFF]/30 px-2 py-1 rounded">
-            <span>{5 - dailyCount}/5 Energi</span>
-          </div>
-          <div className="w-[1px] h-4 bg-[#211D2C]" />
-          <button onClick={onClose} className="p-1 text-text-dim"><X size={18} /></button>
-        </div>
+        <span className="font-display font-bold text-text-high">Seolha</span>
+        <button onClick={onClose} className="p-1 text-text-dim"><X size={18} /></button>
       </div>
 
-      <div className="mt-2.5 p-2.5 bg-[#100E16] border border-[#211D2C] flex flex-col gap-1.5">
-        <div className="flex items-center gap-1.5">
-          <Quote size={11} className="text-accent" />
-          <span className="font-mono text-[10px] text-accent font-bold uppercase">DAILY QUOTE: {LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].name}</span>
-        </div>
-        <p className="font-body text-xs text-text-high italic">"{LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].quote}"</p>
-        <button type="button" onClick={handleClaimLegendQuest} disabled={isQuestClaimed} className={`mt-1 w-full p-2 border text-left flex items-start gap-2.5 ${isQuestClaimed ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-400' : 'bg-[#0A0A0E] border-accent/30 text-text-high'}`}>
-          <div className="flex-1 font-mono text-[11px]">
-            <div className="font-bold">{isQuestClaimed ? 'EVENT QUEST COMPLETED' : 'TERIMA EVENT QUEST'}</div>
-            <p className="text-text-dim font-body">Misi: {LEGENDARY_QUOTES[new Date().getDate() % LEGENDARY_QUOTES.length].mission}</p>
-          </div>
-          <span className="font-bold">{isQuestClaimed ? 'DONE' : '+50 EXP'}</span>
-        </button>
-      </div>
-
+      {/* CHAT AREA */}
       <div className="flex-1 overflow-y-auto py-3 space-y-4">
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`max-w-[85%] p-3 font-body text-sm ${m.sender === 'user' ? 'bg-accent text-white rounded-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-xl'}`}>
-              {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
-              <div>{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
+            <div className={`p-3 text-sm ${m.sender === 'user' ? 'bg-accent text-white rounded-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-xl'}`}>
+              {renderMessageText(m.text)}
             </div>
-            {m.sender === 'seolha' && m.media && Array.isArray(m.media) && m.media.map((med, midx) => (
-              med.type === 'video' && (
-                <div key={midx} className="w-[85%] mt-2 aspect-video">
-                  <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${med.src}?playsinline=1&enablejsapi=1&rel=0`} title="Stream" frameBorder="0" allowFullScreen />
-                </div>
-              )
-            ))}
           </div>
         ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
-              <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang berpikir
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+        {loading && <div className="text-xs text-text-dim italic">Seolha sedang berpikir...</div>}
       </div>
-
-      <div className="mb-2 bg-background pt-1.5">
-        <div className="font-mono text-[10px] font-bold uppercase tracking-wider mb-1.5 text-accent">0 ENERGI — SWIPE →</div>
-        <div className="flex gap-2 overflow-x-auto pb-2 flex-nowrap">
-          <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase">Mulai dari mana?</button>
-          <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase">Kardio atau angkat?</button>
-          <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase">Cara & Jenis Latihan</button>
-        </div>
-      </div>
-
+      
+      {/* INPUT */}
       <form onSubmit={(e) => handleSend(e)} className="pt-2 border-t border-[#211D2C] flex gap-2">
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2.5 text-sm text-text-high focus:outline-none" />
-        <button type="submit" className="w-11 h-11 bg-accent flex items-center justify-center text-white"><Send size={16} /></button>
+        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2 text-sm text-text-high" />
+        <button type="submit" className="bg-accent text-white px-4">Send</button>
       </form>
     </div>
   )

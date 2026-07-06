@@ -124,7 +124,8 @@ export function getTotalQuestExp(claims) {
 }
 
 export async function claimQuest(userId, questId, expAwarded) {
-  const { error } = await supabase
+  // 1. Insert ke quest_claims
+  const { error: insertError } = await supabase
     .from('quest_claims')
     .insert({
       user_id: userId,
@@ -132,11 +133,15 @@ export async function claimQuest(userId, questId, expAwarded) {
       claimed_date: todayKey(),
       exp_awarded: expAwarded,
     })
-  if (error) {
-    if (error.code !== '23505') {
-      console.error('Gagal klaim quest:', error.message)
-    }
+  if (insertError) {
+    if (insertError.code !== '23505') console.error('Gagal klaim quest:', insertError.message)
     return false
   }
+
+  // 2. Update EXP ke user_stats langsung
+  const { data: stats } = await supabase.from('user_stats').select('total_exp').eq('user_id', userId).single()
+  const newExp = (stats?.total_exp || 0) + expAwarded
+  await supabase.from('user_stats').update({ total_exp: newExp }).eq('user_id', userId)
+  
   return true
 }
