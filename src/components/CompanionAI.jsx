@@ -4,6 +4,14 @@ import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
 import { claimQuest } from '../lib/dailyQuests'
 
+// 🧠 STATIC SCROLLBAR FIX: Mencegah teks duplikat / ghosting di mobile browser saat melakukan scrolling
+const ScrollbarStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    .faq-slider-container::-webkit-scrollbar { height: 4px !important; background: #100E16 !important; }
+    .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 2px !important; }
+  `}} />
+)
+
 const LEGENDARY_QUOTES = [
   { id: 'legend_1', name: 'ADE RAI', quote: 'Kesehatan dan otot kuat bukan tujuan utama, melainkan modal dasar paling berharga untuk mencapai semua impian raksasamu.', mission: 'Latihan beban intens & jaga porsi makan hari ini tanpa jebol.' },
   { id: 'legend_2', name: 'ARNOLD SCHWARZENEGGER', quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.', mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.' },
@@ -15,7 +23,7 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-// POOL VIDEO PUBLIK ANTI-PRIVATE & ALLOW EMBED (SUDAH DI-VALIDASI)
+// 🟢 TETAP DI-PRESERVE: Pool bawaan asli khusus menu FAQ 0 Energi (Tidak Diubah)
 const VALID_YOUTUBE_POOL = {
   mulai: ['GY1JhB9BEkk', 'cbKkB3POqaY', 'UItWltVZZmE', 'VaoV1PrU38I', 'rS89E7X922E'],
   kardio_angkat: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'xY9mE_B2ZpM', '958b9Oun_Mo', 'UItWltVZZmE'],
@@ -25,10 +33,47 @@ const VALID_YOUTUBE_POOL = {
   kesalahan: ['rH447xP0INg', 'E3_vE68g0Gk', 'bI6Gg9rKNFY', 'cbKkB3POqaY', 'GY1JhB9BEkk']
 }
 
+// Pool database 34 video kiriman manual lo untuk jalur obrolan chat box Seolha
+const CHAT_WORKOUT_POOL = [
+  { category: 'upper body', id: '0zhvUV1bAVQ' },
+  { category: 'lower body', id: 'UEWEYeJGkLM' },
+  { category: 'full body', id: 'GViX8riaHX4' },
+  { category: 'olympic lifting', id: 'VMaBfcRprAU' },
+  { category: 'boxing/combat', id: '1JHVNzLkbUg' },
+  { category: 'sport-specific', id: 'Mo6B5EjfHGU' },
+  { category: 'martial arts', id: 'bs7X3F-XYTc' },
+  { category: 'core/abs', id: 'Cnmy08JgakM' },
+  { category: 'powerlifting', id: 'JBJqZKx7MLI' },
+  { category: 'calisthenics', id: 'kuUZYUBHryw' },
+  { category: 'kettlebell', id: 'VCcar3MA07w' },
+  { category: 'meditasi', id: '2sJyBfDZpe4' },
+  { category: 'kardio', id: 'kZDvg92tTMc' },
+  { category: 'cardio', id: 'kZDvg92tTMc' },
+  { category: 'hiit', id: 'cbKkB3POqaY' },
+  { category: 'chest', id: 'KIl70ffF5FM' },
+  { category: 'back', id: '8LJ3Q3Fsrzs' },
+  { category: 'shoulders', id: 'QVaijMZ2mp8' },
+  { category: 'arms', id: 'rSohL4gWm9A' },
+  { category: 'glutes', id: '1T3v_leyDIE' },
+  { category: 'mobility', id: 'tg6zZF6pRg0' },
+  { category: 'stretching', id: 'itJE4neqDJw' },
+  { category: 'yoga', id: 'RvCntPg7oPE' },
+  { category: 'swimming', id: 'IKWGF4kP8Cs' },
+  { category: 'running', id: '6H8WLfyavWk' },
+  { category: 'cycling', id: 'ZiGE3-L4vyg' },
+  { category: 'recovery', id: 'utAqR9-dmh0' },
+  { category: 'rest', id: '-dCHrqndWYs' },
+  { category: 'push', id: 'b6ouj88iBZs' },
+  { category: 'pull', id: 'DXL18E7QRbk' },
+  { category: 'legs', id: 'QXtXEug0PLU' },
+  { category: 'latihan', id: 'cbKkB3POqaY' },
+  { category: 'lainnya', id: 'U9ENCvFf9yQ' }
+]
+
 export default function CompanionAI({ userStats, onClose }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false) // Bisa bernilai false, 'thinking', atau 'validating'
+  const [loading, setLoading] = useState(false) 
   const [dailyCount, setDailyCount] = useState(0)
   const [isQuestClaimed, setIsQuestClaimed] = useState(false)
   const [liveTime, setLiveTime] = useState('')
@@ -60,50 +105,46 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // 🛡️ PARSER COMPONENT: BERSIHIN (*) DAN FORSA WARNA UNGU JADE PURPLE (#7C5CFF) PADA TEKS TEBAL
+  // 🛡️ CHARACTER TOGGLE PARSER: Bintang (**) TIDAK DIHAPUS, tapi dibungkus span hidden agar tidak kelihatan di PWA. Teks didalamnya otomatis ungu (text-accent).
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
-      let cleanLine = line.trim()
+      const cleanLine = line.trim()
       if (!cleanLine) return <div key={idx} className="h-2" />
 
-      const isBullet = cleanLine.startsWith('* ') || cleanLine.startsWith('- ')
-      if (isBullet) cleanLine = cleanLine.substring(2).trim()
-
       const parts = []
-      const boldRegex = /\*\*(.*?)\*\*/g
-      let lastIndex = 0
-      let match
+      let currentChunk = ''
+      let isInsideBold = false
 
-      while ((match = boldRegex.exec(cleanLine)) !== null) {
-        if (match.index > lastIndex) {
-          parts.push(cleanLine.substring(lastIndex, match.index))
+      for (let i = 0; i < cleanLine.length; i++) {
+        if (cleanLine[i] === '*' && cleanLine[i + 1] === '*') {
+          if (currentChunk) {
+            parts.push(isInsideBold ? 
+              <strong key={`b-${i}`} className="text-accent font-black">{currentChunk}</strong> : 
+              <span key={`t-${i}`}>{currentChunk}</span>
+            )
+            currentChunk = ''
+          }
+          // Menyembunyikan tanda bintang tanpa menghapusnya dari DOM Node Tree
+          parts.push(<span key={`ast-${i}`} className="hidden">**</span>)
+          isInsideBold = !isInsideBold
+          i++ 
+        } else {
+          currentChunk += cleanLine[i]
         }
-        parts.push(
-          <strong key={match.index} className="text-[#7C5CFF] font-black">
-            {match[1]}
-          </strong>
-        )
-        lastIndex = boldRegex.lastIndex
       }
-      if (lastIndex < cleanLine.length) {
-        parts.push(cleanLine.substring(lastIndex))
-      }
-
-      const content = parts.length > 0 ? parts : cleanLine
-      const finalizedContent = Array.isArray(content)
-        ? content.map(p => typeof p === 'string' ? p.replace(/\*/g, '') : p)
-        : typeof content === 'string' ? content.replace(/\*/g, '') : content
-
-      if (isBullet) {
-        return (
-          <div key={idx} className="flex items-start gap-2 my-1 pl-1 font-body text-sm text-[#EDEAF6]">
-            <span className="text-[#7C5CFF] text-xs mt-1.5">•</span>
-            <div className="flex-1 whitespace-pre-wrap leading-relaxed">{finalizedContent}</div>
-          </div>
+      if (currentChunk) {
+        parts.push(isInsideBold ? 
+          <strong key={`b-end`} className="text-accent font-black">{currentChunk}</strong> : 
+          <span key={`t-end`}>{currentChunk}</span>
         )
       }
-      return <p key={idx} className="whitespace-pre-wrap font-body text-sm text-[#EDEAF6] leading-relaxed my-1">{finalizedContent}</p>
+
+      return (
+        <p key={idx} className="whitespace-pre-wrap font-body text-sm text-[#EDEAF6] leading-relaxed my-1">
+          {parts}
+        </p>
+      )
     })
   }
 
@@ -115,17 +156,28 @@ export default function CompanionAI({ userStats, onClose }) {
     return null
   }
 
+  // 🛡️ TRIGGER INSTAN ABSOLUT: Cukup sebut kategori kata kunci saja langsung memunculkan video tanpa syarat kata 'video' atau 'latihan'
   const scanDynamicChatVideos = (userText, aiText) => {
-    const combined = `${userText} ${aiText}`.toLowerCase()
-    let poolKey = 'mulai'
-    if (combined.includes('tidur') || combined.includes('sleep') || combined.includes('recovery')) poolKey = 'tidur'
-    else if (combined.includes('makan') || combined.includes('nutrisi') || combined.includes('diet')) poolKey = 'makanan'
-    else if (combined.includes('kardio') || combined.includes('angkat') || combined.includes('beban')) poolKey = 'kardio_angkat'
-    else if (combined.includes('salah') || combined.includes('fatal') || combined.includes('dosa')) poolKey = 'kesalahan'
-    else if (combined.includes('jenis') || combined.includes('cara') || combined.includes('latihan')) poolKey = 'latihan'
+    const cleanInput = userText.toLowerCase()
     
-    const arr = VALID_YOUTUBE_POOL[poolKey]
-    return [{ type: 'video', src: arr[Math.floor(Math.random() * arr.length)] }]
+    if (cleanInput.includes('meditasi') || cleanInput.includes('mindfulness')) return [{ type: 'video', src: '2sJyBfDZpe4' }]
+    if (cleanInput.includes('push') || cleanInput.includes('dada') || cleanInput.includes('chest')) return [{ type: 'video', src: 'b6ouj88iBZs' }]
+    if (cleanInput.includes('pull') || cleanInput.includes('punggung') || cleanInput.includes('back')) return [{ type: 'video', src: 'DXL18E7QRbk' }]
+    if (cleanInput.includes('legs') || cleanInput.includes('kaki') || cleanInput.includes('paha')) return [{ type: 'video', src: 'QXtXEug0PLU' }]
+    if (cleanInput.includes('core') || cleanInput.includes('abs') || cleanInput.includes('perut')) return [{ type: 'video', src: 'Cnmy08JgakM' }]
+    if (cleanInput.includes('stretching') || cleanInput.includes('peregangan')) return [{ type: 'video', src: 'itJE4neqDJw' }]
+    if (cleanInput.includes('yoga')) return [{ type: 'video', src: 'RvCntPg7oPE' }]
+    
+    for (const item of CHAT_WORKOUT_POOL) {
+      if (cleanInput.includes(item.category)) {
+        return [{ type: 'video', src: item.id }]
+      }
+    }
+    
+    if (cleanInput.includes('video') || cleanInput.includes('tonton') || cleanInput.includes('putar')) {
+      return [{ type: 'video', src: 'U9ENCvFf9yQ' }] 
+    }
+    return null
   }
 
   useEffect(() => {
@@ -134,8 +186,8 @@ export default function CompanionAI({ userStats, onClose }) {
       { 
         sender: 'seolha', 
         role: 'assistant',
-        text: `${greetingText}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
-        content: `${greetingText}, ${currentTier}. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
+        text: `${greetingText}, Trainer. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
+        content: `${greetingText}, Trainer. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
         media: null
       }
     ])
@@ -202,7 +254,6 @@ export default function CompanionAI({ userStats, onClose }) {
     const currentMessages = [...messages, { sender: 'user', role: 'user', text: msgToSend, content: msgToSend }]
     setMessages(currentMessages)
     
-    // ⏳ STEP 1: PROSES BERPIKIR TEXT ENGINE
     setLoading('thinking')
 
     if (isFaq) {
@@ -210,23 +261,22 @@ export default function CompanionAI({ userStats, onClose }) {
       let faqReply = ''
       let poolKey = 'mulai'
 
-      if (cleanMsg.includes('mulai dari mana')) { poolKey = 'mulai'; faqReply = `Sebagai seorang **${currentTier}**, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n* **Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n* **Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dasar dari Seolha:` }
-      else if (cleanMsg.includes('kardio atau angkat')) { poolKey = 'kardio_angkat'; faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, **${currentTier}**.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.` }
-      else if (cleanMsg.includes('latihan')) { poolKey = 'latihan'; faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, **${currentTier}**.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.` }
-      else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) { poolKey = 'makanan'; faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, **${currentTier}**.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian.` }
-      else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) { poolKey = 'tidur'; faqReply = `Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak, **${currentTier}**.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH).` }
-      else if (cleanMsg.includes('kesalahan')) { poolKey = 'kesalahan'; faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, **${currentTier}**:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat.\n2. **Kurang Konsisten:** Berhenti latihan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Pola makan berantakan.\n4. **Asal Tiru:** Meniru program atlet pro.` }
+      if (cleanMsg.includes('mulai dari mana')) { poolKey = 'mulai'; faqReply = `Sebagai seorang **Trainer**, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\n**Fokus Utama:** Latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank.\n**Frekuensi:** Lakukan sebanyak 3 kali seminggu secara berkala. Berikut panduan form gerakan dasar dari Seolha:` }
+      else if (cleanMsg.includes('kardio atau angkat')) { poolKey = 'kardio_angkat'; faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, **Trainer**.\n\n**1. Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n**2. Kardio:** Menjaga kapasitas stamina kerja jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.` }
+      else if (cleanMsg.includes('latihan')) { poolKey = 'latihan'; faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, **Trainer**.\n\n**Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n**Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.` }
+      else if (cleanMsg.includes('makan') || cleanMsg.includes('nutrisi')) { poolKey = 'makanan'; faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, **Trainer**.\n\n**Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n**Cutting (Turun Lemak):** Defisit kalori terkontrol.\n**Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian.` }
+      else if (cleanMsg.includes('tidur') || cleanMsg.includes('recovery')) { poolKey = 'tidur'; faqReply = `Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak, **Trainer**.\n\n**Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n**Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH).` }
+      else if (cleanMsg.includes('kesalahan')) { poolKey = 'kesalahan'; faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, **Trainer**.\n\n**1. Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n**2. Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n**3. Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n**4. Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.` }
 
       setTimeout(() => {
-        // ⏳ STEP 2: PROSES VALIDASI MEDIA UNBLOCKED DARI 5 VALUE POOL
         setLoading('validating')
         setTimeout(() => {
           const arr = VALID_YOUTUBE_POOL[poolKey]
           const chosenId = arr[Math.floor(Math.random() * arr.length)]
           setMessages(prev => [...prev, { sender: 'seolha', role: 'assistant', text: faqReply, content: faqReply, media: [{ type: 'video', src: chosenId }] }])
           setLoading(false)
-        }, 1200)
-      }, 1000)
+        }, 1100)
+      }, 900)
       return
     }
 
@@ -246,9 +296,8 @@ export default function CompanionAI({ userStats, onClose }) {
         const resData = await response.json()
         let replyText = resData.reply || 'Ada progres lain yang mau kita diskusikan?'
         
-        // ⏳ STEP 2: MUTASI KE VALIDASI MEDIA SEBELUM OBROLAN DITAMPILKAN
         setLoading('validating')
-        await new Promise(resolve => setTimeout(resolve, 1400))
+        await new Promise(resolve => setTimeout(resolve, 1200))
 
         let mediaPayload = null
         const explicitId = extractYoutubeId(replyText)
@@ -269,7 +318,8 @@ export default function CompanionAI({ userStats, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md p-4 max-w-lg mx-auto select-none">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#000000] p-4 max-w-lg mx-auto select-none">
+      <ScrollbarStyles />
       <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
@@ -322,14 +372,13 @@ export default function CompanionAI({ userStats, onClose }) {
             {m.sender === 'seolha' && m.media && Array.isArray(m.media) && m.media.map((med, midx) => (
               med.type === 'video' && (
                 <div key={midx} className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
-                  <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${med.src}?playsinline=1&enablejsapi=1&rel=0&modestbranding=1`} title={`Stream ${midx}`} frameBorder="0" allowFullScreen />
+                  <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${med.src}`} title={`Video ${midx}`} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; allowFullScreen />
                 </div>
               )
             ))}
           </div>
         ))}
         
-        {/* ⏳ VALIDASI NOTIFIKASI DINAMIS BERTAHAP SANG MENTOR */}
         {loading === 'thinking' && (
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
@@ -341,7 +390,7 @@ export default function CompanionAI({ userStats, onClose }) {
         {loading === 'validating' && (
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
-              <Loader2 size={12} className="animate-spin text-[#7C5CFF]" />
+              <Loader2 size={12} className="animate-spin text-accent" />
               Seolha sedang memvalidasi media
             </div>
           </div>
@@ -349,13 +398,9 @@ export default function CompanionAI({ userStats, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="mb-2 bg-background pt-1.5">
+      <div className="mb-2 bg-black pt-1.5">
         <div className="font-mono text-[10px] font-bold uppercase tracking-wider mb-1.5 text-accent">0 ENERGI — SWIPE →</div>
-        <div className="flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ scrollbarWidth: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <style dangerouslySetInnerHTML={{__html: `
-            div::-webkit-scrollbar { height: 4px !important; background: #100E16 !important; }
-            div::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 2px !important; }
-          `}} />
+        <div className="faq-slider-container flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ scrollbarWidth: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Mulai dari mana?</button>
           <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Kardio atau angkat?</button>
           <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className="flex-shrink-0 w-[170px] text-center text-xs px-2.5 py-2.5 bg-[#100E16] border border-[#211D2C] text-text-high font-mono uppercase tracking-wide hover:border-accent transition-colors">Cara & Jenis Latihan</button>
