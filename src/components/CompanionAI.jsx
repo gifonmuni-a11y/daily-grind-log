@@ -7,6 +7,8 @@ const ScrollbarStyles = () => (
   <style dangerouslySetInnerHTML={{__html: `
     .faq-slider-container::-webkit-scrollbar { height: 4px !important; background: #100E16 !important; }
     .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 2px !important; }
+    .matrix-dropdown-container::-webkit-scrollbar { width: 4px !important; background: #0A0A0E !important; }
+    .matrix-dropdown-container::-webkit-scrollbar-thumb { background: #211D2C !important; border-radius: 2px !important; }
   `}} />
 )
 
@@ -15,13 +17,12 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_2', name: 'ARNOLD SCHWARZENEGGER', quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.', mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.' },
   { id: 'legend_3', name: 'DAVID GOGGINS', quote: 'Saat pikiranmu berkata sudah selesai, sebenarnya fisikmu baru menggunakan 40 persen kekuatan aslinya. Tetap keras!', mission: 'Selesaikan sesi latihan penuh hari ini tanpa menyerah di tengah jalan.' },
   { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
-  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
+  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
   { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
   { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-// 🟢 RE-KALIBRASI UTUH: DATA MATRIX MASTER 34 KATEGORI DENGAN STRUKTUR DATA BARU LU 100% SAMA
 const MASTER_34_CATEGORIES = [
   {
     name: 'Pemanasan (Warm-up)',
@@ -44,7 +45,7 @@ const MASTER_34_CATEGORIES = [
     tokoh_terkenal: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.',
     apa_itu: 'Latihan compound tubuh bagian bawah yang meniru gerakan fundamental manusia saat hendak duduk dan berdiri kembali.',
     manfaatnya: 'Memperkuat rantai kekuatan otot paha depan (quadriceps), paha belakang (hamstring), bokong (glutes), serta melatih kekuatan tulang punggung.',
-    tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah and ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.',
+    tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah dan ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.',
     id_video: 'Xb2Lm40nlGo'
   },
   {
@@ -146,7 +147,7 @@ const MASTER_34_CATEGORIES = [
   {
     name: 'Sport-Specific Training',
     tokoh_terkenal: 'Lee Haney: Jadilah spesialis di bidang Anda, latih mekanika gerak sendi secara presisi tanpa celah.',
-    apa_itu: 'Program pengkondisian fisik yang rancangan secara khusus untuk mendukung kebutuhan mekanik gerakan satu cabang olahraga tertentu.',
+    apa_itu: 'Program pengkondisian fisik yang dirancang secara khusus untuk mendukung kebutuhan mekanik gerakan satu cabang olahraga tertentu.',
     manfaatnya: 'Meningkatkan performa tanding secara spesifik pada cabang olahraga yang ditekuni dan meminimalkan risiko cedera akibat gerakan berulang.',
     tata_cara_atau_gerakan: 'Analisis gerakan dominan olahraga Anda (misal gerakan melompat untuk basket), lalu latih kekuatan otot penggeraknya menggunakan beban bebas (seperti Trap Bar Deadlift untuk lompatan).',
     id_video: 'Mo6B5EjfHGU'
@@ -297,6 +298,41 @@ const MASTER_34_CATEGORIES = [
   }
 ]
 
+// 🟢 SUB KOMPONEN INTERAKTIF: Mengatur fungsi buka-tutup list dropdown murni per baris item
+function CategoryItem({ cat, index }) {
+  const [isOpen, setIsOpen] = useState(false)
+  return (
+    <div className="border-b border-[#211D2C]/40 pb-3 last:border-0">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full text-left font-mono text-xs text-accent font-black uppercase tracking-wider flex justify-between items-center py-1.5 hover:text-purple-400 transition-colors"
+      >
+        <span>{index + 1}. {cat.name} <span className="text-text-dim font-normal normal-case ml-1">[silakan klik penjelasan dan videonya]</span></span>
+        <span className="text-text-dim text-[10px]">{isOpen ? '▲' : '▼'}</span>
+      </button>
+      
+      {isOpen && (
+        <div className="mt-2 pl-2.5 space-y-2 border-l border-[#7C5CFF]/40">
+          <p className="font-body text-xs text-text-dim italic">"{cat.tokoh_terkenal}"</p>
+          <p className="font-body text-xs text-[#EDEAF6] leading-relaxed">
+            <strong className="text-accent font-black">{cat.name}:</strong> {cat.apa_itu}
+          </p>
+          <p className="font-body text-xs text-[#EDEAF6] leading-relaxed">
+            <strong className="text-accent font-black">Manfaatnya:</strong> {cat.manfaatnya}
+          </p>
+          <p className="font-body text-xs text-[#EDEAF6] leading-relaxed">
+            <strong className="text-accent font-black">Tata Cara / Gerakan:</strong> {cat.tata_cara_atau_gerakan}
+          </p>
+          <div className="w-full mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg overflow-hidden aspect-video">
+            <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${cat.id_video}?playsinline=1&enablejsapi=1&rel=0`} title={cat.name} frameBorder="0" allowFullScreen />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function CompanionAI({ userStats, onClose }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -308,7 +344,7 @@ export default function CompanionAI({ userStats, onClose }) {
 
   const currentTier = getRankTier(userStats?.level || 1)
   
-  // 🟢 LOGIKA GREETING ASLI SINKRONISASI LU TANPA TAMBAHAN KALIMAT KAKU
+  // 🟢 KUNCI DIALOG SINKRONISASI JAM HP LU
   const getDynamicGreeting = () => {
     const now = new Date()
     const hrs = now.getHours()
@@ -332,7 +368,7 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // 🛡️ PARSER REFERENSI ASLI LU: Bintang disembunyikan rapi, teks otomatis jadi ungu text-accent font-black
+  // 🛡️ PARSER REFERENSI: Bintang bersih, teks jadi ungu text-accent font-black
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -441,34 +477,26 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // 🟢 LINEAR LOOPING MATRIX PENJELASAN DATA BARU LU + IFRAME VIDEO PERSIS DI BAWAHNYA
     if (isAllCategories) {
-      let bulkReply = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP** beserta analisis filosofi tokoh, manfaat, dan struktur gerakan aslinya, Trainer:\n\n"
-      
-      MASTER_34_CATEGORIES.forEach((cat, index) => {
-        bulkReply += `${index + 1}. **${cat.name.toUpperCase()}**\n\n`
-      })
-
       setTimeout(() => {
         setMessages(prev => [...prev, { 
           sender: 'seolha', 
-          text: bulkReply, 
+          text: "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP**. Silakan klik tiap kategori untuk memuat video panduan dan penjelasannya:", 
           media: null,
           multiMedia: MASTER_34_CATEGORIES 
         }])
         setLoading(false)
-      }, 700)
+      }, 600)
       return
     }
 
-    // 🛡️ PENANGANAN TOMBOL FAQ 0 ENERGI: Langsung panggil ID Video baru dari array lu tanpa bypass validasi lambat
     if (isFaq) {
       let faqReply = ''
       let mediaAsset = null
       const lowerText = msgToSend.toLowerCase()
 
       if (lowerText.includes('mulai dari mana')) {
-        faqReply = `Sebagai seorang Trainer, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (**Full-Body Workout**) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
+        faqReply = `Sebagai seorang Trainer, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (**Full-Body Workout**) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video fungsional pilihan Seolha:`
         mediaAsset = { type: 'video', src: 'VZUDAOL2LI8' }
       } 
       else if (lowerText.includes('kardio atau angkat')) {
@@ -499,43 +527,19 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
+    // 🟢 SINKRONISASI FIXED OBJECT PAYLOAD UNTUK SINKRON /API/CHAT LU
     try {
-      const cleanInput = msgToSend.toLowerCase()
-      const foundMatch = MASTER_34_CATEGORIES.find(cat => cleanInput.includes(cat.name.split(' ')[0].toLowerCase()))
-      
-      const formattedHistory = newMessages
-        .filter((m) => m.text && typeof m.text === 'string' && !m.text.includes('Gagal mendapatkan respon'))
-        .map(m => ({
-          role: m.sender === 'user' ? 'user' : 'assistant',
-          content: m.text
-        }))
-
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: formattedHistory, userStats })
+        body: JSON.stringify({ message: msgToSend })
       })
 
       if (response.ok) {
         const resData = await response.json()
         let replyText = resData.reply || 'Ada progres lain yang mau kita diskusikan?'
         
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
-        const matches = replyText.match(regExp)
-        const explicitId = (matches && matches[2].length === 11) ? matches[2] : null
-        
-        if (explicitId) {
-          replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
-        }
-        
-        let finalMedia = null
-        if (explicitId) {
-          finalMedia = { type: 'video', src: explicitId }
-        } else if (foundMatch) {
-          finalMedia = { type: 'video', src: foundMatch.id_video }
-        }
-        
-        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: finalMedia }])
+        setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: null }])
         setDailyCount(prev => prev + 1)
       } else {
         setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat. Mohon periksa kembali status API Studio Key Anda.', media: null }])
@@ -606,20 +610,11 @@ export default function CompanionAI({ userStats, onClose }) {
               </div>
             )}
 
-            {/* 🟢 LINEAR RENDERING TOTAL: Mengalir rapi satu arah menggunakan seluruh key data baru buatan lu */}
+            {/* 🟢 RENDERING INTERAKTIF: Memetika sub-komponen dropdown lipat agar tidak scrolling panjang */}
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
-              <div className="w-[85%] space-y-6 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
+              <div className="matrix-dropdown-container w-[85%] space-y-4 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
                 {m.multiMedia.map((vid, vIdx) => (
-                  <div key={vIdx} className="border-b border-[#211D2C]/60 pb-5 last:border-0 flex flex-col gap-1.5">
-                    <div className="font-mono text-xs text-accent font-black uppercase tracking-wider">{vIdx + 1}. {vid.name}</div>
-                    <p className="font-body text-xs text-text-dim italic">"{vid.tokoh_terkenal}"</p>
-                    <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Apa Itu:</strong> {vid.apa_itu}</p>
-                    <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Manfaatnya:</strong> {vid.manfaatnya}</p>
-                    <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Tata Cara / Gerakan:</strong> {vid.tata_cara_atau_gerakan}</p>
-                    <div className="w-full mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg overflow-hidden aspect-video">
-                      <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${vid.id_video}?playsinline=1&enablejsapi=1&rel=0`} title={vid.name} frameBorder="0" allowFullScreen />
-                    </div>
-                  </div>
+                  <CategoryItem key={vIdx} cat={vid} index={vIdx} />
                 ))}
               </div>
             )}
