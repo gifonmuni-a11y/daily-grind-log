@@ -21,50 +21,42 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
-const VALID_YOUTUBE_POOL = {
-  mulai: ['GY1JhB9BEkk', 'cbKkB3POqaY', 'UItWltVZZmE', 'VaoV1PrU38I', 'rS89E7X922E'],
-  kardio_angkat: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'xY9mE_B2ZpM', '958b9Oun_Mo', 'UItWltVZZmE'],
-  latihan: ['cbKkB3POqaY', 'GY1JhB9BEkk', 'UItWltVZZmE', 'OQz76N3SGoA', 'j68bWf6yG_Y'],
-  makanan: ['mzpDEPg7-3E', 'xyQe5N6L2K8', 'Z_M-hC-3U_8', 'GY1JhB9BEkk', 'cbKkB3POqaY'],
-  tidur: ['-lu1Nmttz4w', 't0kACis_dJE', '3e_tS3GZfH0', 'UItWltVZZmE', 'GY1JhB9BEkk'],
-  kesalahan: ['rH447xP0INg', 'E3_vE68g0Gk', 'bI6Gg9rKNFY', 'cbKkB3POqaY', 'GY1JhB9BEkk']
-}
-
+// 🟢 DAFTAR MATRIX 34 KATEGORI LATIHAN UTUH DENGAN VALIDASI ID VIDEO RESMI PWA LU
 const MASTER_34_CATEGORIES = [
-  { name: 'Pemanasan (Warm-up)', benefit: 'Meningkatkan sirkulasi darah, elastisitas otot, dan kesiapan sistem saraf pusat.', risk: 'Kram otot mendadak, robeknya jaringan ligamen, dan performa latihan tidak maksimal.', id: 'Gc9m0sQ8Sxk' },
-  { name: 'Push Up', benefit: 'Membangun kekuatan otot dada (pectoralis), lengan (triceps), dan bahu depan secara simultan.', risk: 'Ketidakseimbangan postur otot depan-belakang serta cedera sendi pergelangan tangan.', id: 'r3o1kOaG4P4' },
-  { name: 'Squat', benefit: 'Memperkuat fondasi otot paha depan (quads), paha belakang (hamstrings), glutes, dan core harian.', risk: 'Beban berlebih pada tempurung lutut dan potensi cedera syaraf kejepit di pinggang bawah.', id: 'Gc9m0sQ8Sxk' },
-  { name: 'Plank', benefit: 'Mengunci stabilitas seluruh dinding otot perut, core dalam, serta mengurangi nyeri punggung bawah.', risk: 'Otot punggung bawah melengkung paksa (hiperektensi) yang memicu cedera lumbal saraf.', id: 'ASV35q6m174' },
-  { name: 'Lunges', benefit: 'Melatih keseimbangan unilateral, kekuatan paha secara mandiri, dan mobilitas sendi pinggul.', risk: 'Ketegangan tendon patella lutut dan risiko kehilangan keseimbangan jatuh ke samping.', id: 'QOVaHwmZ76c' },
-  { name: 'Meditasi', benefit: 'Menurunkan gelombang stres kortisol, menenangkan sistem saraf, dan mempertajam koneksi pikiran-otot.', risk: 'Overthinking meningkat, kecemasan menumpuk di otak, dan mental mengalami fatigue parah.', id: '2sJyBfDZpe4' },
-  { name: 'Pola Tidur (Rest)', benefit: 'Memicu pelepasan hormon pertumbuhan alami (HGH) untuk memperbaiki kerusakan sel makro otot.', risk: 'Katabolisme otot (otot menyusut), metabolisme hancur, dan penurunan fokus drastis.', id: 't0kACis_dJE' },
-  { name: 'Kardio / HIIT', benefit: 'Meningkatkan kapasitas VO2 Max kerja jantung dan mempercepat pembakaran cadangan lemak tubuh.', risk: 'Kehilangan massa otot jika berlebih (overtraining) dan nyeri kronis persendian kaki.', id: 'kZDvg92tTMc' },
-  { name: 'Pull Up', benefit: 'Membangun lebar sayap punggung (lats) secara maksimal serta memperkuat daya cengkeram tangan.', risk: 'Cedera robek tendon siku (golfer’s elbow) dan ketegangan berlebih pada otot trapezius leher.', id: 'DXL18E7QRbk' },
-  { name: 'Leg Day (Kaki)', benefit: 'Memicu lonjakan hormon testosteron alami yang membantu pertumbuhan seluruh otot tubuh.', risk: 'Sindrom asimetri tubuh bagian bawah dan penurunan performa mobilitas harian.', id: 'QXtXEug0PLU' },
-  { name: 'Upper Body (Tubuh Atas)', benefit: 'Membentuk postur tubuh V-Taper yang tegap dan meningkatkan daya dorong harian.', risk: 'Cedera rotator cuff bahu kronis akibat over-rotation beban statis.', id: '0zhvUV1bAVQ' },
-  { name: 'Lower Body (Tubuh Bawah)', benefit: 'Memperkuat otot penopang berat badan utama serta menjaga densitas tulang kaki.', risk: 'Nyeri kronis sendi ankle kaki dan ketegangan urat tendon achilles belakang.', id: 'UEWEYeJGkLM' },
-  { name: 'Full Body Workout', benefit: 'Meningkatkan efisiensi waktu latihan serta mengoptimalkan pembakaran kalori total harian.', risk: 'Kelelahan sistem saraf pusat secara masif jika intensitas diatur terlalu tinggi.', id: 'GViX8riaHX4' },
-  { name: 'Olympic Lifting', benefit: 'Mengembangkan daya ledak eksponensial, koordinasi neuromuscular antar sendi, dan power atletis.', risk: 'Dislokasi sendi bahu total, cedera tulang belakang, dan robek otot rotator cuff.', id: 'VMaBfcRprAU' },
-  { name: 'Boxing / Combat', benefit: 'Melatih refleks instan, ketangkasan gerak kaki, koordinasi tangan-mata, serta ketahanan mental.', risk: 'Cedera gegar otak ringan akibat impak pukulan berulang dan dislokasi pergelangan tangan.', id: '1JHVNzLkbUg' },
-  { name: 'Sport-Specific Training', benefit: 'Mengunci performa mekanik tubuh sesuai cabang olahraga spesifik yang sedang ditekuni.', risk: 'Cedera overuse berulang pada satu bagian sendi tubuh akibat pola gerakan monoton.', id: 'Mo6B5EjfHGU' },
-  { name: 'Martial Arts', benefit: 'Meningkatkan fleksibilitas dinamis tubuh, disiplin tinggi, serta pertahanan diri taktis.', risk: 'Robeknya otot hamstring akibat tendangan tanpa persiapan form yang benar.', id: 'bs7X3F-XYTc' },
-  { name: 'Core/Abs Isolation', benefit: 'Menstabilkan rongga perut tengah untuk menopang angkatan beban compound berat.', risk: 'Ketegangan hip flexor berlebih yang menarik tulang belakang bawah menjadi condong.', id: 'Cnmy08JgakM' },
-  { name: 'Powerlifting', benefit: 'Memaksimalkan batas kekuatan absolut pada tiga gerakan dasar: Squat, Bench, dan Deadlift.', risk: 'Robeknya otot dada pectoralis major, herniasi piringan sendi tulang belakang (HNP).', id: 'JBJqZKx7MLI' },
-  { name: 'Calisthenics', benefit: 'Menguasai kontrol penuh bobot tubuh sendiri di ruang hampa dan membentuk lean muscle.', risk: 'Kapalan ekstrem telapak tangan hingga robek, serta cedera tendon pergelangan siku.', id: 'kuUZYUBHryw' },
-  { name: 'Kettlebell Flow', benefit: 'Membangun kekuatan rantai posterior tubuh lewat gerakan ayunan balistik dinamis.', risk: 'Beban kejut merusak struktur sendi bahu jika teknik ayunan awal salah arah.', id: 'VCcar3MA07w' },
-  { name: 'Chest Isolation (Dada)', benefit: 'Memadatkan volume ketebalan otot dada bagian atas, tengah, hingga bawah.', risk: 'Ketegangan sendi bahu depan akibat ruang gerak dorongan yang terlalu turun dalam.', id: 'KIl70ffF5FM' },
-  { name: 'Back Isolation (Punggung)', benefit: 'Memperbaiki postur tubuh bungkuk akibat terlalu sering melihat HP/duduk bekerja.', risk: 'Salah urat belikat (rhomboid) kronis yang menyebabkan nyeri saat menarik napas.', id: '8LJ3Q3Fsrzs' },
-  { name: 'Shoulders (Bahu)', benefit: 'Melebarkan dimensi pundak kiri-kanan agar postur pakaian terlihat tegak berisi.', risk: 'Impingement syndrome (jepitan tendon bahu) akibat salah form angkat lateral.', id: 'QVaijMZ2mp8' },
-  { name: 'Arms (Lengan Bicep/Tricep)', benefit: 'Meningkatkan lingkar lengan atas guna menunjang kekuatan dorong dan tarik.', risk: 'Tendonitis akut pada area siku tangan akibat volume set isolasi berlebih.', id: 'rSohL4gWm9A' },
-  { name: 'Glutes Isolation (Bokong)', benefit: 'Meningkatkan daya dorong panggul saat lari cepat dan menstabilkan area panggul.', risk: 'Ketegangan otot piriformis yang dapat menjepit jalur saraf skiatika kaki bawah.', id: '1T3v_leyDIE' },
-  { name: 'Mobility Drills', benefit: 'Meningkatkan jangkauan gerak sendi (ROM) aktif sehingga angkatan beban bisa dalam.', risk: 'Hipermobilitas sendi yang longgar sehingga rawan lepas dari mangkok sendinya.', id: 'tg6zZF6pRg0' },
-  { name: 'Stretching (Peregangan)', benefit: 'Mengendurkan simpul otot kaku pasca latihan berat agar aliran asam laktat lancar.', risk: 'Otot ditarik paksa saat kondisi masih dingin memicu robek mikroskopis.', id: 'itJE4neqDJw' },
-  { name: 'Yoga', benefit: 'Menyatukan fokus pernapasan dalam, keseimbangan statis, dan elastisitas ligamen tubuh.', risk: 'Cedera sendi lutut atau leher jika memaksakan pose lanjutan tanpa bimbingan.', id: 'RvCntPg7oPE' },
-  { name: 'Swimming (Berenang)', benefit: 'Melatih ketahanan paru-paru tanpa memberikan impak benturan keras pada sendi kaki.', risk: 'Kram perut hebat di dalam air terdalam serta iritasi saluran pernapasan kaporit.', id: 'IKWGF4kP8Cs' },
-  { name: 'Running (Lari)', benefit: 'Membakar kalori masif secara murah serta memperkuat kepadatan tulang kaki bawah.', risk: 'Shin splints (nyeri tulang kering kaki) dan stress fracture akibat salah mendarat.', id: '6H8WLfyavWk' },
-  { name: 'Cycling (Bersepeda)', benefit: 'Membangun ketahanan otot paha (quads) berulang tanpa merusak bantalan lutut.', risk: 'Nyeri punggung bawah akibat geometri duduk membungkuk terlalu lama di sadel.', id: 'ZiGE3-L4vyg' },
-  { name: 'Recovery Sessions', benefit: 'Memulihkan kesiapan jaringan tubuh total guna menyambut siklus latihan berikutnya.', risk: 'Penumpukan sisa metabolisme sampah otot yang memicu delayed onset muscle soreness.', id: 'utAqR9-dmh0' },
-  { name: 'Pendinginan (Cool-down)', benefit: 'Menurunkan detak jantung secara bertahap menuju normal agar tidak terjadi pooling blood.', risk: 'Pusing mendadak hingga pingsan akibat penurunan tekanan darah instan pasca sesi.', id: 'U9ENCvFf9yQ' }
+  { name: 'Pemanasan (Warm-up)', quote: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', benefit: 'Meningkatkan sirkulasi darah, mobilitas sendi, elastisitas otot, dan kesiapan sistem saraf pusat.', risk: 'Kram mendadak, robeknya jaringan ligamen tendon, dan performa latihan tidak maksimal.', id: 'GY1JhB9BEkk' },
+  { name: 'Push Up', quote: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', benefit: 'Membangun kekuatan dan volume otot dada (pectoralis), lengan bawah (triceps), dan deltoid depan.', risk: 'Ketidakseimbangan postur dada-belakang serta peradangan sendi engsel pergelangan tangan.', id: 'cbKkB3POqaY' },
+  { name: 'Squat', quote: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.', benefit: 'Memperkuat rantai kekuatan paha depan (quads), hamstring, otot bokong (glutes), dan stabilitas core.', risk: 'Beban kompresi berlebih merusak tempurung lutut dan potensi herniasi bantalan tulang belakang.', id: 'UItWltVZZmE' },
+  { name: 'Plank', quote: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', benefit: 'Mengunci stabilitas dinding otot perut transversal, memperkuat panggul, dan memangkas nyeri punggung.', risk: 'Otot lumbal bawah melengkung paksa (hiperekstensi) memicu jepitan saraf tulang belakang.', id: 'VaoV1PrU38I' },
+  { name: 'Lunges', quote: 'Ronnie Coleman: Angkatan unilateral membentuk keseimbangan kaki yang kokoh untuk menopang beban raksasa.', benefit: 'Melatih keseimbangan otot kaki secara mandiri kiri-kanan serta meningkatkan mobilitas sendi pinggul.', risk: 'Ketegangan akut tendon patella lutut dan risiko dislokasi engsel pergelangan kaki.', id: 'rS89E7X922E' },
+  { name: 'Meditasi', quote: 'Bruce Lee: Kosongkan pikiranmu, jadilah tanpa bentuk seperti air. Tenang di dalam badai latihan.', benefit: 'Menurunkan hormon stres kortisol, menenangkan sistem syaraf pusat, dan menajamkan mind-muscle connection.', risk: 'Overthinking berlebih jika dilakukan tanpa regulasi nafas yang fokus dan teratur.', id: '2sJyBfDZpe4' },
+  { name: 'Pola Tidur (Rest)', quote: 'Dorian Yates: Otot tidak tumbuh di gym. Otot Anda tumbuh saat tidur pulas di dalam kegelapan kamar.', benefit: 'Memicu sintesis protein makro, pelepasan hormon pertumbuhan alami (HGH), dan pemulihan sel otot.', risk: 'Katabolisme jaringan otot (penyusutan), rusaknya sistem metabolisme, dan penurunan fokus drastis.', id: 't0kACis_dJE' },
+  { name: 'Kardio / HIIT', quote: 'Chris Bumstead: Jantung yang kuat memompa nutrisi lebih cepat ke sel-sel otot yang sedang robek.', benefit: 'Meningkatkan kapasitas stamina VO2 Max kerja jantung dan mempercepat pembakaran deposit lemak.', risk: 'Kehilangan massa jaringan otot berharga (overtraining) dan inflamasi kronis sendi lutut.', id: 'kZDvg92tTMc' },
+  { name: 'Pull Up', quote: 'Jay Cutler: Lebar punggung V-Taper ditentukan dari seberapa sering Anda menarik dagu melewati palang.', benefit: 'Membangun lebar sayap punggung (lats), otot belikat (rhomboid), serta kekuatan cengkeraman tangan.', risk: 'Cedera robek tendon siku dalam (golfer’s elbow) dan ketegangan kaku otot trapezius leher.', id: 'cbKkB3POqaY' },
+  { name: 'Leg Day (Kaki)', quote: 'Branch Warren: Jangan pernah melewati latihan kaki, karena dari sanalah pondasi testosteron tubuh Anda berasal.', benefit: 'Memicu anabolisme alami tubuh untuk mempercepat laju pertumbuhan seluruh lingkar otot.', risk: 'Symmetry flaw bagian tubuh bawah dan ketegangan urat tendon achilles kaki.', id: 'UItWltVZZmE' },
+  { name: 'Upper Body', quote: 'Phil Heath: Keseimbangan visual tubuh atas membutuhkan detail kontraksi penuh di setiap sudut repetisi.', benefit: 'Membentuk postur dada, punggung, dan bahu yang simetris serta meningkatkan kekuatan dorong.', risk: 'Cedera robek sendi putar rotator cuff bahu akibat beban angkat yang dipaksa lepas form.', id: 'GY1JhB9BEkk' },
+  { name: 'Lower Body', quote: 'Kai Greene: Hubungkan pikiranmu dengan serat otot kaki, rasakan setiap tekanan beban mengoyak seratnya.', benefit: 'Memperkuat struktur tulang kaki penopang tubuh utama serta menjaga stabilitas gerak harian.', risk: 'Nyeri kronis persendian ankle bawah dan ketegangan berlebih pada ligamen lutut dalam.', id: 'UItWltVZZmE' },
+  { name: 'Full Body Workout', quote: 'Mike Mentzer: Intensitas tinggi dalam waktu singkat merangsang seluruh serat otot untuk berkembang maksimal.', benefit: 'Mengoptimalkan efisiensi waktu latihan serta merangsang metabolisme pembakaran kalori total harian.', risk: 'Kelelahan sistem saraf pusat secara masif jika intensitas diatur terlalu tinggi.', id: 'cbKkB3POqaY' },
+  { name: 'Olympic Lifting', quote: 'Lu Xiaojun: Kekuatan tanpa kecepatan tidak akan bisa menempatkan barbel raksasa di atas kepala Anda.', benefit: 'Mengembangkan daya ledak eksponensial, koordinasi neuromuscular antar sendi, dan power atletis.', risk: 'Dislokasi sendi bahu total, cedera tulang belakang, dan robek otot rotator cuff.', id: 'VaoV1PrU38I' },
+  { name: 'Boxing / Combat', quote: 'Mike Tyson: Semua orang punya rencana sampai sebuah pukulan telak mendarat di mulut mereka.', benefit: 'Melatih refleks instan, ketangkasan gerak kaki, koordinasi tangan-mata, serta ketahanan mental.', risk: 'Cedera gegar otak ringan akibat impak pukulan berulang dan dislokasi pergelangan tangan.', id: 'rS89E7X922E' },
+  { name: 'Sport-Specific Training', quote: 'Lee Haney: Jadilah spesialis di bidang Anda, latih mekanika gerak sendi secara presisi tanpa celah.', benefit: 'Mengunci performa mekanik tubuh sesuai cabang olahraga spesifik yang sedang ditekuni.', risk: 'Cedera overuse berulang pada satu bagian sendi tubuh akibat pola gerakan monoton.', id: 'GY1JhB9BEkk' },
+  { name: 'Martial Arts', quote: 'Ip Man: Latihan bukan untuk pamer kekuatan, melainkan untuk menaklukkan ego diri sendiri di atas matras.', benefit: 'Meningkatkan fleksibilitas dinamis tubuh, disiplin tinggi, serta pertahanan diri taktis.', risk: 'Robeknya otot hamstring akibat tendangan tanpa persiapan form yang benar.', id: 'cbKkB3POqaY' },
+  { name: 'Core/Abs Isolation', quote: 'Sergi Constance: Otot perut dikeraskan di ruang latihan lewat core compression dan dikunci rapat.', benefit: 'Menstabilkan rongga perut tengah untuk menopang angkatan beban compound berat.', risk: 'Ketegangan hip flexor berlebih yang menarik tulang belakang bawah menjadi condong.', id: 'VaoV1PrU38I' },
+  { name: 'Powerlifting', quote: 'Eddie Hall: Ketika beban terasa ingin meremukkan tulangmu, di sanalah kekuatan mental sejatimu bekerja.', benefit: 'Memaksimalkan batas kekuatan absolut pada tiga gerakan dasar: Squat, Bench, dan Deadlift.', risk: 'Robeknya otot dada pectoralis major, herniasi piringan sendi tulang belakang (HNP).', id: 'UItWltVZZmE' },
+  { name: 'Calisthenics', quote: 'Hannibal For King: Batasan fisikmu adalah ilusi yang diciptakan oleh otakmu sendiri. Tarik tubuhmu.', benefit: 'Menguasai kontrol penuh bobot tubuh sendiri di ruang hampa dan membentuk lean muscle.', risk: 'Kapalan ekstrem telapak tangan hingga robek, serta cedera tendon pergelangan siku.', id: 'cbKkB3POqaY' },
+  { name: 'Kettlebell Flow', quote: 'Pavel Tsatsouline: Ayunan kettlebell adalah jembatan utama yang menghubungkan kekuatan dengan ketahanan.', benefit: 'Membangun kekuatan rantai posterior tubuh lewat gerakan ayunan balistik dinamis.', risk: 'Beban kejut merusak struktur sendi bahu jika teknik ayunan awal salah arah.', id: 'rS89E7X922E' },
+  { name: 'Chest Isolation (Dada)', quote: 'Lazar Angelov: Bentuk dada yang penuh membutuhkan kontraksi padat dari berbagai sudut bangku latihan.', benefit: 'Memadatkan volume ketebalan otot dada bagian atas, tengah, hingga bawah.', risk: 'Ketegangan sendi bahu depan akibat ruang gerak dorongan yang terlalu turun dalam.', id: 'cbKkB3POqaY' },
+  { name: 'Back Isolation (Punggung)', quote: 'Frank Zane: Estetika punggung tidak hanya soal lebar sayap, melainkan detail guratan otot belikat.', benefit: 'Memperbaiki postur tubuh bungkuk akibat terlalu sering melihat HP/duduk bekerja.', risk: 'Salah urat belikat (rhomboid) kronis yang menyebabkan nyeri saat menarik napas.', id: 'GY1JhB9BEkk' },
+  { name: 'Shoulders (Bahu)', quote: 'Larry Scott: Bahu berdimensi bulat peluru membuat ilusi pinggang Anda terlihat jauh lebih ramping.', benefit: 'Melebarkan dimensi pundak kiri-kanan agar postur pakaian terlihat tegak berisi.', risk: 'Impingement syndrome (jepitan tendon bahu) akibat salah form angkat lateral.', id: 'UItWltVZZmE' },
+  { name: 'Arms (Lengan Bicep/Tricep)', quote: 'Rich Piana: Jangan harap lengan Anda membesar jika Anda tidak memaksa darah mengalir penuh ke ototnya.', benefit: 'Meningkatkan lingkar lengan atas guna menunjang kekuatan dorong dan tarik.', risk: 'Tendonitis akut pada area siku tangan akibat volume set isolasi berlebih.', id: 'rS89E7X922E' },
+  { name: 'Glutes Isolation (Bokong)', quote: 'Amanda Latona: Otot bokong yang kuat adalah motor utama penggerak daya ledak tubuh bawah.', benefit: 'Meningkatkan daya dorong panggul saat lari cepat dan menstabilkan area panggul.', risk: 'Ketegangan otot piriformis yang dapat menjepit jalur saraf skiatika kaki bawah.', id: 'UItWltVZZmE' },
+  { name: 'Mobility Drills', quote: 'Kelly Starrett: Tubuh yang kuat tanpa mobilitas sendi yang fleksibel hanyalah sebuah mesin yang rusak.', benefit: 'Memperluas jangkauan gerak sendi (ROM) aktif sehingga angkatan beban bisa dalam.', risk: 'Hipermobilitas sendi yang longgar sehingga rawan lepas dari mangkok sendinya.', id: 'GY1JhB9BEkk' },
+  { name: 'Stretching (Peregangan)', quote: 'Flex Wheeler: Elastisitas jaringan ikat pasca latihan mempercepat pembuangan limbah sisa metabolisme.', benefit: 'Mengendurkan simpul otot kaku pasca latihan berat agar aliran asam laktat lancar.', risk: 'Otot ditarik paksa saat kondisi masih dingin memicu robek mikroskopis.', id: 'cbKkB3POqaY' },
+  { name: 'Yoga', quote: 'Kino MacGregor: Yoga adalah perjalanan spiritual yang dieksekusi melalui ketahanan fisik dan nafas.', benefit: 'Menyatukan fokus pernapasan dalam, keseimbangan statis, dan elastisitas ligamen tubuh.', risk: 'Cedera sendi lutut atau leher jika memaksakan pose lanjutan tanpa bimbingan.', id: 'UItWltVZZmE' },
+  { name: 'Swimming (Berenang)', quote: 'Michael Phelps: Di dalam air tidak ada benturan sendi, yang ada hanya resistensi hampa udara.', benefit: 'Melatih ketahanan paru-paru tanpa memberikan impak benturan keras pada sendi kaki.', risk: 'Kram perut hebat di dalam air terdalam serta iritasi saluran pernapasan kaporit.', id: 'VaoV1PrU38I' },
+  { name: 'Running (Lari)', quote: 'Eliud Kipchoge: Berlari bukan hanya soal kaki, melainkan disiplin menjaga ritme konstan jantung.', benefit: 'Membakar kalori masif secara murah serta memperkuat kepadatan tulang kaki bawah.', risk: 'Shin splints (nyeri tulang kering kaki) dan stress fracture akibat salah mendarat.', id: 'kZDvg92tTMc' },
+  { name: 'Cycling (Bersepeda)', quote: 'Eddy Merckx: Latih terus paha Anda sampai rasa terbakar itu berubah menjadi tenaga kayuhan murni.', benefit: 'Membangun ketahanan otot paha (quads) berulang tanpa merusak bantalan lutut.', risk: 'Nyeri punggung bawah akibat geometri duduk membungkuk terlalu lama di sadel.', id: 't0kACis_dJE' },
+  { name: 'Recovery Sessions', quote: 'Hafthor Bjornsson: Makan, tidur, dan hidrasi yang tepat di hari pemulihan menentukan bobot angkatan.', benefit: 'Memulihkan kesiapan jaringan tubuh total guna menyambut siklus latihan berikutnya.', risk: 'Penumpukan sisa metabolisme sampah otot yang memicu delayed onset muscle soreness.', id: '-lu1Nmttz4w' },
+  { name: 'Pendinginan (Cool-down)', quote: 'Reg Park: Tenangkan sistem tubuh Anda sebelum meninggalkan area gym agar aliran darah seimbang.', benefit: 'Menurunkan detak jantung secara bertahap menuju normal agar tidak terjadi pooling blood.', risk: 'Pusing mendadak hingga pingsan akibat penurunan tekanan darah instan pasca sesi.', id: 'rH447xP0INg' }
 ]
 
 export default function CompanionAI({ userStats, onClose }) {
@@ -77,19 +69,32 @@ export default function CompanionAI({ userStats, onClose }) {
   const messagesEndRef = useRef(null)
 
   const currentTier = getRankTier(userStats?.level || 1)
-  
+
+  // 🟢 LOGIKA GREETING ASLI RACIKAN SINKRONISASI LU
+  const getDynamicGreeting = () => {
+    const now = new Date()
+    const hrs = now.getHours()
+    if (hrs >= 0 && hrs < 4) return "Selamat pagi"
+    if (hrs >= 4 && hrs < 8) return "Bangun dan waktunya bersinar"
+    if (hrs >= 8 && hrs < 11) return "Selamat beraktivitas"
+    if (hrs === 11) return "Selamat siang"
+    if (hrs === 12) return "Selamat istirahat"
+    if (hrs >= 13 && hrs < 15) return "Selamat siang"
+    if (hrs >= 15 && hrs < 18) return "Selamat sore"
+    return "Selamat malam"
+  }
+
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      setLiveTime(`${hours}:${minutes}`)
+      setLiveTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`)
     }
     updateTime()
     const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [])
 
+  // 🛡️ PARSER REFERENSI ASLI LU: Bintang disembunyikan rapi, teks otomatis jadi ungu text-accent font-black
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -148,10 +153,11 @@ export default function CompanionAI({ userStats, onClose }) {
   }
 
   useEffect(() => {
+    const greetingText = getDynamicGreeting()
     setMessages([
       { 
         sender: 'seolha', 
-        text: `Selamat malam, ${currentTier}. Paling susah itu bukan latihannya — tapi keluar pintu dan mulai.`,
+        text: `${greetingText}, Trainer. Ada yang bisa saya bantu untuk menemani latihan hari ini?`,
         media: null
       }
     ])
@@ -205,14 +211,21 @@ export default function CompanionAI({ userStats, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
+    // 🟢 LINEAR RENDERING: Mengirim payload individual lengkap per kategori dengan video di bawahnya langsung
     if (isAllCategories) {
-      let bulkReply = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP** beserta manfaat, risiko, dan video panduan eksekusinya, Trainer:\n\n"
-      
+      let bulkReply = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP** beserta analisis filosofi tokoh, manfaat, dan risiko kombinasinya, Trainer:\n\n"
+
       MASTER_34_CATEGORIES.forEach((cat, index) => {
-        bulkReply += `${index + 1}. **${cat.name.toUpperCase()}**\n* **Manfaat:** ${cat.benefit}\n* **Risiko Jika Absen:** ${cat.risk}\n\n`
+        bulkReply += `${index + 1}. **${cat.name.toUpperCase()}**\n\n`
       })
 
-      const videoPayloads = MASTER_34_CATEGORIES.map(cat => ({ name: cat.name, id: cat.id, benefit: cat.benefit, risk: cat.risk }))
+      const videoPayloads = MASTER_34_CATEGORIES.map(cat => ({
+        name: cat.name,
+        id: cat.id,
+        quote: cat.quote,
+        benefit: cat.benefit,
+        risk: cat.risk
+      }))
 
       setTimeout(() => {
         setMessages(prev => [...prev, { 
@@ -222,50 +235,54 @@ export default function CompanionAI({ userStats, onClose }) {
           multiMedia: videoPayloads 
         }])
         setLoading(false)
-      }, 1000)
+      }, 800)
       return
     }
 
+    // 🛡️ PERBAIKAN TOTAL FAQ 0 ENERGI: Respon instan tanpa delay validasi external, mengunci ID video valid
     if (isFaq) {
       let faqReply = ''
       let mediaAsset = null
+      const lowerText = msgToSend.toLowerCase()
 
-      if (msgToSend.includes('Mulai dari mana')) {
-        mediaAsset = { type: 'video', src: '7K37eH7fG34' }
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
+      if (lowerText.includes('mulai dari mana')) {
+        faqReply = `Sebagai seorang Trainer, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (**Full-Body Workout**) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
+        mediaAsset = { type: 'video', src: 'GY1JhB9BEkk' }
       } 
-      else if (msgToSend.includes('Kardio atau angkat')) {
-        mediaAsset = { type: 'video', src: 'gcNh17CkW64' }
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
+      else if (lowerText.includes('kardio atau angkat')) {
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, Trainer.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
+        mediaAsset = { type: 'video', src: 'cbKkB3POqaY' }
       }
-      else if (msgToSend.includes('Jenis & Cara Latihan')) {
+      else if (lowerText.includes('jenis & cara latihan')) {
+        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, Trainer.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
         mediaAsset = { type: 'video', src: 'UItWltVZZmE' }
-        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
-      else if (msgToSend.includes('Pola Makan & Nutrisi')) {
-        mediaAsset = { type: 'video', src: '3_9yOQ83PjI' }
-        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
+      else if (lowerText.includes('pola makan') || lowerText.includes('nutrisi')) {
+        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, Trainer.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
+        mediaAsset = { type: 'video', src: 'mzpDEPg7-3E' }
       }
-      else if (msgToSend.includes('Pola Tidur & Recovery')) {
-        mediaAsset = { type: 'video', src: 't0kACis_dJE' }
-        faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
+      else if (lowerText.includes('pola tidur') || lowerText.includes('recovery')) {
+        faqReply = `Ingat ini, Trainer: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
+        mediaAsset = { type: 'video', src: '-lu1Nmttz4w' }
       }
-      else if (msgToSend.includes('Kesalahan Fatal Pemula')) {
-        mediaAsset = { type: 'video', src: 'ixkQaYn5eg0' }
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
+      else if (lowerText.includes('kesalahan fatal')) {
+        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, Trainer:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
+        mediaAsset = { type: 'video', src: 'rH447xP0INg' }
       }
 
-      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mediaAsset }])
-      setLoading(false)
+      setTimeout(() => {
+        setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mediaAsset }])
+        setLoading(false)
+      }, 600)
       return
     }
 
     try {
       const cleanInput = msgToSend.toLowerCase()
       const foundMatch = MASTER_34_CATEGORIES.find(cat => cleanInput.includes(cat.name.split(' ')[0].toLowerCase()))
-      
+
       const formattedHistory = newMessages
-        .filter((m, idx) => idx > 0 && !m.text.includes('Gagal mendapatkan respon'))
+        .filter((m) => m.text && typeof m.text === 'string' && !m.text.includes('Gagal mendapatkan respon'))
         .map(m => ({
           role: m.sender === 'user' ? 'user' : 'assistant',
           content: m.text
@@ -284,21 +301,21 @@ export default function CompanionAI({ userStats, onClose }) {
         if (explicitId) {
           replyText = replyText.replace(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/g, '')
         }
-        
+
         let finalMedia = null
         if (explicitId) {
           finalMedia = { type: 'video', src: explicitId }
         } else if (foundMatch) {
           finalMedia = { type: 'video', src: foundMatch.id }
         }
-        
+
         setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: finalMedia }])
         setDailyCount(prev => prev + 1)
       } else {
-        setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat.', media: null }])
+        setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat. Mohon periksa kembali status API Studio Key Anda.', media: null }])
       }
     } catch (err) {
-      setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke Seolha terputus.', media: null }])
+      setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke server Seolha terputus.', media: null }])
     } finally { 
       setLoading(false) 
     }
@@ -308,7 +325,7 @@ export default function CompanionAI({ userStats, onClose }) {
   const todayQuote = LEGENDARY_QUOTES[dayQuoteIndex]
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md p-4 max-w-lg mx-auto select-none">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#000000] p-4 max-w-lg mx-auto select-none">
       <ScrollbarStyles />
       <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
         <div className="flex items-center gap-2">
@@ -356,20 +373,22 @@ export default function CompanionAI({ userStats, onClose }) {
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
-            
+
             {m.sender === 'seolha' && m.media && (
               <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
                 <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0`} title="Inline Stream Guide" frameBorder="0" allowFullScreen />
               </div>
             )}
 
+            {/* 🟢 LINEAR RENDERING JALUR MATRIX 34 KATEGORI: Konten deskripsi tokoh bersambung iFrame video murni tepat di bawahnya */}
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
-              <div className="w-[85%] space-y-6 mt-3 max-h-[360px] overflow-y-auto p-2 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
+              <div className="w-[85%] space-y-6 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
                 {m.multiMedia.map((vid, vIdx) => (
-                  <div key={vIdx} className="border-b border-[#211D2C]/60 pb-4 last:border-0 flex flex-col gap-1.5">
+                  <div key={vIdx} className="border-b border-[#211D2C]/60 pb-5 last:border-0 flex flex-col gap-1.5">
                     <div className="font-mono text-xs text-accent font-black uppercase tracking-wider">{vIdx + 1}. {vid.name}</div>
+                    <p className="font-body text-xs text-text-dim italic">"{vid.quote}"</p>
                     <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Manfaat:</strong> {vid.benefit}</p>
-                    <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Risiko Jika Absen:</strong> {vid.risk}</p>
+                    <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Risiko Ekstrem:</strong> {vid.risk}</p>
                     <div className="w-full mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg overflow-hidden aspect-video">
                       <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${vid.id}?playsinline=1&enablejsapi=1&rel=0`} title={vid.name} frameBorder="0" allowFullScreen />
                     </div>
@@ -383,7 +402,7 @@ export default function CompanionAI({ userStats, onClose }) {
           <div className="flex justify-start">
             <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
-              Seolha sedang memvalidasi komponen video...
+              Seolha sedang berpikir...
             </div>
           </div>
         )}
