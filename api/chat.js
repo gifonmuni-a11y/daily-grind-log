@@ -28,51 +28,39 @@ export default async function handler(req, res) {
 
   if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
 
-  const normalizedMessages = messages.map(m => ({
-    role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
-    content: m.content || m.text || ''
-  }));
+  const normalizedMessages = messages
+    .map(m => ({
+      role: m.role || (m.sender === 'seolha' ? 'assistant' : 'user'),
+      content: m.content || m.text || ''
+    }))
+    .filter(m => m.content.trim());
+
+  if (!normalizedMessages.length) {
+    return res.status(200).json({ reply: 'Ada rutinitas latihan lain yang bisa Seolha bantu hari ini?' });
+  }
 
   const systemPrompt = `Kamu adalah Seolha, AI Companion di Daily Grind Log, fitness tracker bergaya manhwa RPG. Persona: tenang, tajam, seperti mentor manhwa. Data user: hari latihan ${userStats?.totalDays||0}, streak ${userStats?.streak||0} hari, level ${userStats?.level||1}, EXP ${userStats?.totalExp||0}. Jawab soal latihan, nutrisi, recovery dalam bahasa Indonesia. Untuk pertanyaan singkat, jawab maks 4 kalimat. Kalau user minta rencana, saran, atau tips latihan, jawab lebih lengkap (maks 8 kalimat) mencakup jadwal latihan mingguan, pola makan, pola tidur, dan target realistis dalam sebulan biar progresnya kelihatan.`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    
-    /* 🟢 KEMBALI KE KODE ASLI LU: systemInstruction dihapus dari sini supaya SDK tidak memaksa rute v1beta */
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: systemPrompt });
 
-    const contents = [];
-    normalizedMessages.forEach(m => {
-      const role = m.role === 'assistant' ? 'model' : 'user';
-      if (!m.content.trim()) return;
+    const history = normalizedMessages.slice(0, -1).map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
 
-      if (contents.length > 0 && contents[contents.length - 1].role === role) {
-        contents[contents.length - 1].parts[0].text += '\n' + m.content;
-      } else {
-        contents.push({
-          role: role,
-          parts: [{ text: m.content }]
-        });
-      }
-    });
-
-    while (contents.length > 0 && contents[0].role === 'model') {
-      contents.shift();
+    // Riwayat yang dikirim ke Gemini gak boleh diawali role 'model'
+    while (history.length > 0 && history[0].role === 'model') {
+      history.shift();
     }
 
-    if (contents.length === 0) {
-      return res.status(200).json({ reply: 'Ada rutinitas latihan lain yang bisa Seolha bantu hari ini?' });
-    }
-
-    /* 🟢 SUNTIKAN AMAN: Memasukkan instruksi persona ke teks pertama agar AI tetap merespon sebagai Seolha */
-    if (contents[0].role === 'user') {
-      contents[0].parts[0].text = `[SYSTEM INSTRUCTION: ${systemPrompt}]\n\nUser: ${contents[0].parts[0].text}`;
-    }
-
-    const result = await model.generateContent({ contents });
+    const chat = model.startChat({ history });
+    const last = normalizedMessages[normalizedMessages.length - 1];
+    const result = await chat.sendMessage(last.content);
     const text = result.response.text();
     return res.status(200).json({ reply: text });
   } catch(err) {
-    return res.status(500).json({ error: 'Gagal memproses engine AI: ' + err.message });
+    return res.status(500).json({ error: 'Gagal: ' + err.message });
   }
 }
