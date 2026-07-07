@@ -34,7 +34,7 @@ const MASTER_34_CATEGORIES = [
   },
   {
     name: 'Push Up',
-    tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.',
+    tokoh_terkenal: 'Ade Rai: Otot dada, bahu, and tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.',
     apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.',
     manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), dan otot lengan belakang (triceps).',
     tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.',
@@ -59,7 +59,7 @@ const MASTER_34_CATEGORIES = [
   {
     name: 'Lunges',
     tokoh_terkenal: 'Ronnie Coleman: Angkatan unilateral membentuk keseimbangan kaki yang kokoh untuk menopang beban raksasa.',
-    apa_itu: 'Latihan unilateral tubuh bagian bawah yang berfokus pada pelatihan satu kaki secara mandiri bergantian kiri dan kanan.',
+    apa_itu: 'Latihan unilateral tubuh bagian bawah yang berfokus pada pelatihan satu kaki secara mandiri bergantian kaki kiri dan kanan.',
     manfaatnya: 'Memperbaiki ketidakseimbangan kekuatan kaki kiri-kanan, meningkatkan stabilitas koordinasi tubuh, serta melatih fleksibilitas otot panggul.',
     tata_cara_atau_gerakan: 'Langkahkan kaki kanan jauh ke depan, turunkan lutut kaki kiri belakang hingga hampir menyentuh lantai dan membentuk sudut 90 derajat pada kedua kaki, dorong tumit depan untuk kembali ke posisi awal.',
     id_video: 'AJUh03WB8F4'
@@ -292,13 +292,12 @@ const MASTER_34_CATEGORIES = [
     name: 'Pendinginan (Cool-down)',
     tokoh_terkenal: 'Reg Park: Tenangkan sistem tubuh Anda sebelum meninggalkan area gym agar aliran darah seimbang.',
     apa_itu: 'Fase penutup latihan fisik dengan cara menurunkan intensitas gerakan secara bertahap menuju kondisi tubuh rileks semula.',
-    manfaatnya: 'Menurunkan detak jantung kembali ke batas normal secara perlahan, serta mencegah terjadinya penumpukan darah mendadak di area kaki (blood pooling).',
+    manfaatnya: 'Menurnkan detak jantung kembali ke batas normal secara perlahan, serta mencegah terjadinya penumpukan darah mendadak di area kaki (blood pooling).',
     tata_cara_atau_gerakan: 'Lakukan jalan lambat di tempat selama 2 sampai 3 menit, dilanjutkan dengan teknik penarikan napas dalam secara rileks sembari meluruskan tangan ke atas.',
     id_video: 'COO2S7lPBzA'
   }
 ]
 
-// 🟢 SUB KOMPONEN INTERAKTIF: Mengatur fungsi buka-tutup list dropdown murni per baris item
 function CategoryItem({ cat, index }) {
   const [isOpen, setIsOpen] = useState(false)
   return (
@@ -344,7 +343,6 @@ export default function CompanionAI({ userStats, onClose }) {
 
   const currentTier = getRankTier(userStats?.level || 1)
   
-  // 🟢 KUNCI DIALOG SINKRONISASI JAM HP LU
   const getDynamicGreeting = () => {
     const now = new Date()
     const hrs = now.getHours()
@@ -368,7 +366,6 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // 🛡️ PARSER REFERENSI: Bintang bersih, teks jadi ungu text-accent font-black
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
@@ -490,34 +487,35 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
+    // 🟢 PEMULIHAN TOTAL LOGIKA FAQ & RESTORE ID VIDEO PILIHAN LU 100%
     if (isFaq) {
       let faqReply = ''
       let mediaAsset = null
       const lowerText = msgToSend.toLowerCase()
 
       if (lowerText.includes('mulai dari mana')) {
-        faqReply = `Sebagai seorang Trainer, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (**Full-Body Workout**) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video fungsional pilihan Seolha:`
-        mediaAsset = { type: 'video', src: 'VZUDAOL2LI8' }
+        mediaAsset = { type: 'video', src: '7K37eH7fG34' }
+        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
       } 
       else if (lowerText.includes('kardio atau angkat')) {
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, Trainer.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Latihan Kardio.`
-        mediaAsset = { type: 'video', src: 'cbKkB3POqaY' }
+        mediaAsset = { type: 'video', src: 'gcNh17CkW64' }
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
       }
       else if (lowerText.includes('jenis & cara latihan')) {
-        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, Trainer.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
-        mediaAsset = { type: 'video', src: 'DXL18E7QRbk' }
+        mediaAsset = { type: 'video', src: 'UItWltVZZmE' }
+        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
       else if (lowerText.includes('pola makan') || lowerText.includes('nutrisi')) {
-        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, Trainer.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
-        mediaAsset = { type: 'video', src: '-dCHrqndWYs' }
+        mediaAsset = { type: 'video', src: '3_9yOQ83PjI' }
+        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
       else if (lowerText.includes('pola tidur') || lowerText.includes('recovery')) {
-        faqReply = `Ingat ini, Trainer: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
-        mediaAsset = { type: 'video', src: '-dCHrqndWYs' }
+        mediaAsset = { type: 'video', src: 't0kACis_dJE' }
+        faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
       else if (lowerText.includes('kesalahan fatal')) {
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, Trainer:\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
-        mediaAsset = { type: 'video', src: 'Gr1GtwTp_ko' }
+        mediaAsset = { type: 'video', src: 'ixkQaYn5eg0' }
+        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
       setTimeout(() => {
@@ -527,12 +525,15 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    // 🟢 SINKRONISASI FIXED OBJECT PAYLOAD UNTUK SINKRON /API/CHAT LU
+    // 🟢 AMAN 100%: MENYELARASKAN PAYLOAD SESUAI DENGAN PARAMETER BACKEND LU
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msgToSend })
+        body: JSON.stringify({ 
+          messages: newMessages.filter(m => m.text && !m.text.includes('Gagal mendapatkan respon')), 
+          userStats: userStats 
+        })
       })
 
       if (response.ok) {
@@ -546,7 +547,7 @@ export default function CompanionAI({ userStats, onClose }) {
       }
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke server Seolha terputus.', media: null }])
-    } finally { 
+    } final { 
       setLoading(false) 
     }
   }
@@ -610,7 +611,6 @@ export default function CompanionAI({ userStats, onClose }) {
               </div>
             )}
 
-            {/* 🟢 RENDERING INTERAKTIF: Memetika sub-komponen dropdown lipat agar tidak scrolling panjang */}
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
               <div className="matrix-dropdown-container w-[85%] space-y-4 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
                 {m.multiMedia.map((vid, vIdx) => (
