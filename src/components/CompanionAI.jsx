@@ -6,17 +6,17 @@ import { getRankTier } from '../lib/expSystem'
 const ScrollbarStyles = () => (
   <style dangerouslySetInnerHTML={{__html: `
     /* Scrollbar untuk Area Chat Utama */
-    .main-chat-container::-webkit-scrollbar { width: 5px !important; background: #100E16 !important; }
+    .main-chat-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
     .main-chat-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .main-chat-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
 
-    /* Scrollbar Horizontal FAQ (Sekarang Muncul Ungu) */
-    .faq-slider-container::-webkit-scrollbar { height: 5px !important; background: #100E16 !important; display: block !important; }
+    /* Scrollbar Horizontal FAQ (Sekarang Muncul Ungu Tebal & Jelas) */
+    .faq-slider-container::-webkit-scrollbar { height: 6px !important; background: #100E16 !important; display: block !important; }
     .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
-    .faq-slider-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
+    .faq-slider-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; overflow-x: auto !important; }
 
     /* Scrollbar untuk Dropdown 34 Kategori Matrix */
-    .matrix-dropdown-container::-webkit-scrollbar { width: 5px !important; background: #100E16 !important; }
+    .matrix-dropdown-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
     .matrix-dropdown-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .matrix-dropdown-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
   `}} />
@@ -61,7 +61,7 @@ const MASTER_34_CATEGORIES = [
   { name: 'Arms (Lengan Bicep/Tricep)', tokoh_terkenal: 'Rich Piana: Jangan harap lengan Anda membesar jika Anda tidak memaksa darah mengalir penuh ke ototnya.', apa_itu: 'Sesi latihan terisolasi yang menargetkan kelompok otot lengan atas bagian depan (biceps) dan otot lengan atas bagian belakang (triceps).', manfaatnya: 'Meningkatkan lingkar dimensi lengan tangan, serta menambah kekuatan dorong dan tarik untuk mendukung latihan compound lainnya.', tata_cara_atau_gerakan: 'Lakukan variasi Bicep Curl menggunakan kabel atau barbel, lalu pasangkan langsung dengan gerakan Tricep Overhead Extension menggunakan dumbbell tunggal.', id_video: 'rSohL4gWm9A' },
   { name: 'Glutes Isolation (Bokong)', tokoh_terkenal: 'Amanda Latona: Otot bokong yang kuat adalah motor utama penggerak daya ledak tubuh bawah.', apa_itu: 'Latihan isolasi yang dirancang untuk mengaktifkan, memperkuat, dan mengencangkan kelompok otot pantat (gluteus maximus, medius, minimus).', manfaatnya: 'Meningkatkan daya dorong panggul saat berlari cepat, menstabilkan posisi panggul bawah, serta melindung punggung bawah dari cedera.', tata_cara_atau_gerakan: 'Tempatkan punggung atas di tepi bangku flat, letakkan barbel di atas panggul, lalu dorong panggul ke atas (Barbell Hip Thrust) hingga sejajar lutut sembari meremas otot bokong.', id_video: '1T3v_leyDIE' },
   { name: 'Mobility Drills', tokoh_terkenal: 'Kelly Starrett: Tubuh yang kuat tanpa mobilitas sendi yang fleksibel hanyalah sebuah mesin yang rusak.', apa_itu: 'Latihan gerakan aktif untuk meningkatkan kapasitas fleksibilitas kapsul sendi dan memperluas jarak jangkauan gerak fungsional tubuh.', manfaatnya: 'Memperluas Range of Motion (ROM) aktif sendi sehingga angkatan beban compound di gym bisa dilakukan secara dalam dan sempurna.', tata_cara_atau_gerakan: 'Lakukan posisi Deep Squat Hold (menahan posisi jongkok paling bawah) selama 1 menit sembari mendorong lutut ke luar menggunakan kedua siku tangan.', id_video: 'tg6zZF6pRg0' },
-  { name: 'Stretching (Peregangan)', tokoh_terkenal: 'Flex Wheeler: Elastisitas jaringan ikat pasca latihan mempercepat pembuangan limbah sisa metabolisme.', apa_itu: 'Gerakan menahan regangan serat otot secara statis di akhir sesi latihan untuk mengembalikan panjang jaringan otot ke kondisi semula.', manfaatnya: 'Mengendurkan simpul-simpul kaku pada otot pasca dihantam latihan berat, serta melancarkan pembuangan asam laktat penyebab pegal.', tata_cara_atau_gerakan: 'Duduk di matras dengan meluruskan kedua kaki ke depan, raih ujung jari kaki menggunakan tangan (Seated Forward Fold) and tahan posisi regangan selama 20-30 detik.', id_video: 'itJE4neqDJw' },
+  { name: 'Stretching (Peregangan)', tokoh_terkenal: 'Flex Wheeler: Elastisitas jaringan ikat pasca latihan mempercepat pembuangan limbah sisa metabolisme.', apa_itu: 'Gerakan menahan regangan serat otot secara statis di akhir sesi latihan untuk mengembalikan panjang jaringan otot ke kondisi semula.', manfaatnya: 'Mengendurkan simpul-simpul kaku pada otot pasca dihantam latihan berat, serta melancarkan pembuangan asam laktat penyebab pegal.', tata_cara_atau_gerakan: 'Duduk di matras dengan meluruskan kedua kaki ke depan, raih ujung jari kaki menggunakan tangan (Seated Forward Fold) dan tahan posisi regangan selama 20-30 detik.', id_video: 'itJE4neqDJw' },
   { name: 'Yoga', tokoh_terkenal: 'Kino MacGregor: Yoga adalah perjalanan spiritual yang dieksekusi melalui ketahanan fisik dan nafas.', apa_itu: 'Sistem penyelarasan postur tubuh statis/dinamis yang dikombinasikan dengan teknik kontrol pernapasan dalam demi harmoni fisik dan mental.', manfaatnya: 'Meningkatkan elastisitas ligamen tubuh secara ekstrem, memperbaiki keseimbangan statis, dan melatih ketenangan fokus pikiran.', tata_cara_atau_gerakan: 'Ikuti transisi pose mengalir (Vinyasa Flow) secara perlahan, mulai dari posisi Downward-Facing Dog, transisi ke Cobra Pose, hingga diakhiri dengan Child’s Pose.', id_video: 'RvCntPg7oPE' },
   { name: 'Swimming (Berenang)', tokoh_terkenal: 'Michael Phelps: Di dalam air tidak ada benturan sendi, yang ada hanya resistensi hampa udara.', apa_itu: 'Olahraga akuatik seluruh tubuh dengan cara menggerakkan lengan dan kaki untuk meluncur membelah resistensi air di kolam.', manfaatnya: 'Melatih kapasitas vitalitas paru-paru dan jantung secara optimal tanpa memberikan risiko impak benturan keras pada sendi-sendi kaki.', tata_cara_atau_gerakan: 'Lakukan kayuhan lengan bergantian ke depan dipadukan dengan gerakan tendangan kaki lurus (flutter kick) menggunakan gaya bebas sepanjang lintasan kolam.', id_video: 'IKWGF4kP8Cs' },
   { name: 'Running (Lari)', tokoh_terkenal: 'Eliud Kipchoge: Berlari bukan hanya soal kaki, melainkan disiplin menjaga ritme konstan jantung.', apa_itu: 'Aktivitas kardio intensitas menengah-tinggi dengan melangkah cepat di mana ada momen kedua kaki melayang di udara secara bergantian.', manfaatnya: 'Membakar kalori dalam jumlah masif secara praktis, memperkuat kepadatan tulang kaki bawah, serta melatih daya tahan stamina kardiovaskular.', tata_cara_atau_gerakan: 'Mulailah dengan joging santai, pertahankan postur tubuh tegak, pandangan lurus ke depan, tekuk siku 90 derajat, dan pastikan mendarat menggunakan area tengah kaki.', id_video: '6H8WLfyavWk' },
@@ -131,16 +131,17 @@ export default function CompanionAI({ userStats, onClose }) {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
       let processedLine = line
-      const boldRegex = /\*\*(.*?)\*\*/g
+      const boldRegex = /\*\frac{(.*?)}{(.*?)}\*\*/g || /\*\*(.*?)\*\*/g
+      const realBoldRegex = /\*\*(.*?)\*\*/g
       const parts = []
       let lastIndex = 0
       let match
       const isBullet = line.trim().startsWith('* ')
       if (isBullet) processedLine = line.trim().substring(2)
-      while ((match = boldRegex.exec(processedLine)) !== null) {
+      while ((match = realBoldRegex.exec(processedLine)) !== null) {
         if (match.index > lastIndex) parts.push(processedLine.substring(lastIndex, match.index))
         parts.push(<strong key={match.index} className="text-accent font-black">{match[1]}</strong>)
-        lastIndex = boldRegex.lastIndex
+        lastIndex = realBoldRegex.lastIndex
       }
       if (lastIndex < processedLine.length) parts.push(processedLine.substring(lastIndex))
       const content = parts.length > 0 ? parts : processedLine
@@ -209,47 +210,53 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
+    // 🟢 PEMBARUAN UTAMA: COCOK CAPSLOCK AMAN & FITUR MULTI-VIDEO HARUS MUNCUL SEMUA
     if (isFaq) {
       let faqReply = ''
-      let mediaAsset = null
-      if (msgToSend.includes('Mulai dari mana')) {
-        mediaAsset = { type: 'video', src: 'rN92rbUoQDE' }
+      let multiVideos = null
+      const lowerText = msgToSend.toLowerCase()
+
+      if (lowerText.includes('mulai dari mana')) {
+        multiVideos = ['rN92rbUoQDE', 'vbJxymW5xj0']
         faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri. Ini ada 2 panduan video lokal pilihan Seolha:\n1. https://youtu.be/rN92rbUoQDE\n2. https://youtu.be/vbJxymW5xj0`
       } 
-      else if (msgToSend.includes('Kardio atau angkat')) {
-        mediaAsset = { type: 'video', src: '2MoGxae-zyo' }
+      else if (lowerText.includes('kardio atau angkat')) {
+        multiVideos = ['2MoGxae-zyo', 'GY1JhB9BEkk']
         faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio. Video referensi:\n1. https://youtu.be/2MoGxae-zyo\n2. https://youtu.be/GY1JhB9BEkk`
       }
-      else if (msgToSend.includes('Jenis & Cara Latihan')) {
-        mediaAsset = { type: 'video', src: 'UItWltVZZmE' }
+      else if (lowerText.includes('jenis & cara latihan')) {
+        multiVideos = ['UItWltVZZmE']
         faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
-      else if (msgToSend.includes('Pola Makan & Nutrisi')) {
-        mediaAsset = { type: 'video', src: 'mzpDEPg7-3E' }
+      else if (lowerText.includes('pola makan') || lowerText.includes('nutrisi')) {
+        multiVideos = ['mzpDEPg7-3E']
         faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.\n\nVideo referensi: https://youtu.be/mzpDEPg7-3E`
       }
-      else if (msgToSend.includes('Pola Tidur & Recovery')) {
-        mediaAsset = { type: 'video', src: '-lu1Nmttz4w' }
+      else if (lowerText.includes('pola tidur') || lowerText.includes('recovery')) {
+        multiVideos = ['-lu1Nmttz4w']
         faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.\n\nVideo referensi: https://youtu.be/-lu1Nmttz4w`
       }
-      else if (msgToSend.includes('Kesalahan Fatal Pemula')) {
-        mediaAsset = { type: 'video', src: 'HtzSj0FEogk' }
+      else if (lowerText.includes('kesalahan fatal')) {
+        multiVideos = ['HtzSj0FEogk']
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.\n\nVideo referensi: https://youtu.be/HtzSj0FEogk`
       }
 
       setTimeout(() => {
-        setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, media: mediaAsset }])
+        setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, mediaSources: multiVideos }])
         setLoading(false)
       }, 500)
       return
     }
 
+    // 🟢 SINKRONISASI COCOK 100% + DISPLAY EROR ASLI DARI BACKEND BIAR GAK BLIND
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           messages: newMessages.filter(m => m.text && !m.text.includes('Gagal mendapatkan respon')).map(m => ({
+            sender: m.sender,
+            text: m.text,
             role: m.sender === 'user' ? 'user' : 'assistant',
             content: m.text
           })), 
@@ -263,7 +270,9 @@ export default function CompanionAI({ userStats, onClose }) {
         setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: null }])
         setDailyCount(prev => prev + 1)
       } else {
-        setMessages(prev => [...prev, { sender: 'seolha', text: 'Gagal mendapatkan respon dari engine chat. Mohon periksa kembali status API Studio Key Anda.', media: null }])
+        const errData = await response.json().catch(() => ({}))
+        const serverError = errData.error || 'Mohon periksa kembali status API Studio Key Anda.'
+        setMessages(prev => [...prev, { sender: 'seolha', text: `Gagal mendapatkan respon dari engine chat. (Detail: ${serverError})`, media: null }])
       }
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke server Seolha terputus.', media: null }])
@@ -315,7 +324,6 @@ export default function CompanionAI({ userStats, onClose }) {
         </button>
       </div>
 
-      {/* 🟢 DITAMBAHKAN CLASS main-chat-container BIAR SCROLLBAR CHAT UTUT JADI UNGU */}
       <div className="main-chat-container flex-1 overflow-y-auto py-3 space-y-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
@@ -323,11 +331,18 @@ export default function CompanionAI({ userStats, onClose }) {
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
-            {m.sender === 'seolha' && m.media && (
-              <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
-                <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0`} title="Inline Stream Guide" frameBorder="0" allowFullScreen />
+            
+            {/* 🟢 OUTPUT FITUR MULTI-VIDEO: Menampilkan lebih dari 1 video sekaligus ke bawah jika ada */}
+            {m.sender === 'seolha' && m.mediaSources && Array.isArray(m.mediaSources) && (
+              <div className="w-[85%] mt-2 space-y-2.5">
+                {m.mediaSources.map((srcId, sIdx) => (
+                  <div key={sIdx} className="w-full p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
+                    <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${srcId}?playsinline=1&enablejsapi=1&rel=0`} title={`FAQ Video Guide ${sIdx}`} frameBorder="0" allowFullScreen />
+                  </div>
+                ))}
               </div>
             )}
+
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
               <div className="matrix-dropdown-container w-[85%] space-y-4 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
                 {m.multiMedia.map((vid, vIdx) => <CategoryItem key={vIdx} cat={vid} index={vIdx} />)}
@@ -339,10 +354,9 @@ export default function CompanionAI({ userStats, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 🟢 FIX UTAMA: MENGHAPUS scrollbarWidth: 'none' BIAR BAR UNGU HORIZONTAL FAQ MUNCUL NYATA */}
       <div className="mb-2 bg-background pt-1.5">
         <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
-        <div className="faq-slider-container flex gap-2 overflow-x-auto pb-1 flex-nowrap" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="faq-slider-container flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ WebkitOverflowScrolling: 'touch' }}>
           <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Mulai dari mana?</button>
           <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Kardio atau angkat?</button>
           <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Cara & Jenis Latihan</button>
