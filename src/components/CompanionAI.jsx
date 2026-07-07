@@ -17,9 +17,9 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_2', name: 'ARNOLD SCHWARZENEGGER', quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.', mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.' },
   { id: 'legend_3', name: 'DAVID GOGGINS', quote: 'Saat pikiranmu berkata sudah selesai, sebenarnya fisikmu baru menggunakan 40 persen kekuatan aslinya. Tetap keras!', mission: 'Selesaikan sesi latihan penuh hari ini tanpa menyerah di tengah jalan.' },
   { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
-  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
+  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
   { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
-  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
+  { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai perceh.' },
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
 ]
 
@@ -69,7 +69,7 @@ const MASTER_34_CATEGORIES = [
     tokoh_terkenal: 'Bruce Lee: Kosongkan pikiranmu, jadilah tanpa bentuk seperti air. Tenang di dalam badai latihan.',
     apa_itu: 'Praktik relaksasi mental terarah untuk melatih fokus pikiran, kedalaman pernapasan, dan memicu ketenangan sistem saraf.',
     manfaatnya: 'Menurunkan hormon stres (kortisol) dengan cepat pasca latihan berat, menenangkan detak jantung, dan mempertajam fokus mind-muscle connection.',
-    tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, and pusatkan perhatian penuh hanya pada hembusan napas Anda.',
+    tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, dan pusatkan perhatian penuh hanya pada hembusan napas Anda.',
     id_video: '2sJyBfDZpe4'
   },
   {
@@ -164,7 +164,7 @@ const MASTER_34_CATEGORIES = [
     name: 'Core/Abs Isolation',
     tokoh_terkenal: 'Sergi Constance: Otot perut dikeraskan di ruang latihan lewat core compression dan dikunci rapat.',
     apa_itu: 'Latihan isolasi terfokus yang menargetkan kelompok otot perut bagian depan (six pack) dan otot perut samping (obliques).',
-    manfaatnya: 'Membentuk estetika otot perut yang kering and tajam, serta menstabilkan rongga perut tengah untuk menohan angkatan compound berat.',
+    manfaatnya: 'Membentuk estetika otot perut yang kering dan tajam, serta menstabilkan rongga perut tengah untuk menahan angkatan compound berat.',
     tata_cara_atau_gerakan: 'Lakukan gerakan fleksi perut seperti Hanging Leg Raises (mengangkat kaki menggantung), Cable Crunch, dan Russian Twist menggunakan plate beban ringan.',
     id_video: 'Cnmy08JgakM'
   },
@@ -310,7 +310,7 @@ function CategoryItem({ cat, index }) {
         <span>{index + 1}. {cat.name} <span className="text-text-dim font-normal normal-case ml-1">[silakan klik penjelasan dan videonya]</span></span>
         <span className="text-text-dim text-[10px]">{isOpen ? '▲' : '▼'}</span>
       </button>
-      
+
       {isOpen && (
         <div className="mt-2 pl-2.5 space-y-2 border-l border-[#7C5CFF]/40">
           <p className="font-body text-xs text-text-dim italic">"{cat.tokoh_terkenal}"</p>
@@ -342,12 +342,11 @@ export default function CompanionAI({ userStats, onClose }) {
   const messagesEndRef = useRef(null)
 
   const currentTier = getRankTier(userStats?.level || 1)
-  
+
   const getDynamicGreeting = () => {
     const now = new Date()
     const hrs = now.getHours()
     if (hrs >= 0 && hrs < 4) return "Selamat pagi"
-    if (hrs >= 4 && hrs < 8) return "Bangun dan waktunya bersinar"
     if (hrs >= 4 && hrs < 8) return "Bangun dan waktunya bersinar"
     if (hrs >= 8 && hrs < 11) return "Selamat beraktivitas"
     if (hrs === 11) return "Selamat siang"
@@ -488,7 +487,7 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    // 🟢 SINKRONISASI COK FAQ MENGIKUTI STRUKTUR & VIDEO MANDATORI BENTUKAN LU
+    // 🟢 FAQ LOGIC PREMIUM DAN RESTORE 100% VIDEO MANDATORI ASLI LU
     if (isFaq) {
       let faqReply = ''
       let mediaAsset = null
@@ -525,7 +524,7 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    // 🟢 PENYESUAIAN STRUKTUR PAYLOAD CHAT ENGINE MENUJU BACKEND CHAT.JS LU
+    // 🟢 SINKRONISASI COCOK 100%: Menembak payload murni mengikuti chat.js asli lu tanpa merubah backend
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -542,7 +541,7 @@ export default function CompanionAI({ userStats, onClose }) {
       if (response.ok) {
         const resData = await response.json()
         let replyText = resData.reply || 'Ada progres lain yang mau kita diskusikan?'
-        
+
         setMessages(prev => [...prev, { sender: 'seolha', text: replyText, media: null }])
         setDailyCount(prev => prev + 1)
       } else {
@@ -607,7 +606,7 @@ export default function CompanionAI({ userStats, onClose }) {
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
-            
+
             {m.sender === 'seolha' && m.media && (
               <div className="w-[85%] mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
                 <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${m.media.src}?playsinline=1&enablejsapi=1&rel=0`} title="Inline Stream Guide" frameBorder="0" allowFullScreen />
