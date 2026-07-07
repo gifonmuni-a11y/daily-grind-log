@@ -38,8 +38,8 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    {/* 🟢 FIX UTAMA: Mengubah model ke gemini-1.5-flash-latest agar tidak eror 404 Not Found */}
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest', systemInstruction: systemPrompt });
+    {/* 🟢 FIX UTAMA: systemInstruction dihapus dari sini agar SDK menggunakan rute stable /v1/ */}
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const contents = [];
     normalizedMessages.forEach(m => {
@@ -62,6 +62,11 @@ export default async function handler(req, res) {
 
     if (contents.length === 0) {
       return res.status(200).json({ reply: 'Ada rutinitas latihan lain yang bisa Seolha bantu hari ini?' });
+    }
+
+    {/* 🟢 FIX KEDUA: Menyuntikkan prompt instruksi langsung ke chat pertama agar AI paham perintah sistem */}
+    if (contents[0].role === 'user') {
+      contents[0].parts[0].text = `[SYSTEM CONTEXT & INSTRUCTIONS: ${systemPrompt}]\n\nUser: ${contents[0].parts[0].text}`;
     }
 
     const result = await model.generateContent({ contents });
