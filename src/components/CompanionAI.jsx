@@ -17,7 +17,7 @@ const LEGENDARY_QUOTES = [
   { id: 'legend_2', name: 'ARNOLD SCHWARZENEGGER', quote: 'Satu-satunya cara untuk meruntuhkan batasan fisikmu adalah dengan terus menembus rasa sakit itu tanpa rasa takut.', mission: 'Tambah repetisi atau beban melebihi batas nyaman biasanya hari ini.' },
   { id: 'legend_3', name: 'DAVID GOGGINS', quote: 'Saat pikiranmu berkata sudah selesai, sebenarnya fisikmu baru menggunakan 40 persen kekuatan aslinya. Tetap keras!', mission: 'Selesaikan sesi latihan penuh hari ini tanpa menyerah di tengah jalan.' },
   { id: 'legend_4', name: 'DEDDY CORBUZIER', quote: 'Rasa malas itu bukan kepribadian, itu cuma alasan dari mental yang lemah. Bangun sekarang dan paksa dirimu ke medan latihan!', mission: 'Jangan tunda jam latihan, eksekusi log tepat waktu hari ini.' },
-  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan pernah berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
+  { id: 'legend_5', name: 'CRISTIANO RONALDO', quote: 'Bakat tanpa kerja keras jangka panjang tidak akan berarti apa-apa di panggung tertinggi dunia.', mission: 'Fokus penuh pada konsistensi gerakan dan ketepatan form eksekusi.' },
   { id: 'legend_6', name: 'DENNY SUMARGO', quote: 'Kemenangan sejati didapatkan saat kamu berhasil mengalahkan rasa ingin menyerah yang berisik di dalam kepalamu sendiri.', mission: 'Lawan rasa mager, lakukan minimal 15 menit conditioning harian.' },
   { id: 'legend_7', name: 'THE ROCK', quote: 'Sukses bukan tentang menjadi yang paling hebat dalam semalam, tapi tentang konsistensi kerja keras berdarah-darah setiap hari.', mission: 'Pertahankan dan amankan grafik streak harianmu jangan sampai pecah.' },
   { id: 'legend_8', name: 'BUNG KARNO', quote: 'Gantungkan cita-cita latihanmu setinggi langit! Jika engkau jatuh, engkau akan jatuh di antara bintang-bintang.', mission: 'Set target log mingguan tertinggi dan catat sesi dengan performa terbaik.' }
@@ -34,7 +34,7 @@ const MASTER_34_CATEGORIES = [
   },
   {
     name: 'Push Up',
-    tokoh_terkenal: 'Ade Rai: Otot dada, bahu, and tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.',
+    tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.',
     apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.',
     manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), dan otot lengan belakang (triceps).',
     tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.',
@@ -69,7 +69,7 @@ const MASTER_34_CATEGORIES = [
     tokoh_terkenal: 'Bruce Lee: Kosongkan pikiranmu, jadilah tanpa bentuk seperti air. Tenang di dalam badai latihan.',
     apa_itu: 'Praktik relaksasi mental terarah untuk melatih fokus pikiran, kedalaman pernapasan, dan memicu ketenangan sistem saraf.',
     manfaatnya: 'Menurunkan hormon stres (kortisol) dengan cepat pasca latihan berat, menenangkan detak jantung, dan mempertajam fokus mind-muscle connection.',
-    tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, dan pusatkan perhatian penuh hanya pada hembusan napas Anda.',
+    tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, and pusatkan perhatian penuh hanya pada hembusan napas Anda.',
     id_video: '2sJyBfDZpe4'
   },
   {
@@ -164,7 +164,7 @@ const MASTER_34_CATEGORIES = [
     name: 'Core/Abs Isolation',
     tokoh_terkenal: 'Sergi Constance: Otot perut dikeraskan di ruang latihan lewat core compression dan dikunci rapat.',
     apa_itu: 'Latihan isolasi terfokus yang menargetkan kelompok otot perut bagian depan (six pack) dan otot perut samping (obliques).',
-    manfaatnya: 'Membentuk estetika otot perut yang kering dan tajam, serta menstabilkan rongga perut tengah untuk menahan angkatan compound berat.',
+    manfaatnya: 'Membentuk estetika otot perut yang kering and tajam, serta menstabilkan rongga perut tengah untuk menohan angkatan compound berat.',
     tata_cara_atau_gerakan: 'Lakukan gerakan fleksi perut seperti Hanging Leg Raises (mengangkat kaki menggantung), Cable Crunch, dan Russian Twist menggunakan plate beban ringan.',
     id_video: 'Cnmy08JgakM'
   },
@@ -292,7 +292,7 @@ const MASTER_34_CATEGORIES = [
     name: 'Pendinginan (Cool-down)',
     tokoh_terkenal: 'Reg Park: Tenangkan sistem tubuh Anda sebelum meninggalkan area gym agar aliran darah seimbang.',
     apa_itu: 'Fase penutup latihan fisik dengan cara menurunkan intensitas gerakan secara bertahap menuju kondisi tubuh rileks semula.',
-    manfaatnya: 'Menurnkan detak jantung kembali ke batas normal secara perlahan, serta mencegah terjadinya penumpukan darah mendadak di area kaki (blood pooling).',
+    manfaatnya: 'Menurunkan detak jantung kembali ke batas normal secara perlahan, serta mencegah terjadinya penumpukan darah mendadak di area kaki (blood pooling).',
     tata_cara_atau_gerakan: 'Lakukan jalan lambat di tempat selama 2 sampai 3 menit, dilanjutkan dengan teknik penarikan napas dalam secara rileks sembari meluruskan tangan ke atas.',
     id_video: 'COO2S7lPBzA'
   }
@@ -347,6 +347,7 @@ export default function CompanionAI({ userStats, onClose }) {
     const now = new Date()
     const hrs = now.getHours()
     if (hrs >= 0 && hrs < 4) return "Selamat pagi"
+    if (hrs >= 4 && hrs < 8) return "Bangun dan waktunya bersinar"
     if (hrs >= 4 && hrs < 8) return "Bangun dan waktunya bersinar"
     if (hrs >= 8 && hrs < 11) return "Selamat beraktivitas"
     if (hrs === 11) return "Selamat siang"
@@ -487,33 +488,32 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    // 🟢 PEMULIHAN TOTAL LOGIKA FAQ & RESTORE ID VIDEO PILIHAN LU 100%
+    // 🟢 SINKRONISASI COK FAQ MENGIKUTI STRUKTUR & VIDEO MANDATORI BENTUKAN LU
     if (isFaq) {
       let faqReply = ''
       let mediaAsset = null
-      const lowerText = msgToSend.toLowerCase()
 
-      if (lowerText.includes('mulai dari mana')) {
+      if (msgToSend.includes('Mulai dari mana')) {
         mediaAsset = { type: 'video', src: '7K37eH7fG34' }
         faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
       } 
-      else if (lowerText.includes('kardio atau angkat')) {
+      else if (msgToSend.includes('Kardio atau angkat')) {
         mediaAsset = { type: 'video', src: 'gcNh17CkW64' }
         faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${currentTier}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
       }
-      else if (lowerText.includes('jenis & cara latihan')) {
+      else if (msgToSend.includes('Jenis & Cara Latihan')) {
         mediaAsset = { type: 'video', src: 'UItWltVZZmE' }
         faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${currentTier}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
-      else if (lowerText.includes('pola makan') || lowerText.includes('nutrisi')) {
+      else if (msgToSend.includes('Pola Makan & Nutrisi')) {
         mediaAsset = { type: 'video', src: '3_9yOQ83PjI' }
         faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${currentTier}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
-      else if (lowerText.includes('pola tidur') || lowerText.includes('recovery')) {
+      else if (msgToSend.includes('Pola Tidur & Recovery')) {
         mediaAsset = { type: 'video', src: 't0kACis_dJE' }
         faqReply = `Ingat ini, ${currentTier}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
-      else if (lowerText.includes('kesalahan fatal')) {
+      else if (msgToSend.includes('Kesalahan Fatal Pemula')) {
         mediaAsset = { type: 'video', src: 'ixkQaYn5eg0' }
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${currentTier}.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
@@ -525,13 +525,16 @@ export default function CompanionAI({ userStats, onClose }) {
       return
     }
 
-    // 🟢 AMAN 100%: MENYELARASKAN PAYLOAD SESUAI DENGAN PARAMETER BACKEND LU
+    // 🟢 PENYESUAIAN STRUKTUR PAYLOAD CHAT ENGINE MENUJU BACKEND CHAT.JS LU
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          messages: newMessages.filter(m => m.text && !m.text.includes('Gagal mendapatkan respon')), 
+          messages: newMessages.filter(m => m.text && !m.text.includes('Gagal mendapatkan respon')).map(m => ({
+            role: m.sender === 'user' ? 'user' : 'assistant',
+            content: m.text
+          })), 
           userStats: userStats 
         })
       })
@@ -547,7 +550,7 @@ export default function CompanionAI({ userStats, onClose }) {
       }
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke server Seolha terputus.', media: null }])
-    } final { 
+    } finally { 
       setLoading(false) 
     }
   }
