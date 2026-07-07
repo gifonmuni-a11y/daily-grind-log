@@ -43,7 +43,9 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: systemPrompt });
+    
+    {/* 🟢 MODEL SUDAH TERGANTI KE 3.5 FLASH */}
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash', systemInstruction: systemPrompt });
 
     const history = normalizedMessages.slice(0, -1).map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
