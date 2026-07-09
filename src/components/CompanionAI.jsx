@@ -66,10 +66,6 @@ export default function CompanionAI({ userStats, onClose }) {
   const modelRef = useRef(null)
   const isTalkingRef = useRef(false)
 
-  // Array penampung seluruh komponen tulang lengan kanan & kiri yang terdeteksi
-  const leftArmBones = useRef([])
-  const rightArmBones = useRef([])
-
   const activeUserName = userStats?.name || 'Hunter'
   const userStatsWithDynamicName = { ...userStats, name: activeUserName }
   const currentTier = getRankTier(userStats?.level || 1)
@@ -93,7 +89,7 @@ export default function CompanionAI({ userStats, onClose }) {
     const width = canvasContainerRef.current.clientWidth
     const height = canvasContainerRef.current.clientHeight
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-    camera.position.set(0, 1.3, 2.2)
+    camera.position.set(0, 1.2, 1.8) // Fokus portrait ke area karakter cewek
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setSize(width, height)
@@ -108,8 +104,9 @@ export default function CompanionAI({ userStats, onClose }) {
     scene.add(directionalLight)
 
     const loader = new GLTFLoader()
+    // LANGSUNG MEMANGGIL CDN MODEL CEWEK RESMI DENGAN TANGAN RILEKS KE BAWAH
     loader.load(
-      '/uploads_files_6103604_C_SwordJKv2.glb',
+      'https://assets.babylonjs.com/models/HVGirl.glb',
       (gltf) => {
         const model = gltf.scene
         model.position.set(0, 0, 0)
@@ -118,19 +115,6 @@ export default function CompanionAI({ userStats, onClose }) {
         const size = box.getSize(new THREE.Vector3())
         const center = box.getCenter(new THREE.Vector3())
         model.position.y = -center.y + (size.y / 4) 
-
-        // 🟢 PENCARI TULANG AGRESIF: Menjaring variasi nama struktur rigging upperarm / shoulder / lengan
-        model.traverse((object) => {
-          if (object.isBone) {
-            const name = object.name.toLowerCase()
-            if (name.includes('arm_l') || name.includes('shoulder_l') || name.includes('upperarm_l') || name.includes('leftarm') || name.includes('l_arm') || name.includes('bahu_l')) {
-              leftArmBones.current.push(object)
-            }
-            if (name.includes('arm_r') || name.includes('shoulder_r') || name.includes('upperarm_r') || name.includes('rightarm') || name.includes('r_arm') || name.includes('bahu_r')) {
-              rightArmBones.current.push(object)
-            }
-          }
-        })
 
         scene.add(model)
         modelRef.current = model
@@ -145,10 +129,6 @@ export default function CompanionAI({ userStats, onClose }) {
     const animate = () => {
       animationId = requestAnimationFrame(animate)
       const elapsedTime = clock.getElapsedTime()
-
-      // 🛠️ Tekuk paksa sudut seluruh tulang lengan yang berhasil ditangkap agar jatuh ke bawah
-      leftArmBones.current.forEach(bone => { bone.rotation.z = 1.35 })
-      rightArmBones.current.forEach(bone => { bone.rotation.z = -1.35 })
 
       if (modelRef.current) {
         if (isTalkingRef.current) {
