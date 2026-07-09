@@ -22,8 +22,8 @@ const ScrollbarStyles = () => (
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), dan lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
   { name: 'Push Up', tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.', manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), dan otot lengan belakang (triceps).', tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.', id_video: 'VZUDAOL2LI8' },
-  { name: 'Squat', tokoh_terkenal: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.', apa_itu: 'Latihan compound tubuh bagian bawah yang meniru gerakan fundamental manusia saat hendak duduk dan berdiri kembali.', manfaatnya: 'Memperkuat rantai kekuatan otot paha depan (quadriceps), paha belakang (hamstring), bokong (glutes), serta melatih kekuatan tulang punggung.', tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah and ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.', id_video: 'Xb2Lm40nlGo' },
-  { name: 'Plank', tokoh_terkenal: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', apa_itu: 'Latihan kekuatan isometrik statis yang mengharuskan Anda menahan satu posisi tubuh garis lurus dalam durasi waktu tertentu.', manfaatnya: 'Mengunci stabilitas seluruh dinding otot perut (core), memperkuat otot panggul bawah, serta memperbaiki postur tubuh bungkuk.', tata_cara_atau_gerakan: 'Tumpu bobot badan Anda pada kedua siku lengan bawah dan ujung jari kaki di atas matras, kunci otot perut dan bokong sekencang mungkin, pastikan posisi pinggul tidak naik atau merosot.', id_video: 'Gr1GtwTp_ko' },
+  { name: 'Squat', tokoh_terkenal: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.', apa_itu: 'Latihan compound tubuh bagian bawah yang meniru gerakan fundamental manusia saat hendak duduk dan berdiri kembali.', manfaatnya: 'Memperkuat rantai kekuatan otot paha depan (quadriceps), paha belakang (hamstring), bokong (glutes), serta melatih kekuatan tulang punggung.', tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah dan ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.', id_video: 'Xb2Lm40nlGo' },
+  { name: 'Plank', tokoh_terkenal: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', apa_itu: 'Latihan kekuatan isometrik statis yang mengharuskan Anda menahan satu posisi tubuh garis lurus dalam durasi waktu tertentu.', manfaatnya: 'Mengunci stabilitas seluruh dinding otot perut (core), memperkuat otot panggul bawah, serta memperbaiki postur tubuh bungkuk.', tata_cara_atau_gerakan: 'Tumpu bobot badan Anda pada kedua siku lengan bawah dan ujung jari kaki di atas matras, kunci otot perut and bokong sekencang mungkin, pastikan posisi pinggul tidak naik atau merosot.', id_video: 'Gr1GtwTp_ko' },
   { name: 'Lunges', tokoh_terkenal: 'Ronnie Coleman: Angkatan unilateral membentuk keseimbangan kaki yang kokoh untuk menopang beban raksasa.', apa_itu: 'Latihan unilateral tubuh bagian bawah yang berfokus pada pelatihan satu kaki secara mandiri bergantian kaki kaki kiri dan kanan.', manfaatnya: 'Memperbaiki ketidakseimbangan kekuatan kaki kiri-kanan, meningkatkan stabilitas koordinasi tubuh, serta melatih fleksibilitas otot panggul.', tata_cara_atau_gerakan: 'Langkahkan kaki kanan jauh ke depan, turunkan lutut kaki kiri belakang hingga hampir menyentuh lantai dan membentuk sudut 90 derajat pada kedua kaki, dorong tumit depan untuk kembali ke posisi awal.', id_video: 'AJUh03WB8F4' },
   { name: 'Meditasi', tokoh_terkenal: 'Bruce Lee: Kosongkan pikiranmu, jadilah tanpa bentuk seperti air. Tenang di dalam badai latihan.', apa_itu: 'Praktik relaksasi mental terarah untuk melatih fokus pikiran, kedalaman pernapasan, dan memicu ketenangan sistem saraf.', manfaatnya: 'Menurunkan hormon stres (kortisol) dengan cepat pasca latihan berat, menenangkan detak jantung, dan mempertajam fokus mind-muscle connection.', tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, dan pusatkan perhatian penuh hanya pada hembusan napas Anda.', id_video: '2sJyBfDZpe4' },
   { name: 'Pola Tidur (Rest)', tokoh_terkenal: 'Dorian Yates: Otot tidak tumbuh di gym. Otot Anda tumbuh saat tidur pulas di dalam kegelapan kamar.', apa_itu: 'Fase pemulihan pasif total di mana tubuh melakukan perbaikan makro terhadap jaringan sel otot yang robek selama latihan fisik.', manfaatnya: 'Memicu pelepasan Hormon Pertumbuhan Manusia (HGH) secara alami, mempercepat pemulihan energi seluler, dan menghentikan katabolisme (penyusutan otot).', tata_cara_atau_gerakan: 'Matikan seluruh lampu kamar dan gadget 30 menit sebelum tidur, pastikan Anda mendapatkan tidur malam berkualitas tanpa interupsi selama 7 hingga 8 jam penuh.', id_video: '-dCHrqndWYs' },
@@ -66,6 +66,10 @@ export default function CompanionAI({ userStats, onClose }) {
   const modelRef = useRef(null)
   const isTalkingRef = useRef(false)
 
+  // Ref untuk menyimpan tulang bahu/lengan agar bisa dipaksa turun rileks
+  const leftShoulderRef = useRef(null)
+  const rightShoulderRef = useRef(null)
+
   const activeUserName = userStats?.name || 'Hunter'
   const userStatsWithDynamicName = { ...userStats, name: activeUserName }
   const currentTier = getRankTier(userStats?.level || 1)
@@ -89,17 +93,17 @@ export default function CompanionAI({ userStats, onClose }) {
     const width = canvasContainerRef.current.clientWidth
     const height = canvasContainerRef.current.clientHeight
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-    camera.position.set(0, 1.3, 2.5)
+    camera.position.set(0, 1.3, 2.0) // Kamera maju dikit biar fokus portrait
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     canvasContainerRef.current.appendChild(renderer.domElement)
 
-    const ambientLight = new THREE.AmbientLight('#ffffff', 0.8)
+    const ambientLight = new THREE.AmbientLight('#ffffff', 0.9)
     scene.add(ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight('#7C5CFF', 1.2)
+    const directionalLight = new THREE.DirectionalLight('#7C5CFF', 1.5)
     directionalLight.position.set(5, 5, 5)
     scene.add(directionalLight)
 
@@ -115,6 +119,19 @@ export default function CompanionAI({ userStats, onClose }) {
         const center = box.getCenter(new THREE.Vector3())
         model.position.y = -center.y + (size.y / 4) 
 
+        // 🔍 Otomatis cari tulang bahu/lengan karakter untuk nurunin posisi T-Pose
+        model.traverse((object) => {
+          if (object.isBone) {
+            const boneName = object.name.toLowerCase()
+            if (boneName.includes('shoulder_l') || boneName.includes('upperarm_l') || boneName.includes('bahu_l')) {
+              leftShoulderRef.current = object
+            }
+            if (boneName.includes('shoulder_r') || boneName.includes('upperarm_r') || boneName.includes('bahu_r')) {
+              rightShoulderRef.current = object
+            }
+          }
+        })
+
         scene.add(model)
         modelRef.current = model
       },
@@ -129,13 +146,17 @@ export default function CompanionAI({ userStats, onClose }) {
       animationId = requestAnimationFrame(animate)
       const elapsedTime = clock.getElapsedTime()
 
+      // 🛠️ Paksa rotasi tulang lengan ke bawah agar tidak T-Pose kaku
+      if (leftShoulderRef.current) leftShoulderRef.current.rotation.z = 1.2
+      if (rightShoulderRef.current) rightShoulderRef.current.rotation.z = -1.2
+
       if (modelRef.current) {
         if (isTalkingRef.current) {
-          modelRef.current.rotation.y = Math.sin(elapsedTime * 4) * 0.08
-          modelRef.current.position.y += Math.sin(elapsedTime * 8) * 0.001
+          modelRef.current.rotation.y = Math.sin(elapsedTime * 4) * 0.05
+          modelRef.current.position.y += Math.sin(elapsedTime * 8) * 0.0008
         } else {
-          modelRef.current.rotation.y = Math.sin(elapsedTime * 1.5) * 0.03
-          modelRef.current.position.y += Math.sin(elapsedTime * 2) * 0.0003
+          modelRef.current.rotation.y = Math.sin(elapsedTime * 1.2) * 0.02
+          modelRef.current.position.y += Math.sin(elapsedTime * 1.5) * 0.0002
         }
       }
 
