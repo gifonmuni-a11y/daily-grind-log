@@ -5,17 +5,14 @@ import { getRankTier } from '../lib/expSystem'
 
 const ScrollbarStyles = () => (
   <style dangerouslySetInnerHTML={{__html: `
-    /* Scrollbar untuk Area Chat Utama */
     .main-chat-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
     .main-chat-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .main-chat-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
 
-    /* Scrollbar Horizontal FAQ (Muncul Ungu Jelas) */
     .faq-slider-container::-webkit-scrollbar { height: 6px !important; background: #100E16 !important; display: block !important; }
     .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .faq-slider-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; overflow-x: auto !important; }
 
-    /* Scrollbar untuk Dropdown 34 Kategori Matrix */
     .matrix-dropdown-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
     .matrix-dropdown-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .matrix-dropdown-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
@@ -32,11 +29,11 @@ const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), dan lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
   { name: 'Push Up', tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.', manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), dan otot lengan belakang (triceps).', tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.', id_video: 'VZUDAOL2LI8' },
   { name: 'Squat', tokoh_terkenal: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.', apa_itu: 'Latihan compound tubuh bagian bawah yang meniru gerakan fundamental manusia saat hendak duduk dan berdiri kembali.', manfaatnya: 'Memperkuat rantai kekuatan otot paha depan (quadriceps), paha belakang (hamstring), bokong (glutes), serta melatih kekuatan tulang punggung.', tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah dan ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.', id_video: 'Xb2Lm40nlGo' },
-  { name: 'Plank', tokoh_terkenal: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', apa_itu: 'Latihan kekuatan isometrik statis yang mengharuskan Anda menahan satu posisi tubuh garis lurus dalam durasi waktu tertentu.', manfaatnya: 'Mengunci stabilitas seluruh dinding otot perut (core), memperkuat otot panggul bawah, serta memperbaiki postur tubuh bungkuk.', tata_cara_atau_gerakan: 'Tumpu bobot badan Anda pada kedua siku lengan bawah dan ujung jari kaki di atas matras, kunci otot perut and bokong sekencang mungkin, pastikan posisi pinggul tidak naik atau merosot.', id_video: 'Gr1GtwTp_ko' },
+  { name: 'Plank', tokoh_terkenal: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', apa_itu: 'Latihan kekuatan isometrik statis yang mengharuskan Anda menahan satu posisi tubuh garis lurus dalam durasi waktu tertentu.', manfaatnya: 'Mengunci stabilitas seluruh dinding otot perut (core), memperkuat otot panggul bawah, serta memperbaiki postur tubuh bungkuk.', tata_cara_atau_gerakan: 'Tumpu bobot badan Anda pada kedua siku lengan bawah dan ujung jari kaki di atas matras, kunci otot perut dan bokong sekencang mungkin, pastikan posisi pinggul tidak naik atau merosot.', id_video: 'Gr1GtwTp_ko' },
   { name: 'Lunges', tokoh_terkenal: 'Ronnie Coleman: Angkatan unilateral membentuk keseimbangan kaki yang kokoh untuk menopang beban raksasa.', apa_itu: 'Latihan unilateral tubuh bagian bawah yang berfokus pada pelatihan satu kaki secara mandiri bergantian kaki kaki kiri dan kanan.', manfaatnya: 'Memperbaiki ketidakseimbangan kekuatan kaki kiri-kanan, meningkatkan stabilitas koordinasi tubuh, serta melatih fleksibilitas otot panggul.', tata_cara_atau_gerakan: 'Langkahkan kaki kanan jauh ke depan, turunkan lutut kaki kiri belakang hingga hampir menyentuh lantai dan membentuk sudut 90 derajat pada kedua kaki, dorong tumit depan untuk kembali ke posisi awal.', id_video: 'AJUh03WB8F4' },
   { name: 'Meditasi', tokoh_terkenal: 'Bruce Lee: Kosongkan pikiranmu, jadilah tanpa bentuk seperti air. Tenang di dalam badai latihan.', apa_itu: 'Praktik relaksasi mental terarah untuk melatih fokus pikiran, kedalaman pernapasan, dan memicu ketenangan sistem saraf.', manfaatnya: 'Menurunkan hormon stres (kortisol) dengan cepat pasca latihan berat, menenangkan detak jantung, dan mempertajam fokus mind-muscle connection.', tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, dan pusatkan perhatian penuh hanya pada hembusan napas Anda.', id_video: '2sJyBfDZpe4' },
   { name: 'Pola Tidur (Rest)', tokoh_terkenal: 'Dorian Yates: Otot tidak tumbuh di gym. Otot Anda tumbuh saat tidur pulas di dalam kegelapan kamar.', apa_itu: 'Fase pemulihan pasif total di mana tubuh melakukan perbaikan makro terhadap jaringan sel otot yang robek selama latihan fisik.', manfaatnya: 'Memicu pelepasan Hormon Pertumbuhan Manusia (HGH) secara alami, mempercepat pemulihan energi seluler, dan menghentikan katabolisme (penyusutan otot).', tata_cara_atau_gerakan: 'Matikan seluruh lampu kamar dan gadget 30 menit sebelum tidur, pastikan Anda mendapatkan tidur malam berkualitas tanpa interupsi selama 7 hingga 8 jam penuh.', id_video: '-dCHrqndWYs' },
-  { name: 'Kardio / HIIT', tokoh_terkenal: 'Chris Bumstead: Jantung yang kuat memompa nutrisi lebih cepat ke sel-sel otot yang sedang robek.', apa_itu: 'Latihan kardiovaskular intensitas tinggi yang dikombinasikan dengan periode istirahat singkat secara berulang-ulang.', manfaatnya: 'Meningkatan kapasitas stamina fungsional (VO2 Max), mempercepat pembakaran deposit kalori/lemak tubuh, dan menyehatkan pembuluh darah.', tata_cara_atau_gerakan: 'Lakukan gerakan eksplosif seperti jumping jacks atau burpees selama 30 detik sekuat tenaga, disusul dengan istirahat pasif selama 15 detik, ulangi sirkuit ini sebanyak 4-5 siklus.', id_video: 'cbKkB3POqaY' }
+  { name: 'Kardio / HIIT', tokoh_terkenal: 'Chris Bumstead: Jantung yang kuat memompa nutrisi lebih cepat ke sel-sel otot yang sedang robek.', apa_itu: 'Latihan kardiovaskular intensitas tinggi yang dikombinasikan dengan periode istirahat singkat secara berulang-ulang.', manfaatnya: 'Meningkatkan kapasitas stamina fungsional (VO2 Max), mempercepat pembakaran deposit kalori/lemak tubuh, dan menyehatkan pembuluh darah.', tata_cara_atau_gerakan: 'Lakukan gerakan eksplosif seperti jumping jacks atau burpees selama 30 detik sekuat tenaga, disusul dengan istirahat pasif selama 15 detik, ulangi sirkuit ini sebanyak 4-5 siklus.', id_video: 'cbKkB3POqaY' }
 ]
 
 function CategoryItem({ cat, index }) {
@@ -62,7 +59,7 @@ function CategoryItem({ cat, index }) {
   )
 }
 
-export default function CompanionAI({ userStats, onClose }) {
+export default function CompanionAI({ userStats, profile, onClose }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -72,7 +69,9 @@ export default function CompanionAI({ userStats, onClose }) {
   const [avatarState, setAvatarState] = useState('diam')
   const messagesEndRef = useRef(null)
 
-  const userStatsWithCain = { ...userStats, name: 'Cain' }
+  // Mengambil nama dinamis dari profile database
+  const userName = profile?.name || 'Trainer'
+  const userStatsWithProfile = { ...userStats, name: userName }
   const currentTier = getRankTier(userStats?.level || 1)
   
   const getDynamicGreeting = () => {
@@ -125,7 +124,7 @@ export default function CompanionAI({ userStats, onClose }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  const speakText = (text) => {
+  const speakText = (text, customEndState = null) => {
     if (isMuted) return
     window.speechSynthesis.cancel()
     
@@ -135,24 +134,25 @@ export default function CompanionAI({ userStats, onClose }) {
     utterance.rate = 1.05
 
     utterance.onstart = () => setAvatarState('ngomong')
-    utterance.onend = () => setAvatarState('diam')
-    utterance.onerror = () => setAvatarState('diam')
+    utterance.onend = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+    utterance.onerror = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
 
     window.speechSynthesis.speak(utterance)
   }
 
   useEffect(() => {
     const greetingText = getDynamicGreeting()
-    const msg = `${greetingText}, Cain. Seolha siap mendampingi latihan harian Anda hari ini. Ada target kasta RPG fisik yang ingin kita tembus bersama?`
+    const msg = `${greetingText}, ${userName}. Seolha siap mendampingi latihan harian Anda hari ini. Ada target kasta RPG fisik yang ingin kita tembus bersama?`
     setMessages([{ sender: 'seolha', text: msg, mediaSources: null }])
     fetchDailyLimit()
     
     setTimeout(() => { speakText(msg) }, 600)
     return () => window.speechSynthesis.cancel()
-  }, [currentTier])
+  }, [currentTier, userName])
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
+  // Pengendali Efek Suara Saat Status Berpikir (Mikir) Terpicu
   useEffect(() => {
     if (loading) {
       setAvatarState('mikir')
@@ -175,7 +175,7 @@ export default function CompanionAI({ userStats, onClose }) {
     if (!msgToSend.trim() || loading) return
     
     if (!isFaq && dailyCount >= 5) {
-      const failMsg = 'Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya, Cain!'
+      const failMsg = `Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya, ${userName}!`
       setMessages(prev => [...prev, { sender: 'user', text: msgToSend }, { sender: 'seolha', text: failMsg, mediaSources: null }])
       speakText(failMsg)
       if (!customMsg) setInput('')
@@ -185,7 +185,10 @@ export default function CompanionAI({ userStats, onClose }) {
     const newMessages = [...messages, { sender: 'user', text: msgToSend }]
     if (!customMsg) setInput('')
     setMessages(newMessages)
+    
+    // Aktifkan Loading & Trigger Suara Mikir secara Real-Time sebelum fetch API
     setLoading(true)
+    speakText("Bentar ya aku lagi mikir", "mikir")
 
     if (isAllCategories) {
       setTimeout(() => {
@@ -193,7 +196,7 @@ export default function CompanionAI({ userStats, onClose }) {
         setMessages(prev => [...prev, { sender: 'seolha', text: textCat, mediaSources: null, multiMedia: MASTER_34_CATEGORIES }])
         setLoading(false)
         speakText("Berikut adalah daftar matriks tiga puluh empat kategori latihan lengkap.")
-      }, 600)
+      }, 1500)
       return
     }
 
@@ -204,34 +207,34 @@ export default function CompanionAI({ userStats, onClose }) {
 
       if (lowerText.includes('mulai dari mana')) {
         multiVideos = ['rN92rbUoQDE', 'vbJxymW5xj0']
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu, Cain.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
+        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu, ${userName}.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
       } 
       else if (lowerText.includes('kardio atau angkat')) {
         multiVideos = ['2MoGxae-zyo', 'GY1JhB9BEkk']
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, Cain.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${userName}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
       }
       else if (lowerText.includes('jenis & cara') || lowerText.includes('cara & jenis') || lowerText.includes('jenis latihan')) {
         multiVideos = ['UItWltVZZmE']
-        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, Cain.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
+        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${userName}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
       else if (lowerText.includes('pola makan') || lowerText.includes('nutrisi')) {
         multiVideos = ['mzpDEPg7-3E']
-        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, Cain.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
+        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${userName}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
       else if (lowerText.includes('pola tidur') || lowerText.includes('recovery')) {
         multiVideos = ['-lu1Nmttz4w']
-        faqReply = `Ingat ini, Cain: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
+        faqReply = `Ingat ini, ${userName}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
       else if (lowerText.includes('kesalahan fatal')) {
         multiVideos = ['HtzSj0FEogk']
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, Cain.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
+        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${userName}.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
       setTimeout(() => {
         setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, mediaSources: multiVideos }])
         setLoading(false)
         speakText(faqReply)
-      }, 500)
+      }, 1500)
       return
     }
 
@@ -240,11 +243,11 @@ export default function CompanionAI({ userStats, onClose }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          messages: newMessages.filter(m => m.text && !m.text.includes('Gagal mendapatkan respon')).map(m => ({
+          messages: newMessages.filter(m => m.text && !m.text.includes('Silakan coba lagi')).map(m => ({
             role: m.sender === 'user' ? 'user' : 'assistant',
             content: m.text
           })), 
-          userStats: userStatsWithCain 
+          userStats: userStatsWithProfile 
         })
       })
 
@@ -255,14 +258,15 @@ export default function CompanionAI({ userStats, onClose }) {
         setDailyCount(prev => prev + 1)
         speakText(replyText)
       } else {
-        const errData = await response.json().catch(() => ({}))
-        const serverError = errData.error || 'Mohon periksa kembali status API Studio Key Anda.'
-        const failText = `Gagal mendapatkan respon dari engine chat. (Detail: ${serverError})`
+        // Intersepsi kegagalan server/API Studio menjadi pesan kustom premium pesananmu
+        const failText = "Silakan coba lagi, banyak orang yang lagi bertanya"
         setMessages(prev => [...prev, { sender: 'seolha', text: failText, media: null }])
-        speakText("Sistem eror, mohon periksa kembali API key Anda.")
+        speakText(failText)
       }
     } catch (err) {
-      setMessages(prev => [...prev, { sender: 'seolha', text: 'Koneksi ke server Seolha terputus.', media: null }])
+      const failText = "Silakan coba lagi, banyak orang yang lagi bertanya"
+      setMessages(prev => [...prev, { sender: 'seolha', text: failText, media: null }])
+      speakText(failText)
     } finally { 
       setLoading(false) 
     }
@@ -275,7 +279,7 @@ export default function CompanionAI({ userStats, onClose }) {
 
   const handleAvatarTap = () => {
     const interactiveTexts = [
-      "Jangan menyentuhku sembarangan, Cain! Fokus kembali pada log latihanmu.",
+      `Jangan menyentuhku sembarangan, ${userName}! Fokus kembali pada log latihanmu.`,
       "Sentuhanmu tidak akan meningkatkan stat STR milikmu, Hunter.",
       "Ada yang mengganjal dalam pikiranmu? Katakan saja langsung lewat text input."
     ]
@@ -319,7 +323,7 @@ export default function CompanionAI({ userStats, onClose }) {
         <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
           <img src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
         </div>
-        <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/40 px-2 py-0.5 border border-[#211D2C] rounded">
+        <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/40 px-2 py-1.5 border border-[#211D2C] rounded">
           Status: <span className="text-accent font-black">{avatarState}</span>
         </div>
       </div>
@@ -350,7 +354,15 @@ export default function CompanionAI({ userStats, onClose }) {
             )}
           </div>
         ))}
-        {loading && <div className="flex justify-start"><div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim"><Loader2 size={12} className="animate-spin text-accent" />Seolha sedang menyusun data...</div></div>}
+        {/* Modifikasi Teks & Animasi Loading Berpikir Sesuai Keinginanmu */}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
+              <Loader2 size={12} className="animate-spin text-accent" />
+              Seolha sedang berpikir...
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
