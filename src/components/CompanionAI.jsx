@@ -1,32 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { X, Send, Bot, Loader2, Clock, Volume2, VolumeX } from 'lucide-react'
+import { X, Send, Bot, Clock, Volume2, VolumeX } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
 
 const ScrollbarStyles = () => (
   <style dangerouslySetInnerHTML={{__html: `
-    /* Scrollbar untuk Area Chat Utama */
     .main-chat-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
     .main-chat-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .main-chat-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
-
-    /* Scrollbar Horizontal FAQ (Muncul Ungu Jelas) */
     .faq-slider-container::-webkit-scrollbar { height: 6px !important; background: #100E16 !important; display: block !important; }
     .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .faq-slider-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; overflow-x: auto !important; }
-
-    /* Scrollbar untuk Dropdown 34 Kategori Matrix */
     .matrix-dropdown-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
     .matrix-dropdown-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .matrix-dropdown-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
   `}} />
 )
-
-const AVATAR_LINKS = {
-  diam: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/diam.gif',
-  ngomong: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/ngomong.gif',
-  mikir: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/mikir.gif'
-}
 
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), dan lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
@@ -36,7 +25,7 @@ const MASTER_34_CATEGORIES = [
   { name: 'Lunges', tokoh_terkenal: 'Ronnie Coleman: Angkatan unilateral membentuk keseimbangan kaki yang kokoh untuk menopang beban raksasa.', apa_itu: 'Latihan unilateral tubuh bagian bawah yang berfokus pada pelatihan satu kaki secara mandiri bergantian kaki kaki kiri dan kanan.', manfaatnya: 'Memperbaiki ketidakseimbangan kekuatan kaki kiri-kanan, meningkatkan stabilitas koordinasi tubuh, serta melatih fleksibilitas otot panggul.', tata_cara_atau_gerakan: 'Langkahkan kaki kanan jauh ke depan, turunkan lutut kaki kiri belakang hingga hampir menyentuh lantai dan membentuk sudut 90 derajat pada kedua kaki, dorong tumit depan untuk kembali ke posisi awal.', id_video: 'AJUh03WB8F4' },
   { name: 'Meditasi', tokoh_terkenal: 'Bruce Lee: Kosongkan pikiranmu, jadilah tanpa bentuk seperti air. Tenang di dalam badai latihan.', apa_itu: 'Praktik relaksasi mental terarah untuk melatih fokus pikiran, kedalaman pernapasan, dan memicu ketenangan sistem saraf.', manfaatnya: 'Menurunkan hormon stres (kortisol) dengan cepat pasca latihan berat, menenangkan detak jantung, dan mempertajam fokus mind-muscle connection.', tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, dan pusatkan perhatian penuh hanya pada hembusan napas Anda.', id_video: '2sJyBfDZpe4' },
   { name: 'Pola Tidur (Rest)', tokoh_terkenal: 'Dorian Yates: Otot tidak tumbuh di gym. Otot Anda tumbuh saat tidur pulas di dalam kegelapan kamar.', apa_itu: 'Fase pemulihan pasif total di mana tubuh melakukan perbaikan makro terhadap jaringan sel otot yang robek selama latihan fisik.', manfaatnya: 'Memicu pelepasan Hormon Pertumbuhan Manusia (HGH) secara alami, mempercepat pemulihan energi seluler, dan menghentikan katabolisme (penyusutan otot).', tata_cara_atau_gerakan: 'Matikan seluruh lampu kamar dan gadget 30 menit sebelum tidur, pastikan Anda mendapatkan tidur malam berkualitas tanpa interupsi selama 7 hingga 8 jam penuh.', id_video: '-dCHrqndWYs' },
-  { name: 'Kardio / HIIT', tokoh_terkenal: 'Chris Bumstead: Jantung yang kuat memompa nutrisi lebih cepat ke sel-sel otot yang sedang robek.', apa_itu: 'Latihan kardiovaskular intensitas tinggi yang dikombinasikan dengan periode istirahat singkat secara berulang-ulang.', manfaatnya: 'Meningkatkan kapasitas stamina fungsional (VO2 Max), mempercepat pembakaran deposit kalori/lemak tubuh, dan menyehatkan pembuluh darah.', tata_cara_atau_gerakan: 'Lakukan gerakan eksplosif seperti jumping jacks atau burpees selama 30 detik sekuat tenaga, disusul dengan istirahat pasif selama 15 detik, ulangi sirkuit ini sebanyak 4-5 siklus.', id_video: 'cbKkB3POqaY' }
+  { name: 'Kardio / HIIT', tokoh_terkenal: 'Chris Bumstead: Jantung yang kuat memompa nutrisi lebih cepat ke sel-sel otot yang sedang robek.', apa_itu: 'Latihan kardiovaskular intensitas tinggi yang dikombinasikan dengan periode istirahat singkat secara berulang-ulang.', manfaatnya: 'Meningkatan kapasitas stamina fungsional (VO2 Max), mempercepat pembakaran deposit kalori/lemak tubuh, dan menyehatkan pembuluh darah.', tata_cara_atau_gerakan: 'Lakukan gerakan eksplosif seperti jumping jacks atau burpees selama 30 detik sekuat tenaga, disusul dengan istirahat pasif selama 15 detik, ulangi sirkuit ini sebanyak 4-5 siklus.', id_video: 'cbKkB3POqaY' }
 ]
 
 function CategoryItem({ cat, index }) {
@@ -69,11 +58,10 @@ export default function CompanionAI({ userStats, onClose }) {
   const [dailyCount, setDailyCount] = useState(0)
   const [liveTime, setLiveTime] = useState('')
   const [isMuted, setIsMuted] = useState(false)
-  const [avatarState, setAvatarState] = useState('diam')
   const messagesEndRef = useRef(null)
 
-  // Mengunci Nama User Tetap Cain & Rank Sesuai Tier Resmi RPG
-  const userStatsWithCain = { ...userStats, name: 'Cain' }
+  const activeUserName = userStats?.name || 'Hunter'
+  const userStatsWithDynamicName = { ...userStats, name: activeUserName }
   const currentTier = getRankTier(userStats?.level || 1)
   
   const getDynamicGreeting = () => {
@@ -96,11 +84,13 @@ export default function CompanionAI({ userStats, onClose }) {
     return () => clearInterval(interval)
   }, [])
 
-  // 🟢 PARSING TEKS DAN SUPRES BINTANG SATU/DUA MENJADI STRUKTUR UNGU PREMIUM
+  // 🟢 DETEKSI NAMA USER DI CHAT BIAR OTOMATIS BERWARNA UNGU TEBAL
   const renderMessageText = (text) => {
     if (!text) return null
     return text.split('\n').map((line, idx) => {
       let processedLine = line
+      
+      // Deteksi tanda bintang markdown
       const cleanRegex = /\*\*([^*]+)\*\*|\*([^*]+)\*/g
       const parts = []
       let lastIndex = 0
@@ -109,17 +99,41 @@ export default function CompanionAI({ userStats, onClose }) {
       if (isBullet) processedLine = line.trim().substring(2)
       
       while ((match = cleanRegex.exec(processedLine)) !== null) {
-        if (match.index > lastIndex) parts.push(processedLine.substring(lastIndex, match.index))
+        if (match.index > lastIndex) {
+          parts.push(...highlightNameInText(processedLine.substring(lastIndex, match.index)))
+        }
         const boldText = match[1] || match[2]
-        parts.push(<strong key={match.index} className="text-accent font-black">{boldText}</strong>)
+        parts.push(<strong key={`bold-${match.index}`} className="text-accent font-black">{boldText}</strong>)
         lastIndex = cleanRegex.lastIndex
       }
-      if (lastIndex < processedLine.length) parts.push(processedLine.substring(lastIndex))
-      const content = parts.length > 0 ? parts : processedLine
+      if (lastIndex < processedLine.length) {
+        parts.push(...highlightNameInText(processedLine.substring(lastIndex)))
+      }
+      
+      const content = parts.length > 0 ? parts : highlightNameInText(processedLine)
       
       if (isBullet) return <div key={idx} className="flex items-start gap-2 my-1 pl-1 font-body text-sm text-[#EDEAF6]"><span className="text-accent text-xs mt-1.5">•</span><div className="flex-1 whitespace-pre-wrap leading-relaxed">{content}</div></div>
       return <p key={idx} className="whitespace-pre-wrap font-body text-sm text-[#EDEAF6] leading-relaxed my-1">{content}</p>
     })
+  }
+
+  // Fungsi pembantu untuk membuat nama user otomatis ungu tebal saat tertulis di chat
+  const highlightNameInText = (textStr) => {
+    if (typeof textStr !== 'string') return [textStr]
+    if (!activeUserName || activeUserName === 'Hunter') return [textStr]
+    
+    const nameRegex = new RegExp(`\\b(${activeUserName})\\b`, 'gi')
+    const finalParts = []
+    let cursor = 0
+    let nMatch
+    
+    while ((nMatch = nameRegex.exec(textStr)) !== null) {
+      if (nMatch.index > cursor) finalParts.push(textStr.substring(cursor, nMatch.index))
+      finalParts.push(<strong key={`name-${nMatch.index}`} className="text-accent font-black">{nMatch[1]}</strong>)
+      cursor = nameRegex.lastIndex
+    }
+    if (cursor < textStr.length) finalParts.push(textStr.substring(cursor))
+    return finalParts.length > 0 ? finalParts : [textStr]
   }
 
   const getTodayDateStr = () => {
@@ -127,43 +141,29 @@ export default function CompanionAI({ userStats, onClose }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  // 🔊 SISTEM AUTO SPEECH CONTEXT SYNTHESIS (SINKRON AVATAR NGOMONG)
   const speakText = (text) => {
     if (isMuted) return
     window.speechSynthesis.cancel()
     
-    // Hilangkan simbol markdown/bintang agar pelafalan suara tidak terbata-bata
     const cleanText = text.replace(/[*#_]/g, '')
     const utterance = new SpeechSynthesisUtterance(cleanText)
     utterance.lang = 'id-ID'
     utterance.rate = 1.05
-
-    utterance.onstart = () => setAvatarState('ngomong')
-    utterance.onend = () => setAvatarState('diam')
-    utterance.onerror = () => setAvatarState('diam')
 
     window.speechSynthesis.speak(utterance)
   }
 
   useEffect(() => {
     const greetingText = getDynamicGreeting()
-    const msg = `${greetingText}, Cain. Seolha siap mendampingi latihan harian Anda hari ini. Ada target kasta RPG fisik yang ingin kita tembus bersama?`
+    const msg = `${greetingText}, ${activeUserName}. Seolha siap mendampingi latihan harian Anda hari ini. Ada target kasta RPG fisik yang ingin kita tembus bersama?`
     setMessages([{ sender: 'seolha', text: msg, mediaSources: null }])
     fetchDailyLimit()
     
-    // Sambut dengan suara otomatis di awal masuk
     setTimeout(() => { speakText(msg) }, 600)
     return () => window.speechSynthesis.cancel()
-  }, [currentTier])
+  }, [currentTier, activeUserName])
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
-
-  // 🟢 KONDISI LOADING BERUBAH MENJADI MIKIR SECARA REALTIME
-  useEffect(() => {
-    if (loading) {
-      setAvatarState('mikir')
-    }
-  }, [loading])
 
   const fetchDailyLimit = async () => {
     try {
@@ -181,7 +181,7 @@ export default function CompanionAI({ userStats, onClose }) {
     if (!msgToSend.trim() || loading) return
     
     if (!isFaq && dailyCount >= 5) {
-      const failMsg = 'Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya, Cain!'
+      const failMsg = `Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya, ${activeUserName}!`
       setMessages(prev => [...prev, { sender: 'user', text: msgToSend }, { sender: 'seolha', text: failMsg, mediaSources: null }])
       speakText(failMsg)
       if (!customMsg) setInput('')
@@ -210,27 +210,27 @@ export default function CompanionAI({ userStats, onClose }) {
 
       if (lowerText.includes('mulai dari mana')) {
         multiVideos = ['rN92rbUoQDE', 'vbJxymW5xj0']
-        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu, Cain.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
+        faqReply = `Sebagai seorang ${currentTier}, langkah awal terbaik adalah membangun fondasi konsistensi tanpa memikirkan beban berat dulu, ${activeUserName}.\n\nFokuslah pada latihan beban seluruh tubuh (Full-Body Workout) menggunakan berat badan sendiri seperti Squat, Push-up, dan Plank sebanyak 3 kali seminggu. Berikut panduan video lokal pilihan Seolha:`
       } 
       else if (lowerText.includes('kardio atau angkat')) {
         multiVideos = ['2MoGxae-zyo', 'GY1JhB9BEkk']
-        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, Cain.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
+        faqReply = `Kardio dan Angkat Beban memiliki peran masing-masing, ${activeUserName}.\n\n1. **Angkat Beban:** Wajib diutamakan untuk merobek otot lama agar tumbuh menjadi massa otot baru yang padat.\n2. **Kardio:** Menjaga stamina jantung.\n\nSaran eksekusi: Dahulukan Angkat Beban selagi energi penuh, lalu tutup dengan 15 menit Kardio.`
       }
       else if (lowerText.includes('jenis & cara') || lowerText.includes('cara & jenis') || lowerText.includes('jenis latihan')) {
         multiVideos = ['UItWltVZZmE']
-        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, Cain.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
+        faqReply = `Untuk pemula, persiapkan mental untuk menguasai gerakan dasar dengan form yang sempurna, ${activeUserName}.\n\n* **Jenis Latihan Utama:** Gerakan Compound seperti Push-Up (dada/tricep), Pull-Up/Inverted Row (punggung/bicep), dan Squat (kaki).\n* **Cara Latihan:** Lakukan 3 set per gerakan dengan repetisi terkontrol (8-12 repetisi). Istirahat 1-2 menit antar set. Jaga otot inti (core) selalu terkunci rapat.`
       }
       else if (lowerText.includes('pola makan') || lowerText.includes('nutrisi')) {
         multiVideos = ['mzpDEPg7-3E']
-        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, Cain.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
+        faqReply = `Nutrisi adalah 70% penentu keberhasilan progres RPG fisikmu, ${activeUserName}.\n\n* **Bulking (Naik Berat Otot):** Surplus kalori bersih dari sumber makanan utuh.\n* **Cutting (Turun Lemak):** Defisit kalori terkontrol.\n* **Kebutuhan Protein:** Konsumsi 1.5x - 2x berat badan gram protein harian. Maksimalkan opsi murah lokal: Dada ayam, telur ayam, tempe, tahu, dan ikan kembung. Hindari gorengan minyak berlebih.`
       }
       else if (lowerText.includes('pola tidur') || lowerText.includes('recovery')) {
         multiVideos = ['-lu1Nmttz4w']
-        faqReply = `Ingat ini, Cain: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
+        faqReply = `Ingat ini, ${activeUserName}: Otot tidak bertumbuh saat kamu mengangkat beban di gym, melainkan saat kamu tidur nyenyak.\n\n* **Durasi Mandatori:** 7-8 jam per hari secara konsisten.\n* **Manfaat Deep Sleep:** Mempercepat sintesis protein dan memicu pelepasan Growth Hormone (HGH) secara maksimal untuk memulihkan jaringan otot yang rusak.`
       }
       else if (lowerText.includes('kesalahan fatal')) {
         multiVideos = ['HtzSj0FEogk']
-        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, Cain.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
+        faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${activeUserName}.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
       setTimeout(() => {
@@ -250,7 +250,7 @@ export default function CompanionAI({ userStats, onClose }) {
             role: m.sender === 'user' ? 'user' : 'assistant',
             content: m.text
           })), 
-          userStats: userStatsWithCain 
+          userStats: userStatsWithDynamicName 
         })
       })
 
@@ -279,30 +279,15 @@ export default function CompanionAI({ userStats, onClose }) {
     setIsMuted(!isMuted)
   }
 
-  // INTERAKTIF SENTUH AVATAR
-  const handleAvatarTap = () => {
-    const interactiveTexts = [
-      "Jangan menyentuhku sembarangan, Cain! Fokus kembali pada log latihanmu.",
-      "Sentuhanmu tidak akan meningkatkan stat STR milikmu, Hunter.",
-      "Ada yang mengganjal dalam pikiranmu? Katakan saja langsung lewat text input."
-    ]
-    const randomIdx = Math.floor(Math.random() * interactiveTexts.length)
-    const reply = interactiveTexts[randomIdx]
-    
-    setMessages(prev => [...prev, { sender: 'seolha', text: `*[SYSTEM NOTIFICATION: Anda menyentuh asisten Seolha]*\n\n"${reply}"`, mediaSources: null }])
-    speakText(reply)
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#000000] p-4 max-w-lg mx-auto select-none">
       <ScrollbarStyles />
       
-      {/* HEADER UTAMA */}
       <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
           <span className="font-display font-bold text-text-high tracking-wider">Seolha</span>
-          <span className="font-mono text-[10px] text-text-dim uppercase">AI Mentor</span>
+          <span className="font-mono text-[10px] text-text-dim uppercase">Live VTuber Stream</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 font-mono text-xs text-text-high bg-[#100E16] px-2 py-0.5 border border-[#211D2C]">
@@ -321,17 +306,21 @@ export default function CompanionAI({ userStats, onClose }) {
         </div>
       </div>
 
-      {/* 🟢 AVATAR CONTAINER LIVE GIF (MENGGANTIKAN DATA MISI LAMA AGAR LAYAR PLONG) */}
-      <div className="mt-2.5 flex flex-col items-center justify-center p-2 bg-[#100E16] border border-[#211D2C] rounded-lg relative overflow-hidden">
-        <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
-          <img src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
-        </div>
-        <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/40 px-2 py-0.5 border border-[#211D2C] rounded">
-          Status: <span className="text-accent font-black">{avatarState}</span>
+      <div className="mt-2.5 w-full bg-[#100E16] border border-[#211D2C] rounded-lg overflow-hidden shadow-[0_0_20px_rgba(124,92,255,0.1)] flex flex-col">
+        <div className="w-full aspect-[4/3] bg-black">
+          <iframe 
+            title="【常服】艾米娅 AMIYA Casual wear (2024)" 
+            frameBorder="0" 
+            allowFullScreen 
+            mozallowfullscreen="true" 
+            webkitallowfullscreen="true" 
+            allow="autoplay; fullscreen; xr-spatial-tracking" 
+            className="w-full h-full"
+            src="https://sketchfab.com/models/eb19b40a99d541f8988a4729c12c6781/embed?ui_infos=0&ui_watermark=0&ui_help=0&ui_settings=0&ui_inspector=0&theme=dark animate=1"
+          />
         </div>
       </div>
 
-      {/* AREA TEXT ROOM CHAT */}
       <div className="main-chat-container flex-1 overflow-y-auto py-3 space-y-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
@@ -357,11 +346,19 @@ export default function CompanionAI({ userStats, onClose }) {
             )}
           </div>
         ))}
-        {loading && <div className="flex justify-start"><div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim"><Loader2 size={12} className="animate-spin text-accent" />Seolha sedang menyusun data...</div></div>}
+        
+        {/* 🟢 ANIMASI LOADING BARU: UNGU BERKEDIP DENGAN PINGGIRAN KARTU RPG */}
+        {loading && (
+          <div className="flex justify-start animate-pulse">
+            <div className="bg-[#100E16] border border-[#7C5CFF]/40 p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-accent font-black tracking-wider shadow-[0_0_10px_rgba(124,92,255,0.1)]">
+              <span className="w-1.5 h-1.5 bg-accent rounded-full animate-ping" />
+              SEOLHA SEDANG BERPIKIR...
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* FAQ SLIDER BAR UNGU */}
       <div className="mb-2 bg-background pt-1.5">
         <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
         <div className="faq-slider-container flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -375,7 +372,6 @@ export default function CompanionAI({ userStats, onClose }) {
         </div>
       </div>
 
-      {/* INPUT FORM */}
       <form onSubmit={(e) => handleSend(e)} className="pt-2 border-t border-[#211D2C] flex gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2.5 text-sm text-text-high focus:outline-none focus:border-accent" />
         <button type="submit" disabled={loading || !input.trim()} className="w-11 h-11 bg-accent flex items-center justify-center text-white"><Send size={16} /></button>
