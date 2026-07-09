@@ -89,24 +89,25 @@ export default function CompanionAI({ userStats, onClose }) {
     const width = canvasContainerRef.current.clientWidth
     const height = canvasContainerRef.current.clientHeight
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-    camera.position.set(0, 1.2, 1.8) // Fokus portrait ke area karakter cewek
+    
+    // Settingan jarak pandang portrait universal yang pas buat model ReadyPlayerMe lokal
+    camera.position.set(0, 1.45, 1.1)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     canvasContainerRef.current.appendChild(renderer.domElement)
 
-    const ambientLight = new THREE.AmbientLight('#ffffff', 0.9)
+    const ambientLight = new THREE.AmbientLight('#ffffff', 1.0)
     scene.add(ambientLight)
 
     const directionalLight = new THREE.DirectionalLight('#7C5CFF', 1.5)
-    directionalLight.position.set(5, 5, 5)
+    directionalLight.position.set(2, 4, 5)
     scene.add(directionalLight)
 
     const loader = new GLTFLoader()
-    // LANGSUNG MEMANGGIL CDN MODEL CEWEK RESMI DENGAN TANGAN RILEKS KE BAWAH
     loader.load(
-      'https://assets.babylonjs.com/models/HVGirl.glb',
+      '/uploads_files_6103604_C_SwordJKv2.glb',
       (gltf) => {
         const model = gltf.scene
         model.position.set(0, 0, 0)
@@ -114,7 +115,9 @@ export default function CompanionAI({ userStats, onClose }) {
         const box = new THREE.Box3().setFromObject(model)
         const size = box.getSize(new THREE.Vector3())
         const center = box.getCenter(new THREE.Vector3())
-        model.position.y = -center.y + (size.y / 4) 
+        
+        // Posisikan pivot tepat di tengah dada/wajah karakter cewek baru
+        model.position.y = -center.y + (size.y / 6)
 
         scene.add(model)
         modelRef.current = model
@@ -132,11 +135,11 @@ export default function CompanionAI({ userStats, onClose }) {
 
       if (modelRef.current) {
         if (isTalkingRef.current) {
-          modelRef.current.rotation.y = Math.sin(elapsedTime * 4) * 0.05
-          modelRef.current.position.y += Math.sin(elapsedTime * 8) * 0.0008
+          modelRef.current.rotation.y = Math.sin(elapsedTime * 4) * 0.04
+          modelRef.current.position.y += Math.sin(elapsedTime * 8) * 0.0005
         } else {
-          modelRef.current.rotation.y = Math.sin(elapsedTime * 1.2) * 0.02
-          modelRef.current.position.y += Math.sin(elapsedTime * 1.5) * 0.0002
+          modelRef.current.rotation.y = Math.sin(elapsedTime * 1.2) * 0.015
+          modelRef.current.position.y += Math.sin(elapsedTime * 1.5) * 0.0001
         }
       }
 
