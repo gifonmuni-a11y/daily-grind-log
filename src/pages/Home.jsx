@@ -91,7 +91,7 @@ export default function Home({ session }) {
 
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
-  
+
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [levelUpData, setLevelUpData] = useState({ oldTier: '', newTier: '', newLevel: 1 })
   const [showAchievementUnlock, setShowAchievementUnlock] = useState(false)
@@ -170,7 +170,7 @@ export default function Home({ session }) {
         setShowLevelUp(true)
       }
     }
-    
+
     // Kunci utama perbaikan: Selalu sinkronkan Ref level baik saat naik maupun turun log latihannya
     prevLevelRef.current = level
 
@@ -343,11 +343,12 @@ export default function Home({ session }) {
       <button onClick={handleNewLog} className="fixed bottom-6 right-24 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Plus size={24} className="text-white" /></button>
       <button onClick={() => setShowCompanion(true)} className="fixed bottom-6 right-6 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Bot size={24} className="text-white" /></button>
 
-      {showCompanion && <CompanionAI userStats={userStats} onClose={() => setShowCompanion(false)} />}
+      {/* BERHASIL DISINKRONISASI: Menambahkan prop profile={profile} ke CompanionAI */}
+      {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
       {showLogModal && <LogModal userId={userId} maxDayNumber={maxDayNumber} editEntry={editEntry} onClose={() => { setShowLogModal(false); setEditEntry(null) }} onSaved={fetchEntries} />}
       {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
       {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
-      
+
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
     </div>
