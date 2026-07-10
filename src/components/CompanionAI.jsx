@@ -28,12 +28,12 @@ const AVATAR_LINKS = {
 
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), dan lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
-  { name: 'Push Up', tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.', manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), and otot lengan belakang (triceps).', tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.', id_video: 'VZUDAOL2LI8' },
+  { name: 'Push Up', tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.', manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), dan otot lengan belakang (triceps).', tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.', id_video: 'VZUDAOL2LI8' },
   { name: 'Squat', tokoh_terkenal: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.', apa_itu: 'Latihan compound tubuh bagian bawah yang meniru gerakan fundamental manusia saat hendak duduk dan berdiri kembali.', manfaatnya: 'Memperkuat rantai kekuatan otot paha depan (quadriceps), paha belakang (hamstring), bokong (glutes), serta melatih kekuatan tulang punggung.', tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah and ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.', id_video: 'Xb2Lm40nlGo' },
   { name: 'Plank', tokoh_terkenal: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', apa_itu: 'Latihan kekuatan isometrik statis yang mengharuskan Anda menahan satu posisi tubuh garis lurus dalam durasi waktu tertentu.', manfaatnya: 'Mengunci stabilitas seluruh dinding otot perut (core), memperkuat otot panggul bawah, serta memperbaiki postur tubuh bungkuk.', tata_cara_atau_gerakan: 'Tumpu bobot badan Anda pada kedua siku lengan bawah dan ujung jari kaki di atas matras, kunci otot perut and bokong sekencang mungkin, pastikan posisi pinggul tidak naik atau merosot.', id_video: 'Gr1GtwTp_ko' },
   { name: 'Lunges', tokoh_terkenal: 'Ronnie Coleman: Angkatan unilateral membentuk keseimbangan kaki yang kokoh untuk menopang beban raksasa.', apa_itu: 'Latihan unilateral tubuh bagian bawah yang berfokus pada pelatihan satu kaki secara mandiri bergantian kaki kiri dan kanan.', manfaatnya: 'Memperbaiki ketidakseimbangan kekuatan kaki kiri-kanan, meningkatkan stabilitas koordinasi tubuh, serta melatih fleksibilitas otot panggul.', tata_cara_atau_gerakan: 'Langkahkan kaki kanan jauh ke depan, turunkan lutut kaki kiri belakang hingga hampir menyentuh lantai dan membentuk sudut 90 derajat pada kedua kaki, dorong tumit depan untuk kembali ke posisi awal.', id_video: 'AJUh03WB8F4' },
   { name: 'Meditasi', tokoh_terkenal: 'Bruce Lee: Kosongkan pikiranmu, jadilah tanpa bentuk seperti air. Tenang di dalam badai latihan.', apa_itu: 'Praktik relaksasi mental terarah untuk melatih fokus pikiran, kedalaman pernapasan, dan memicu ketenangan sistem saraf.', manfaatnya: 'Menunrunkan hormon stres (kortisol) dengan cepat pasca latihan berat, menenangkan detak jantung, dan mempertajam fokus mind-muscle connection.', tata_cara_atau_gerakan: 'Duduk bersila dengan punggung tegak namun rileks, pejamkan mata Anda, atur ritme napas dalam lewat hidung, dan pusatkan perhatian penuh hanya pada hembusan napas Anda.', id_video: '2sJyBfDZpe4' },
-  { name: 'Pola Tidur (Rest)', tokoh_terkenal: 'Dorian Yates: Otot tidak tumbuh di gym. Otot Anda tumbuh saat tidur pulas di dalam kegelapan kamar.', apa_itu: 'Fase pemulihan pasif total di mana tubuh melakukan perbaikan makro terhadap jaringan sel otot yang robek selama latihan fisik.', manfaatnya: 'Memicu pelepasan Hormon Pertumbuhan Manusia (HGH) secara alami, mempercepat pemulihan energi seluler, dan menghentikan katabolisme (penyusutan otot).', tata_cara_atau_gerakan: 'Matikan seluruh lampu kamar dan gadget 30 menit sebelum tidur, pastikan Anda mendapatkan tidur malam berkualitas tanpa interupsi selama 7 hingga 8 jam penuh.', id_video: '-dCHrqndWYs' },
+  { name: 'Pola Tidur (Rest)', tokoh_terkenal: 'Dorian Yates: Otot tidak tumbuh di gym. Otot Anda tumbuh saat tidur pulas di dalam kegelapan kamar.', apa_itu: 'Fase pemulihan pasif total di mana tubuh melakukan perbaikan makro terhadap jaringan sel otot yang robek selama latihan fisik.', manfaatnya: 'Memicu pelepasan Hormon Growth secara alami, mempercepat pemulihan energi seluler, dan menghentikan katabolisme (penyusutan otot).', tata_cara_atau_gerakan: 'Matikan seluruh lampu kamar dan gadget 30 menit sebelum tidur, pastikan Anda mendapatkan tidur malam berkualitas tanpa interupsi selama 7 hingga 8 jam penuh.', id_video: '-dCHrqndWYs' },
   { name: 'Kardio / HIIT', tokoh_terkenal: 'Chris Bumstead: Jantung yang kuat memompa nutrisi lebih cepat ke sel-sel otot yang sedang robek.', apa_itu: 'Latihan kardiovaskular intensitas tinggi yang dikombinasikan dengan periode istirahat singkat secara berulang-ulang.', manfaatnya: 'Meningkatkan kapasitas stamina fungsional (VO2 Max), mempercepat pembakaran deposit kalori/lemak tubuh, dan menyehatkan pembuluh darah.', tata_cara_atau_gerakan: 'Lakukan gerakan eksplosif seperti jumping jacks atau burpees selama 30 detik sekuat tenaga, disusul dengan istirahat pasif selama 15 detik, ulangi sirkuit ini sebanyak 4-5 siklus.', id_video: 'cbKkB3POqaY' },
   { name: 'Pull Up', tokoh_terkenal: 'Jay Cutler: Lebar punggung V-Taper ditentukan dari seberapa sering Anda menarik dagu melewati palang.', apa_itu: 'Latihan kekuatan tubuh bagian atas (upper body pull) menggunakan palang horizontal tinggi untuk mengangkat seluruh bobot tubuh.', manfaatnya: 'Membangun lebar sayap punggung (latissimus dorsi), memperkuat otot belikat (rhomboids), serta melatih kekuatan genggaman tangan (forearms).', tata_cara_atau_gerakan: 'Genggam palang pull-up sedikit lebih lebar dari bahu, gantungkan tubuh, tarik badan Anda ke atas menggunakan otot punggung hingga dada mendekati bar dan dagu melewati palang, turunkan perlahan.', id_video: 'DXL18E7QRbk' },
   { name: 'Leg Day (Kaki)', tokoh_terkenal: 'Branch Warren: Jangan pernah melewati latihan kaki, karena dari sanalah pondasi testosteron tubuh Anda berasal.', apa_itu: 'Sesi latihan angkat beban komprehensif yang didedikasikan penuh untuk memicu perkembangan seluruh kelompok otot tubuh bawah.', manfaatnya: 'Memicu lonjakan hormon anabolik alami tubuh (seperti testosteron) yang krusial untuk mempercepat laju pertumbuhan seluruh otot tubuh Anda.', tata_cara_atau_gerakan: 'Gabungkan gerakan dasar beban berat seperti Barbell Squat, dilanjutkan dengan mesin isolasi seperti Leg Press, Leg Extension, dan Seated Calf Raises.', id_video: 'QXtXEug0PLU' },
@@ -51,7 +51,7 @@ const MASTER_34_CATEGORIES = [
   { name: 'Chest Isolation (Dada)', tokoh_terkenal: 'Lazar Angelov: Bentuk dada yang penuh membutuhkan kontraksi padat dari berbagai sudut bangku latihan.', apa_itu: 'Latihan isolasi terfokus yang dirancang untuk mengisolasi ketegangan pada otot dada tanpa membagi beban kerja ke otot bahu atau tricep.', manfaatnya: 'Memadatkan volume ketebalan serat otot dada bagian atas (upper chest), dada tengah, hingga membentuk garis dada bawah yang tegas.', tata_cara_atau_gerakan: 'Duduk di bangku incline atau datar, lakukan gerakan memeluk/meremas dada menggunakan sepasang dumbbell (Dumbbell Flyes) atau mesin kabel (Cable Crossover).', id_video: 'KIl70ffF5FM' },
   { name: 'Back Isolation (Punggung)', tokoh_terkenal: 'Frank Zane: Estetika punggung tidak hanya soal lebar sayap, melainkan detail guratan otot belikat.', apa_itu: 'Latihan isolasi tarikan yang difokuskan untuk melatih kedalaman tekstur, ketebalan, dan guratan otot punggung tengah.', manfaatnya: 'Memperbaiki postur tubuh yang bungkuk akibat terlalu sering duduk bekerja depan laptop, serta melebarkan bentuk tubuh V-Taper.', tata_cara_atau_gerakan: 'Posisikan dada menempel pada bantalan kursi (Chest-Supported Row), genggam handle beban, tarik ke arah perut bawah dengan merapatkan belikat ke belakang, tahan kontraksi 1 detik.', id_video: '8LJ3Q3Fsrzs' },
   { name: 'Shoulders (Bahu)', tokoh_terkenal: 'Larry Scott: Bahu berdimensi bulat peluru membuat ilusi pinggang Anda terlihat jauh lebih ramping.', apa_itu: 'Latihan beban terarah yang menargetkan tiga kepala otot deltoid (bahu depan, bahu samping, dan bahu belakang).', manfaatnya: 'Melebarkan dimensi pundak kiri-kanan agar postur tubuh terlihat tegap berisi saat menggunakan pakaian, serta menyeimbangkan sendi lengan atas.', tata_cara_atau_gerakan: 'Lakukan angkatan Dumbbell Lateral Raise (mengangkat lengan ke samping badan hingga sejajar bahu) untuk menargetkan deltoid samping agar bahu terlihat bulat peluru.', id_video: 'QVaijMZ2mp8' },
-  { name: 'Arms (Lengan Bicep/Tricep)', tokoh_terkenal: 'Rich Piana: Jangan harap lengan Anda membesar jika Anda tidak memaksa darah mengalir penuh ke ototnya.', apa_itu: 'Sesi latihan terisolasi yang menargetkan kelompok otot lengan atas bagian depan (biceps) dan otot lengan atas bagian belakang (triceps).', manfaatnya: 'Meningkatkan lingkar dimensi lengan tangan, serta menambah kekuatan dorong dan tarik untuk mendukung latihan compound lainnya.', tata_cara_atau_gerakan: 'Lakukan variasi Bicep Curl menggunakan kabel atau barbel, lalu pasangkan langsung dengan gerakan Tricep Overhead Extension menggunakan dumbbell tunggal.', id_video: 'rSohL4gWm9A' },
+  { name: 'Arms (Lengan Bicep/Tricep)', tokoh_terkenal: 'Rich Piana: Jangan harap lengan Anda membesar if Anda tidak memaksa darah mengalir penuh ke ototnya.', apa_itu: 'Sesi latihan terisolasi yang menargetkan kelompok otot lengan atas bagian depan (biceps) dan otot lengan atas bagian belakang (triceps).', manfaatnya: 'Meningkatkan lingkar dimensi lengan tangan, serta menambah kekuatan dorong dan tarik untuk mendukung latihan compound lainnya.', tata_cara_atau_gerakan: 'Lakukan variasi Bicep Curl menggunakan kabel atau barbel, lalu pasangkan langsung dengan gerakan Tricep Overhead Extension menggunakan dumbbell tunggal.', id_video: 'rSohL4gWm9A' },
   { name: 'Glutes Isolation (Bokong)', tokoh_terkenal: 'Amanda Latona: Otot bokong yang kuat adalah motor utama penggerak daya ledak tubuh bawah.', apa_itu: 'Latihan isolasi yang dirancang untuk mengaktifkan, memperkuat, dan mengencangkan kelompok otot pantat (gluteus maximus, medius, minimus).', manfaatnya: 'Meningkatkan daya dorong panggul saat berlari cepat, menstabilkan posisi panggul bawah, serta melindung punggung bawah dari cedera.', tata_cara_atau_gerakan: 'Tempatkan punggung atas di tepi bangku flat, letakkan barbel di atas panggul, lalu dorong panggul ke atas (Barbell Hip Thrust) hingga sejajar lutut sembari meremas otot bokong.', id_video: '1T3v_leyDIE' },
   { name: 'Mobility Drills', tokoh_terkenal: 'Kelly Starrett: Tubuh yang kuat tanpa mobilitas sendi yang fleksibel hanyalah sebuah mesin yang rusak.', apa_itu: 'Latihan gerakan aktif untuk meningkatkan kapasitas fleksibilitas kapsul sendi dan memperluas jarak jangkauan gerak fungsional tubuh.', manfaatnya: 'Memperluas Range of Motion (ROM) aktif sendi sehingga angkatan beban compound di gym bisa dilakukan secara dalam dan sempurna.', tata_cara_atau_gerakan: 'Lakukan posisi Deep Squat Hold (menahan posisi jongkok paling bawah) selama 1 menit sembari mendorong lutut ke luar menggunakan kedua siku tangan.', id_video: 'tg6zZF6pRg0' },
   { name: 'Stretching (Peregangan)', tokoh_terkenal: 'Flex Wheeler: Elastisitas jaringan ikat pasca latihan mempercepat pembuangan limbah sisa metabolisme.', apa_itu: 'Gerakan menahan regangan serat otot secara statis di akhir sesi latihan untuk mengembalikan panjang jaringan otot ke kondisi semula.', manfaatnya: 'Mengendurkan simpul-simpul kaku pada otot pasca dihantam latihan berat, serta melancarkan pembuangan asam laktat penyebab pegal.', tata_cara_atau_gerakan: 'Duduk di matras dengan meluruskan kedua kaki ke depan, raih ujung jari kaki menggunakan tangan (Seated Forward Fold) dan tahan posisi regangan selama 20-30 detik.', id_video: 'itJE4neqDJw' },
@@ -180,13 +180,19 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
+  // PROTEKSI TOTAL: Putus paksa event listener sisa audio lama agar tidak menimpa state avatar baru
+  const stopSpeechSafely = () => {
+    if (utteranceRef.current) {
+      utteranceRef.current.onend = null
+      utteranceRef.current.onerror = null
+    }
+    window.speechSynthesis.cancel()
+  }
+
   const speakText = (text, customEndState = null, customStartState = null) => {
     if (isMuted) return
     
-    if (window.currentSeolhaAudio) {
-      window.currentSeolhaAudio.pause()
-    }
-    window.speechSynthesis.cancel()
+    stopSpeechSafely()
     
     const cleanText = text.replace(/[*#_]/g, '').replace(/\bHunter\b/g, userName)
     
@@ -219,7 +225,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     
     setTimeout(() => { speakText(msg) }, 600)
     return () => {
-      window.speechSynthesis.cancel()
+      stopSpeechSafely()
     }
   }, [currentTier, userName])
 
@@ -246,6 +252,9 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     const msgToSend = customMsg || input
     if (!msgToSend.trim() || loading) return
     
+    // INSTANT STOP: Begitu tombol diketuk, suara lama langsung mati detik ini juga tanpa sisa tabrakan event
+    stopSpeechSafely()
+
     if (!isFaq && dailyCount >= 5) {
       const failMsg = `Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya, ${userName}!`
       setMessages(prev => [...prev, { sender: 'user', text: msgToSend }, { sender: 'seolha', text: failMsg, mediaSources: null }])
@@ -259,7 +268,6 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // KEMBALIKAN DELAY: Di bawah ini delay diaktifkan kembali agar transisi status MIKIR kelihatan alami
     if (isAllCategories) {
       setTimeout(() => {
         const textCat = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP**. Silakan klik tiap kategori untuk memuat video panduan dan penjelasannya:"
@@ -342,7 +350,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
   }
 
   const handleToggleMute = () => {
-    window.speechSynthesis.cancel()
+    stopSpeechSafely()
     setIsMuted(!isMuted)
   }
 
