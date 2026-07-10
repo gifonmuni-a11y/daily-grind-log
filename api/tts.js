@@ -13,9 +13,8 @@ export default async function handler(req, res) {
 
   if (!text.trim()) return res.status(400).json({ error: 'Teks kosong.' });
 
-  // Ambil API key dari Environment Variables Vercel, bukan hardcode
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Model suara Rachel premium
+  const VOICE_ID = 'c470sxKWDq6tA74TL3yB';
 
   if (!apiKey) {
     return res.status(500).json({ error: 'API key ElevenLabs belum ke-set di server.' });
