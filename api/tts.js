@@ -13,31 +13,12 @@ export default async function handler(req, res) {
 
   if (!text.trim()) return res.status(400).json({ error: 'Teks kosong.' });
 
-  // Inisialisasi kredensial proyek Supabase kamu secara langsung
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVla2VpeHZ2cnNweWd1YXdxbW5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MDg1NDcsImV4cCI6MjA5ODM4NDU0N30.dtCY8398z_1MltxLqlTHqAjlL_pXnizCJlckUzLiRmE";
-  const SUPABASE_URL = "https://eekeixvvrspyguawqmnl.supabase.co";
+  // SOLUSI PAMUNGKAS: Langsung tanam API Key ElevenLabs kamu di sisi server backend yang aman
+  const apiKey = "sk_2f51904b165fe4f8220ef9ab3c925e3ef750eade7e7057e8";
+  const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Model suara Rachel premium
 
   try {
-    // Mengambil API key ElevenLabs langsung via REST API resmi Supabase
-    const supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/secrets?key_name=eq.elevenlabs&select=key_value`, {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-      }
-    });
-
-    if (!supabaseResponse.ok) throw new Error('Gagal mengambil key dari Supabase');
-    
-    const secretsData = await supabaseResponse.json();
-    if (!secretsData || secretsData.length === 0) {
-      throw new Error('Key elevenlabs tidak ditemukan di database');
-    }
-
-    const apiKey = secretsData[0].key_value;
-    const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Model suara Rachel premium
-
-    // Kirim data teks ke ElevenLabs API
+    // Tembak langsung ke ElevenLabs API tanpa perantara database lagi
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
       method: 'POST',
       headers: {
@@ -47,7 +28,10 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         text: text,
         model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.45, similarity_boost: 0.75 }
+        voice_settings: { 
+          stability: 0.45, 
+          similarity_boost: 0.75 
+        }
       })
     });
 
