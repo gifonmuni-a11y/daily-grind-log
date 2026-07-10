@@ -186,10 +186,16 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       utteranceRef.current.onend = null
       utteranceRef.current.onerror = null
     }
+    if (window.currentSeolhaAudio) {
+      window.currentSeolhaAudio.pause()
+      window.currentSeolhaAudio.onended = null
+      window.currentSeolhaAudio.onerror = null
+    }
     window.speechSynthesis.cancel()
   }
 
-  const speakText = (text, customEndState = null, customStartState = null) => {
+  // INTEGRASI ELEVENLABS + FALLBACK GOOGLE LOKAL ANTI-MACET
+  const speakText = async (text, customEndState = null, customStartState = null) => {
     if (isMuted) return
     
     stopSpeechSafely()
@@ -199,22 +205,51 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     setInteractionId(prev => prev + 1)
     setAvatarState(customStartState || 'ngomong')
 
-    const utterance = new SpeechSynthesisUtterance(cleanText)
-    utterance.lang = 'id-ID'
-    utterance.rate = 1.05
-    
-    utteranceRef.current = utterance
-    window.currentUtterance = utterance 
+    try {
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText }),
+      })
 
-    utterance.onend = () => {
-      setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+      if (!response.ok) throw new Error('API down / limit')
+
+      const audioBlob = await response.blob()
+      const audioUrl = URL.createObjectURL(audioBlob)
+      const audio = new Audio(audioUrl)
+      
+      window.currentSeolhaAudio = audio
+
+      audio.onended = () => {
+        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+        URL.revokeObjectURL(audioUrl)
+      }
+      audio.onerror = () => {
+        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+        URL.revokeObjectURL(audioUrl)
+      }
+
+      await audio.play()
+
+    } catch (err) {
+      console.warn('ElevenLabs bermasalah/limit, otomatis fallback ke Google lokal:', err)
+      
+      const utterance = new SpeechSynthesisUtterance(cleanText)
+      utterance.lang = 'id-ID'
+      utterance.rate = 1.05
+      
+      utteranceRef.current = utterance
+      window.currentUtterance = utterance 
+
+      utterance.onend = () => {
+        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+      }
+      utterance.onerror = () => {
+        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+      }
+      
+      window.speechSynthesis.speak(utterance)
     }
-    utterance.onerror = (e) => {
-      console.error("Google SpeechSynthesis Error:", e)
-      setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-    }
-    
-    window.speechSynthesis.speak(utterance)
   }
 
   useEffect(() => {
@@ -252,7 +287,6 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     const msgToSend = customMsg || input
     if (!msgToSend.trim() || loading) return
     
-    // INSTANT STOP: Begitu tombol diketuk, suara lama langsung mati detik ini juga tanpa sisa tabrakan event
     stopSpeechSafely()
 
     if (!isFaq && dailyCount >= 5) {
