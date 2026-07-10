@@ -28,7 +28,7 @@ const AVATAR_LINKS = {
 
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), dan lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
-  { name: 'Push Up', tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.', manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), dan otot lengan belakang (triceps).', tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.', id_video: 'VZUDAOL2LI8' },
+  { name: 'Push Up', tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.', manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), and otot lengan belakang (triceps).', tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.', id_video: 'VZUDAOL2LI8' },
   { name: 'Squat', tokoh_terkenal: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.', apa_itu: 'Latihan compound tubuh bagian bawah yang meniru gerakan fundamental manusia saat hendak duduk dan berdiri kembali.', manfaatnya: 'Memperkuat rantai kekuatan otot paha depan (quadriceps), paha belakang (hamstring), bokong (glutes), serta melatih kekuatan tulang punggung.', tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah and ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.', id_video: 'Xb2Lm40nlGo' },
   { name: 'Plank', tokoh_terkenal: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', apa_itu: 'Latihan kekuatan isometrik statis yang mengharuskan Anda menahan satu posisi tubuh garis lurus dalam durasi waktu tertentu.', manfaatnya: 'Mengunci stabilitas seluruh dinding otot perut (core), memperkuat otot panggul bawah, serta memperbaiki postur tubuh bungkuk.', tata_cara_atau_gerakan: 'Tumpu bobot badan Anda pada kedua siku lengan bawah dan ujung jari kaki di atas matras, kunci otot perut and bokong sekencang mungkin, pastikan posisi pinggul tidak naik atau merosot.', id_video: 'Gr1GtwTp_ko' },
   { name: 'Lunges', tokoh_terkenal: 'Ronnie Coleman: Angkatan unilateral membentuk keseimbangan kaki yang kokoh untuk menopang beban raksasa.', apa_itu: 'Latihan unilateral tubuh bagian bawah yang berfokus pada pelatihan satu kaki secara mandiri bergantian kaki kiri dan kanan.', manfaatnya: 'Memperbaiki ketidakseimbangan kekuatan kaki kiri-kanan, meningkatkan stabilitas koordinasi tubuh, serta melatih fleksibilitas otot panggul.', tata_cara_atau_gerakan: 'Langkahkan kaki kanan jauh ke depan, turunkan lutut kaki kiri belakang hingga hampir menyentuh lantai dan membentuk sudut 90 derajat pada kedua kaki, dorong tumit depan untuk kembali ke posisi awal.', id_video: 'AJUh03WB8F4' },
@@ -94,8 +94,9 @@ export default function CompanionAI({ userStats, profile, onClose }) {
   const [liveTime, setLiveTime] = useState('')
   const [isMuted, setIsMuted] = useState(false)
   const [avatarState, setAvatarState] = useState('diam')
-  const [interactionId, setInteractionId] = useState(0) // Pemicu render ulang GIF instant hulu-hilir
+  const [interactionId, setInteractionId] = useState(0)
   const messagesEndRef = useRef(null)
+  const utteranceRef = useRef(null)
 
   const userName = profile?.name || 'Trainer'
   const userStatsWithProfile = { ...userStats, name: userName }
@@ -179,60 +180,35 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  const runSpeechSynthesisFallback = (cleanText, customEndState) => {
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(cleanText)
-    utterance.lang = 'id-ID'
-    utterance.rate = 1.05
-    utterance.onend = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-    utterance.onerror = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-    window.speechSynthesis.speak(utterance)
-  }
-
-  const speakText = async (text, customEndState = null, customStartState = null) => {
+  const speakText = (text, customEndState = null, customStartState = null) => {
     if (isMuted) return
     
-    // Matikan paksa audio lama & hapus callback lamanya biar tidak bentrok
     if (window.currentSeolhaAudio) {
       window.currentSeolhaAudio.pause()
-      window.currentSeolhaAudio.onended = null
-      window.currentSeolhaAudio.onerror = null
     }
     window.speechSynthesis.cancel()
     
     const cleanText = text.replace(/[*#_]/g, '').replace(/\bHunter\b/g, userName)
-
-    // Naikkan interactionId agar tag gambar mendeteksi trigger baru & reset GIF dari awal
+    
     setInteractionId(prev => prev + 1)
+    setAvatarState(customStartState || 'ngomong')
 
-    try {
-      setAvatarState(customStartState || 'ngomong')
+    const utterance = new SpeechSynthesisUtterance(cleanText)
+    utterance.lang = 'id-ID'
+    utterance.rate = 1.05
+    
+    utteranceRef.current = utterance
+    window.currentUtterance = utterance 
 
-      const response = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: cleanText }),
-      })
-
-      if (!response.ok) throw new Error('API server down')
-
-      const audioBlob = await response.blob()
-      const audioUrl = URL.createObjectURL(audioBlob)
-      const audio = new Audio(audioUrl)
-      
-      window.currentSeolhaAudio = audio
-
-      audio.onended = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-      audio.onerror = () => {
-        runSpeechSynthesisFallback(cleanText, customEndState)
-      }
-
-      await audio.play()
-
-    } catch (err) {
-      console.warn('Edge TTS gagal/menunggu deploy, otomatis pakai suara cadangan browser:', err)
-      runSpeechSynthesisFallback(cleanText, customEndState)
+    utterance.onend = () => {
+      setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
     }
+    utterance.onerror = (e) => {
+      console.error("Google SpeechSynthesis Error:", e)
+      setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+    }
+    
+    window.speechSynthesis.speak(utterance)
   }
 
   useEffect(() => {
@@ -243,7 +219,6 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     
     setTimeout(() => { speakText(msg) }, 600)
     return () => {
-      if (window.currentSeolhaAudio) window.currentSeolhaAudio.pause()
       window.speechSynthesis.cancel()
     }
   }, [currentTier, userName])
@@ -284,12 +259,14 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
-    // Seluruh setTimeout buatan dihapus total agar respon tombol instant sat-set
+    // KEMBALIKAN DELAY: Di bawah ini delay diaktifkan kembali agar transisi status MIKIR kelihatan alami
     if (isAllCategories) {
-      const textCat = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP**. Silakan klik tiap kategori untuk memuat video panduan dan penjelasannya:"
-      setMessages(prev => [...prev, { sender: 'seolha', text: textCat, mediaSources: null, multiMedia: MASTER_34_CATEGORIES }])
-      setLoading(false)
-      speakText("Berikut adalah daftar matriks tiga puluh empat kategori latihan lengkap.")
+      setTimeout(() => {
+        const textCat = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP**. Silakan klik tiap kategori untuk memuat video panduan dan penjelasannya:"
+        setMessages(prev => [...prev, { sender: 'seolha', text: textCat, mediaSources: null, multiMedia: MASTER_34_CATEGORIES }])
+        setLoading(false)
+        speakText("Berikut adalah daftar matriks tiga puluh empat kategori latihan lengkap.")
+      }, 800)
       return
     }
 
@@ -323,9 +300,11 @@ export default function CompanionAI({ userStats, profile, onClose }) {
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${userName}.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
-      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, mediaSources: multiVideos }])
-      setLoading(false)
-      speakText(faqReply)
+      setTimeout(() => {
+        setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, mediaSources: multiVideos }])
+        setLoading(false)
+        speakText(faqReply)
+      }, 1500)
       return
     }
 
@@ -363,7 +342,6 @@ export default function CompanionAI({ userStats, profile, onClose }) {
   }
 
   const handleToggleMute = () => {
-    if (!isMuted && window.currentSeolhaAudio) window.currentSeolhaAudio.pause()
     window.speechSynthesis.cancel()
     setIsMuted(!isMuted)
   }
@@ -379,14 +357,8 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     
     setMessages(prev => [...prev, { sender: 'seolha', text: `*[SYSTEM NOTIFICATION: Anda menyentuh asisten Seolha]*\n\n"${reply}"`, mediaSources: null }])
     
-    setAvatarState('seolha_marah')
-    setInteractionId(prev => prev + 1) // Force reset GIF marah instant pas diketuk berulang
-
-    if (isMuted) {
-      setTimeout(() => setAvatarState('diam'), 2000)
-    } else {
-      speakText(reply, 'diam', 'seolha_marah')
-    }
+    setInteractionId(prev => prev + 1)
+    speakText(reply, 'diam', 'seolha_marah')
   }
 
   return (
@@ -420,7 +392,6 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       {/* AVATAR CONTAINER */}
       <div className="mt-2.5 flex flex-col items-center justify-center p-2 bg-[#100E16] border border-[#211D2C] rounded-lg relative overflow-hidden">
         <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
-          {/* Menyuntikkan KEY dinamis agar browser menghancurkan tag lama & me-play GIF murni dari frame 1 tiap ada interaksi */}
           <img key={`${avatarState}-${interactionId}`} src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
         </div>
         <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/40 px-2 py-1.5 border border-[#211D2C] rounded">
