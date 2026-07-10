@@ -43,12 +43,12 @@ const MASTER_34_CATEGORIES = [
   { name: 'Olympic Lifting', tokoh_terkenal: 'Lu Xiaojun: Kekuatan tanpa kecepatan tidak akan bisa menempatkan barbel raksasa di atas kepala Anda.', apa_itu: 'Cabang olahraga angkat besi kompetitif teknis tinggi yang berfokus pada perpindahan beban dari lantai ke atas kepala dengan daya ledak.', manfaatnya: 'Mengembangkan daya ledak (explosive power) eksponensial otot, koordinasi saraf-otot, dan mobilitas fungsional sendi tingkat lanjut.', tata_cara_atau_gerakan: 'Pelajari fase penarikan barbel dari lantai (first pull), fase akselerasi pinggul (triple extension), hingga fase menangkap barbel di atas kepala pada gerakan Snatch dan Clean & Jerk.', id_video: 'VMaBfcRprAU' },
   { name: 'Boxing / Combat', tokoh_terkenal: 'Mike Tyson: Semua orang punya rencana sampai sebuah pukulan telak mendarat di mulut mereka.', apa_itu: 'Latihan seni bela diri berbasis pukulan pukulan presisi and pergerakan kaki taktis untuk pengkondisian fisik.', manfaatnya: 'Melatih refleks instan sistem saraf, ketangkasan gerak kaki (footwork), koordinasi mata-tangan, serta membakar kalori dalam jumlah masif.', tata_cara_atau_gerakan: 'Lakukan kombinasi pukulan fundamental: Jab, Cross, Hook, dan Upper-cut dipadukan dengan gerakan menghindar (weaving) di depan samsak atau cermin (shadow boxing).', id_video: '3u6lojo40a8' },
   { name: 'Sport-Specific Training', tokoh_terkenal: 'Lee Haney: Jadilah spesialis di bidang Anda, latih mekanika gerak sendi secara presisi tanpa celah.', apa_itu: 'Program pengkondisian fisik yang dirancang secara khusus untuk mendukung kebutuhan mekanik gerakan satu cabang olahraga tertentu.', manfaatnya: 'Meningkatkan performa tanding secara spesifik pada cabang olahraga yang ditekuni dan meminimalkan risiko cedera akibat gerakan berulang.', tata_cara_atau_gerakan: 'Analisis gerakan dominan olahraga Anda (misal gerakan melompat untuk basket), lalu latih kekuatan otot penggeraknya menggunakan beban bebas (seperti Trap Bar Deadlift untuk lompatan).', id_video: 'Mo6B5EjfHGU' },
-  { name: 'Martial Arts', tokoh_terkenal: 'Ip Man: Latihan bukan untuk pamer kekuatan, melainkan untuk menaklukkan ego diri sendiri di atas matras.', apa_itu: 'Sistem latihan fisik bela diri terstruktur yang mencakup teknik kuncian, tendangan, pertahanan diri, dan disiplin mental.', manfaatnya: 'Meningkatkan fleksibilitas dinamis otot tubuh, keseimbangan postur, serta membentuk pertahanan diri taktis yang responsif.', tata_cara_atau_gerakan: 'Latih posisi kuda-kuda dasar yang kokoh, transisi perpindahan berat badan saat menangkis, serta eksekusi tendangan depan secara berulang dengan form yang benar.', id_video: 'bs7X3F-XYTc' },
+  { name: 'Martial Arts', tokoh_terkenal: 'Ip Man: Latihan bukan untuk pamer kekuatan, melainkan untuk menaklukkan ego diri sendiri di atas matras.', apa_itu: 'Sistem latihan fisik bela diri terstruktur yang mencakup teknik kuncian, tendangan, pertahanan diri, dan disiplin mental.', manfaatnya: 'Meningkatkan fleksibilitas dinamis otot tubuh, keseimbangan postur, serta membentuk pertahanan diri taktis yang responsif.', tata_cara_atau_gerakan: 'Latih posisi kuda-kada dasar yang kokoh, transisi perpindahan berat badan saat menangkis, serta eksekusi tendangan depan secara berulang dengan form yang benar.', id_video: 'bs7X3F-XYTc' },
   { name: 'Core/Abs Isolation', tokoh_terkenal: 'Sergi Constance: Otot perut dikeraskan di ruang latihan lewat core compression dan dikunci rapat.', apa_itu: 'Latihan isolasi terfokus yang menargetkan kelompok otot perut bagian depan (six pack) dan otot perut samping (obliques).', manfaatnya: 'Membentuk estetika otot perut yang kering dan tajam, serta menstabilkan rongga perut tengah untuk menahan angkatan compound berat.', tata_cara_atau_gerakan: 'Lakukan gerakan fleksi perut seperti Hanging Leg Raises (mengangkat kaki menggantung), Cable Crunch, dan Russian Twist menggunakan plate beban ringan.', id_video: 'Cnmy08JgakM' },
   { name: 'Powerlifting', tokoh_terkenal: 'Eddie Hall: Ketika beban terasa ingin meremukkan tulangmu, di sanalah kekuatan mental sejatimu bekerja.', apa_itu: 'Cabang olahraga kekuatan absolut yang berfokus pada upaya mengangkat beban seberat mungkin dalam satu repetisi maksimal (1RM).', manfaatnya: 'Memaksimalkan batas kekuatan absolut sistem saraf dan otot pada tiga gerakan fundamental utama: Squat, Bench Press, dan Deadlift.', tata_cara_atau_gerakan: 'Gunakan program latihan berbasis persentase beban berat (rentang 1-5 repetisi per set) dengan fokus pada teknik angkatan mati (Deadlift) konvensional atau sumo dari lantai.', id_video: 'JBJqZKx7MLI' },
   { name: 'Calisthenics', tokoh_terkenal: 'Hannibal For King: Batasan fisikmu adalah ilusi yang diciptakan oleh otakmu sendiri. Tarik tubuhmu.', apa_itu: 'Sistem latihan kekuatan yang murni memanfaatkan berat badan sendiri sebagai media resistensi utama tanpa menggunakan mesin gym.', manfaatnya: 'Membentuk massa otot yang kering (lean muscle), meningkatkan kontrol penuh tubuh terhadap gravitasi, dan menguatkan jaringan ikat sendi.', tata_cara_atau_gerakan: 'Latih gerakan fundamental tingkat lanjut pada palang besi atau parallette bars seperti Chest-to-Bar Pull Ups, Parallel Dips, dan senam lantai L-Sit.', id_video: 'kuUZYUBHryw' },
   { name: 'Kettlebell Flow', tokoh_terkenal: 'Pavel Tsatsouline: Ayunan kettlebell adalah jembatan utama yang menghubungkan kekuatan dengan ketahanan.', apa_itu: 'Latihan fungsional dinamis menggunakan bola besi berhandle (kettlebell) dengan rangkaian gerakan yang mengalir konstan tanpa henti.', manfaatnya: 'Membangun kekuatan rantai posterior tubuh (punggung bawah dan bokong), melatih stamina kardio, dan memperkuat daya cengkeram tangan.', tata_cara_atau_gerakan: 'Lakukan gerakan Kettlebell Swing (ayunan) dasar dari celah kaki hingga setinggi dada, lalu transisikan secara mulus ke gerakan Clean dan Overhead Press.', id_video: 'VCcar3MA07w' },
-  { name: 'Chest Isolation (Dada)', tokoh_terkenal: 'Lazar Angelov: Bentuk dada yang penuh membutuhkan kontraksi padat dari berbagai sudut bangku latihan.', apa_itu: 'Latihan terfokus yang dirancang untuk mengisolasi ketegangan pada otot dada tanpa membagi beban kerja ke otot bahu atau tricep.', manfaatnya: 'Memadatkan volume ketebalan serat otot dada bagian atas (upper chest), dada tengah, hingga membentuk garis dada bawah yang tegas.', tata_cara_atau_gerakan: 'Duduk di bangku incline atau datar, lakukan gerakan memeluk/meremas dada menggunakan sepasang dumbbell (Dumbbell Flyes) atau mesin kabel (Cable Crossover).', id_video: 'KIl70ffF5FM' },
+  { name: 'Chest Isolation (Dada)', tokoh_terkenal: 'Lazar Angelov: Bentuk dada yang penuh membutuhkan kontraksi padat dari berbagai sudut bangku latihan.', apa_itu: 'Latihan terfokus yang dirancang untuk mengisolasi ketegangan pada otot dada tanpa membagi beban kerja ke otot bahu atau tricep.', manfaatnya: 'Memadatkan volume ketebalan serat otot dada bagian atas (upper chest), dada tengah, hingga membentuk garis dada bawah yang tegas.', tata_cara_atau_gerakan: 'Duduk di bangku incline atau datar, lakukan gerakan memeluk/meremas dada menggunakan sepasang dumbbell (Dumbbell Flyes) or mesin kabel (Cable Crossover).', id_video: 'KIl70ffF5FM' },
   { name: 'Back Isolation (Punggung)', tokoh_terkenal: 'Frank Zane: Estetika punggung tidak hanya soal lebar sayap, melainkan detail guratan otot belikat.', apa_itu: 'Latihan isolasi tarikan yang difokuskan untuk melatih kedalaman tekstur, ketebalan, dan guratan otot punggung tengah.', manfaatnya: 'Memperbaiki postur tubuh yang bungkuk akibat terlalu sering duduk bekerja depan laptop, serta melebarkan bentuk tubuh V-Taper.', tata_cara_atau_gerakan: 'Posisikan dada menempel pada bantalan kursi (Chest-Supported Row), genggam handle beban, tarik ke arah perut bawah dengan merapatkan belikat ke belakang, tahan kontraksi 1 detik.', id_video: '8LJ3Q3Fsrzs' },
   { name: 'Shoulders (Bahu)', tokoh_terkenal: 'Larry Scott: Bahu berdimensi bulat peluru membuat ilusi pinggang Anda terlihat jauh lebih ramping.', apa_itu: 'Latihan beban terarah yang menargetkan tiga kepala otot deltoid (bahu depan, bahu samping, dan bahu belakang).', manfaatnya: 'Melebarkan dimensi pundak kiri-kanan agar postur tubuh terlihat tegap berisi saat menggunakan pakaian, serta menyeimbangkan sendi lengan atas.', tata_cara_atau_gerakan: 'Lakukan angkatan Dumbbell Lateral Raise (mengangkat lengan ke samping badan hingga sejajar bahu) untuk menargetkan deltoid samping agar bahu terlihat bulat peluru.', id_video: 'QVaijMZ2mp8' },
   { name: 'Arms (Lengan Bicep/Tricep)', tokoh_terkenal: 'Rich Piana: Jangan harap lengan Anda membesar if Anda tidak memaksa darah mengalir penuh ke ototnya.', apa_itu: 'Sesi latihan terisolasi yang menargetkan kelompok otot lengan atas bagian depan (biceps) dan otot lengan atas bagian belakang (triceps).', manfaatnya: 'Meningkatkan lingkar dimensi lengan tangan, serta menambah kekuatan dorong dan tarik untuk mendukung latihan compound lainnya.', tata_cara_atau_gerakan: 'Lakukan variasi Bicep Curl menggunakan kabel atau barbel, lalu pasangkan langsung dengan gerakan Tricep Overhead Extension menggunakan dumbbell tunggal.', id_video: 'rSohL4gWm9A' },
@@ -180,20 +180,44 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  const speakText = (text, customEndState = null, customStartState = null) => {
+  // Modifikasi fungsi utama speakText untuk menembak API Microsoft Edge TTS
+  const speakText = async (text, customEndState = null, customStartState = null) => {
     if (isMuted) return
-    window.speechSynthesis.cancel()
     
-    const cleanText = text.replace(/[*#_]/g, '')
-    const utterance = new SpeechSynthesisUtterance(cleanText)
-    utterance.lang = 'id-ID'
-    utterance.rate = 1.05
+    // Hentikan audio yang sedang berputar jika ada
+    if (window.currentSeolhaAudio) {
+      window.currentSeolhaAudio.pause()
+    }
+    
+    // Bersihkan kata 'Hunter' sebelum dibaca oleh mesin TTS
+    const cleanText = text.replace(/[*#_]/g, '').replace(/\bHunter\b/g, userName)
 
-    utterance.onstart = () => setAvatarState(customStartState || 'ngomong')
-    utterance.onend = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-    utterance.onerror = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+    try {
+      setAvatarState(customStartState || 'ngomong')
 
-    window.speechSynthesis.speak(utterance)
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText }),
+      })
+
+      if (!response.ok) throw new Error('TTS API failed')
+
+      const audioBlob = await response.blob()
+      const audioUrl = URL.createObjectURL(audioBlob)
+      const audio = new Audio(audioUrl)
+      
+      window.currentSeolhaAudio = audio
+
+      audio.onended = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+      audio.onerror = () => setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+
+      await audio.play()
+
+    } catch (err) {
+      console.error('Edge TTS Error, fallback to normal state:', err)
+      setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+    }
   }
 
   useEffect(() => {
@@ -203,7 +227,9 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     fetchDailyLimit()
     
     setTimeout(() => { speakText(msg) }, 600)
-    return () => window.speechSynthesis.cancel()
+    return () => {
+      if (window.currentSeolhaAudio) window.currentSeolhaAudio.pause()
+    }
   }, [currentTier, userName])
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
@@ -324,7 +350,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
   }
 
   const handleToggleMute = () => {
-    if (!isMuted) window.speechSynthesis.cancel()
+    if (!isMuted && window.currentSeolhaAudio) window.currentSeolhaAudio.pause()
     setIsMuted(!isMuted)
   }
 
