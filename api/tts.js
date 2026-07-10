@@ -13,12 +13,15 @@ export default async function handler(req, res) {
 
   if (!text.trim()) return res.status(400).json({ error: 'Teks kosong.' });
 
-  // SOLUSI PAMUNGKAS: Langsung tanam API Key ElevenLabs kamu di sisi server backend yang aman
-  const apiKey = "sk_2f51904b165fe4f8220ef9ab3c925e3ef750eade7e7057e8";
+  // Ambil API key dari Environment Variables Vercel, bukan hardcode
+  const apiKey = process.env.ELEVENLABS_API_KEY;
   const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Model suara Rachel premium
 
+  if (!apiKey) {
+    return res.status(500).json({ error: 'API key ElevenLabs belum ke-set di server.' });
+  }
+
   try {
-    // Tembak langsung ke ElevenLabs API tanpa perantara database lagi
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
       method: 'POST',
       headers: {
@@ -28,9 +31,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         text: text,
         model_id: 'eleven_multilingual_v2',
-        voice_settings: { 
-          stability: 0.45, 
-          similarity_boost: 0.75 
+        voice_settings: {
+          stability: 0.45,
+          similarity_boost: 0.75
         }
       })
     });
