@@ -21,7 +21,7 @@ const ScrollbarStyles = () => (
 
 const AVATAR_LINKS = {
   diam: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/diam.gif',
-  ngomong: 'https://eekeixvvrspyguaw/storage/v1/object/public/Public/entry-images/ngomong.gif',
+  ngomong: 'https://eekeixvvrspyguaw.supabase.co/storage/v1/object/public/Public/entry-images/ngomong.gif',
   mikir: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/mikir.gif',
   seolha_marah: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/seolha_marah.gif'
 }
