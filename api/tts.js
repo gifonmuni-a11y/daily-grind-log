@@ -1,6 +1,6 @@
-const WebSocket = require('ws');
+import WebSocket from 'ws';
 
-module.exports = function handler(req, res) {
+export default function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
   }
@@ -9,6 +9,14 @@ module.exports = function handler(req, res) {
   if (!text) {
     return res.status(400).json({ error: 'Text is required' });
   }
+
+  // Proteksi Mutlak: Amankan karakter khusus agar XML parser Microsoft tidak crash
+  const escapedText = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 
   const voice = 'id-ID-GadisNeural';
   const timestamp = Date.now();
@@ -21,7 +29,7 @@ module.exports = function handler(req, res) {
     const configPay = `X-Timestamp:${timestamp}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"system":{"name":"SpeechSDK","version":"1.12.1-rc.1","os":{"platform":"Browser","name":"Chrome","version":"120.0.0"},"device":{"manufacturer":"SpeechSDK","model":"SpeechSDK","type":"Desktop"}}}}`;
     ws.send(configPay);
     
-    const ssmlPay = `X-Timestamp:${timestamp}\r\nPath:ssml\r\nContent-Type:application/ssml+xml\r\n\r\n<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='id-ID'><voice name='${voice}'><prosody pitch='+0Hz' rate='+4%'>${text}</prosody></voice></speak>`;
+    const ssmlPay = `X-Timestamp:${timestamp}\r\nPath:ssml\r\nContent-Type:application/ssml+xml\r\n\r\n<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='id-ID'><voice name='${voice}'><prosody pitch='+0Hz' rate='+4%'>${escapedText}</prosody></voice></speak>`;
     ws.send(ssmlPay);
   });
   
