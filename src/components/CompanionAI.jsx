@@ -38,7 +38,7 @@ const MASTER_34_CATEGORIES = [
   { name: 'Pull Up', tokoh_terkenal: 'Jay Cutler: Lebar punggung V-Taper ditentukan dari seberapa sering Anda menarik dagu melewati palang.', apa_itu: 'Latihan kekuatan tubuh bagian atas (upper body pull) menggunakan palang horizontal tinggi untuk mengangkat seluruh bobot tubuh.', manfaatnya: 'Membangun lebar sayap punggung (latissimus dorsi), memperkuat otot belikat (rhomboids), serta melatih kekuatan genggaman tangan (forearms).', tata_cara_atau_gerakan: 'Genggam palang pull-up sedikit lebih lebar dari bahu, gantungkan tubuh, tarik badan Anda ke atas menggunakan otot punggung hingga dada mendekati bar dan dagu melewati palang, turunkan perlahan.', id_video: 'DXL18E7QRbk' },
   { name: 'Leg Day (Kaki)', tokoh_terkenal: 'Branch Warren: Jangan pernah melewati latihan kaki, karena dari sanalah pondasi testosteron tubuh Anda berasal.', apa_itu: 'Sesi latihan angkat beban komprehensif yang didedikasikan penuh untuk memicu perkembangan seluruh kelompok otot tubuh bawah.', manfaatnya: 'Memicu lonjakan hormon anabolik alami tubuh (seperti testosteron) yang krusial untuk mempercepat laju pertumbuhan seluruh otot tubuh Anda.', tata_cara_atau_gerakan: 'Gabungkan gerakan dasar beban berat seperti Barbell Squat, dilanjutkan dengan mesin isolasi seperti Leg Press, Leg Extension, dan Seated Calf Raises.', id_video: 'QXtXEug0PLU' },
   { name: 'Upper Body', tokoh_terkenal: 'Phil Heath: Keseimbangan visual tubuh atas membutuhkan detail kontraksi penuh di setiap sudut repetisi.', apa_itu: 'Sesi latihan gabungan terpadu yang menargetkan seluruh arsitektur kelompok otot di atas garis pinggang.', manfaatnya: 'Membentuk postur tubuh bagian atas yang simetris, berdimensi tegap, serta meningkatkan kapasitas kekuatan dorong dan tarik.', tata_cara_atau_gerakan: 'Susun variasi menu latihan bangku (Bench Press), tarikan punggung (Lat Pulldown), and dorongan bahu (Overhead Dumbbell Press) secara berurutan dalam satu hari latihan.', id_video: '0zhvUV1bAVQ' },
-  { name: 'Lower Body', tokoh_terkenal: 'Kai Greene: Hubungkan pikiranmu dengan serat otot kaki, rasakan setiap tekanan beban mengoyak seratnya.', apa_itu: 'Program latihan terfokus khusus untuk membangun kekuatan struktural paha, bokong, pinggul, dan betis.', manfaatnya: 'Memperkuat densitas (kepadatan) tulang kaki penopang tubuh utama serta menjaga stabilitas gerak atletik harian.', tata_cara_atau_gerakan: 'Fokus pada latihan pola gerakan engsel panggul dan dorongan kaki seperti Romanian Deadlifts, Goblet Squats, dan Glute Bridges menggunakan beban tambahan.', id_video: 'UEWEYeJGkLM' },
+  { name: 'Lower Body', tokoh_terkenal: 'Kai Greene: Hubungkan pikiranmu dengan serat otot kaki, rasakan setiap tekanan beban mengoyak seratnya.', apa_itu: 'Program latihan terfokus khusus untuk membangun kekuatan struktural paha, bokong, pinggul, dan betis.', manfaatnya: 'Memperkuat densitas (kepadatan) tulang kaki penopang tubuh utama serta menjaga stabilitas gerak atletik harian.', tata_cara_atau_gerakan: 'Fokus pada latihan pola gerakan engsel panggul and dorongan kaki seperti Romanian Deadlifts, Goblet Squats, dan Glute Bridges menggunakan beban tambahan.', id_video: 'UEWEYeJGkLM' },
   { name: 'Full Body Workout', tokoh_terkenal: 'Mike Mentzer: Intensitas tinggi dalam waktu singkat merangsang seluruh serat otot untuk berkembang maksimal.', apa_itu: 'Metode latihan efisien tinggi yang merangsang seluruh kelompok otot besar tubuh dalam satu sesi tunggal.', manfaatnya: 'Sangat menghemat waktu latihan harian, mengoptimalkan metabolisme pembakaran kalori total, dan melatih kebugaran tubuh secara menyeluruh.', tata_cara_atau_gerakan: 'Pilih satu gerakan compound utama untuk setiap bagian tubuh: Squat (kaki), Incline Bench Press (dada), dan Barbell Row (punggung), lakukan sebanyak 3-4 set masing-masing.', id_video: 'GViX8riaHX4' },
   { name: 'Olympic Lifting', tokoh_terkenal: 'Lu Xiaojun: Kekuatan tanpa kecepatan tidak akan bisa menempatkan barbel raksasa di atas kepala Anda.', apa_itu: 'Cabang olahraga angkat besi kompetitif teknis tinggi yang berfokus pada perpindahan beban dari lantai ke atas kepala dengan daya ledak.', manfaatnya: 'Mengembangkan daya ledak (explosive power) eksponensial otot, koordinasi saraf-otot, dan mobilitas fungsional sendi tingkat lanjut.', tata_cara_atau_gerakan: 'Pelajari fase penarikan barbel dari lantai (first pull), fase akselerasi pinggul (triple extension), hingga fase menangkap barbel di atas kepala pada gerakan Snatch dan Clean & Jerk.', id_video: 'VMaBfcRprAU' },
   { name: 'Boxing / Combat', tokoh_terkenal: 'Mike Tyson: Semua orang punya rencana sampai sebuah pukulan telak mendarat di mulut mereka.', apa_itu: 'Latihan seni bela diri berbasis pukulan pukulan presisi and pergerakan kaki taktis untuk pengkondisian fisik.', manfaatnya: 'Melatih refleks instan sistem saraf, ketangkasan gerak kaki (footwork), koordinasi mata-tangan, serta membakar kalori dalam jumlah masif.', tata_cara_atau_gerakan: 'Lakukan kombinasi pukulan fundamental: Jab, Cross, Hook, dan Upper-cut dipadukan dengan gerakan menghindar (weaving) di depan samsak atau cermin (shadow boxing).', id_video: '3u6lojo40a8' },
@@ -94,6 +94,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
   const [liveTime, setLiveTime] = useState('')
   const [isMuted, setIsMuted] = useState(false)
   const [avatarState, setAvatarState] = useState('diam')
+  const [interactionId, setInteractionId] = useState(0) // Pemicu render ulang GIF instant hulu-hilir
   const messagesEndRef = useRef(null)
 
   const userName = profile?.name || 'Trainer'
@@ -191,12 +192,18 @@ export default function CompanionAI({ userStats, profile, onClose }) {
   const speakText = async (text, customEndState = null, customStartState = null) => {
     if (isMuted) return
     
+    // Matikan paksa audio lama & hapus callback lamanya biar tidak bentrok
     if (window.currentSeolhaAudio) {
       window.currentSeolhaAudio.pause()
+      window.currentSeolhaAudio.onended = null
+      window.currentSeolhaAudio.onerror = null
     }
     window.speechSynthesis.cancel()
     
     const cleanText = text.replace(/[*#_]/g, '').replace(/\bHunter\b/g, userName)
+
+    // Naikkan interactionId agar tag gambar mendeteksi trigger baru & reset GIF dari awal
+    setInteractionId(prev => prev + 1)
 
     try {
       setAvatarState(customStartState || 'ngomong')
@@ -277,13 +284,12 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     setMessages(newMessages)
     setLoading(true)
 
+    // Seluruh setTimeout buatan dihapus total agar respon tombol instant sat-set
     if (isAllCategories) {
-      setTimeout(() => {
-        const textCat = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP**. Silakan klik tiap kategori untuk memuat video panduan dan penjelasannya:"
-        setMessages(prev => [...prev, { sender: 'seolha', text: textCat, mediaSources: null, multiMedia: MASTER_34_CATEGORIES }])
-        setLoading(false)
-        speakText("Berikut adalah daftar matriks tiga puluh empat kategori latihan lengkap.")
-      }, 300)
+      const textCat = "Berikut adalah daftar matrix **34 KATEGORI LATIHAN LENGKAP**. Silakan klik tiap kategori untuk memuat video panduan dan penjelasannya:"
+      setMessages(prev => [...prev, { sender: 'seolha', text: textCat, mediaSources: null, multiMedia: MASTER_34_CATEGORIES }])
+      setLoading(false)
+      speakText("Berikut adalah daftar matriks tiga puluh empat kategori latihan lengkap.")
       return
     }
 
@@ -317,11 +323,9 @@ export default function CompanionAI({ userStats, profile, onClose }) {
         faqReply = `Hindari 4 dosa besar pemula ini agar terhindar dari cedera kronis, ${userName}.\n\n1. **Ego Lifting:** Memaksa beban terlalu berat padahal form gerakan berantakan.\n2. **Kurang Konsisten:** Berhenti latihan hanya karena otot belum kelihatan dalam 2 minggu.\n3. **Mengabaikan Nutrisi:** Mengira latihan keras bisa menutupi pola makan berantakan/begadang.\n4. **Asal Tiru:** Meniru program latihan atlet profesional tanpa fondasi dasar.`
       }
 
-      setTimeout(() => {
-        setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, mediaSources: multiVideos }])
-        setLoading(false)
-        speakText(faqReply)
-      }, 1500)
+      setMessages(prev => [...prev, { sender: 'seolha', text: faqReply, mediaSources: multiVideos }])
+      setLoading(false)
+      speakText(faqReply)
       return
     }
 
@@ -376,6 +380,8 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     setMessages(prev => [...prev, { sender: 'seolha', text: `*[SYSTEM NOTIFICATION: Anda menyentuh asisten Seolha]*\n\n"${reply}"`, mediaSources: null }])
     
     setAvatarState('seolha_marah')
+    setInteractionId(prev => prev + 1) // Force reset GIF marah instant pas diketuk berulang
+
     if (isMuted) {
       setTimeout(() => setAvatarState('diam'), 2000)
     } else {
@@ -414,7 +420,8 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       {/* AVATAR CONTAINER */}
       <div className="mt-2.5 flex flex-col items-center justify-center p-2 bg-[#100E16] border border-[#211D2C] rounded-lg relative overflow-hidden">
         <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
-          <img src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
+          {/* Menyuntikkan KEY dinamis agar browser menghancurkan tag lama & me-play GIF murni dari frame 1 tiap ada interaksi */}
+          <img key={`${avatarState}-${interactionId}`} src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
         </div>
         <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/40 px-2 py-1.5 border border-[#211D2C] rounded">
           Status: <span className="text-accent font-black">{avatarState === 'seolha_marah' ? 'seolha marah' : avatarState}</span>
