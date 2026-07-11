@@ -93,7 +93,7 @@ export default function Home({ session }) {
   // STATE HALAMAN UTAMA DOCK BAR
   const [activeTab, setActiveTab] = useState('grind') 
   
-  // 🎯 STATE BARU: KONTROL POPUP LOGOUT AMAN
+  // STATE KONTROL POPUP LOGOUT AMAN
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const prevLevelRef = useRef(null)
@@ -195,6 +195,7 @@ export default function Home({ session }) {
     await fetchEntries()
   }
 
+  bin
   function handleEdit(entry) {
     setEditEntry(entry)
     setShowLogModal(true)
@@ -205,7 +206,6 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
-  // LOGOUT FINAL DIJALANKAN DI SINI
   async function handleSignOut() {
     await supabase.auth.signOut()
   }
@@ -232,7 +232,6 @@ export default function Home({ session }) {
     setClaimingId(null)
   }
 
-  @Object
   function handleToggleTitle(achievementId) {
     if (equippedTitleId === achievementId) {
       setEquippedTitle(userId, null)
@@ -263,7 +262,6 @@ export default function Home({ session }) {
             <button onClick={() => setShowAboutModal(true)} className="p-2 hover:bg-border-hover transition-colors">
               <HelpCircle size={16} className="text-text-dim" />
             </button>
-            {/* 🎯 Memicu popup dialog konfirmasi log out, tidak langsung auto keluar */}
             <button onClick={() => setShowLogoutConfirm(true)} className="p-2 hover:bg-border-hover transition-colors">
               <LogOut size={16} className="text-text-dim" />
             </button>
@@ -360,7 +358,7 @@ export default function Home({ session }) {
 
       </div>
 
-      {/* 🧭 PREMIUM FLOATING DOCK BAR MELAYANG */}
+      {/* 🧭 NAVIGATION DOCK MELAYANG PREMIUM */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[90%] w-max">
         <button 
           type="button" 
@@ -391,7 +389,7 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* 🎯 OVERLAY DIALOG MODAL KONFIRMASI LOG OUT PREMIUM */}
+      {/* OVERLAY DIALOG MODAL KONFIRMASI LOG OUT PREMIUM */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
