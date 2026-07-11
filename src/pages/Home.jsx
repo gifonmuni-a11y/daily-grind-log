@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Loader2, Bot, Target, Award, Map } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel, getRankTier } from '../lib/expSystem'
@@ -24,7 +24,6 @@ import StatusPanel from '../components/StatusPanel'
 import StatsDashboard from '../components/StatsDashboard'
 import FilterTabs from '../components/FilterTabs'
 import EntryCard from '../components/EntryCard'
-import CompactRow from '../components/CompactRow'
 import LogModal from '../components/LogModal'
 import AboutModal from '../components/AboutModal'
 import CompanionAI from '../components/CompanionAI'
@@ -93,6 +92,9 @@ export default function Home({ session }) {
   // STATE MANAGEMENT HALAMAN UTAMA DOCK BAR
   const [activeTab, setActiveTab] = useState('grind') 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  
+  // 🎯 CUSTOM STATE MODAL HAPUS SESI (BUKAN DEFAULT BROWSER)
+  const [deleteTargetId, setDeleteTargetId] = useState(null)
 
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
@@ -140,8 +142,6 @@ export default function Home({ session }) {
   }, [fetchProfile, fetchEntries, fetchQuestClaimsData])
 
   const filteredEntries = filterEntries(entries, activeFilter)
-  const cardEntries = filteredEntries.slice(0, 3)
-  const compactEntries = filteredEntries.slice(3)
   const streak = calcStreak(entries)
   const entriesExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
   const entriesToday = getEntriesToday(entries)
@@ -187,9 +187,11 @@ export default function Home({ session }) {
     }
   }, [loading, level, unlockedAchievements])
 
-  async function handleDelete(id) {
-    if (!window.confirm('Hapus entry ini?')) return
-    await supabase.from('entries').delete().eq('id', id)
+  // 🎯 FUNGSI EKSEKUSI HAPUS MODAL KUSTOM KITA
+  const confirmDeleteSesi = async () => {
+    if (!deleteTargetId) return
+    await supabase.from('entries').delete().eq('id', deleteTargetId)
+    setDeleteTargetId(null)
     await fetchEntries()
   }
 
@@ -323,29 +325,32 @@ export default function Home({ session }) {
 
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
-            <FilterTabs active={activeFilter} onChange={setActiveFilter} />
+            
+            {/* 🎯 FIX 1: MENURUNKAN JARAK TAB FILTER SEDIKIT AGAR TIDAK TERLALU MEPEt KE ATAS PANEL */}
+            <div className="mt-6 mb-3">
+              <FilterTabs active={activeFilter} onChange={setActiveFilter} />
+            </div>
 
+            {/* 🎯 FIX 2: MENAMPILKAN SEMUA CARD UTUH SECARA UTUH TANPA PEMOTONGAN ATAUPUN SLICE */}
             {filteredEntries.length === 0 ? (
               <div className="mx-4 py-16 text-center">
                 <p className="font-display text-2xl font-bold text-text-dim mb-2">NO ENTRIES</p>
                 <button onClick={handleNewLog} className="font-display font-semibold text-base px-6 py-3" style={{ background: '#7C5CFF', color: '#EDEAF6' }}>LOG SESI PERTAMA</button>
               </div>
             ) : (
-              <>
-                {cardEntries.map(entry => (
-                  <EntryCard key={entry.id} entry={entry} profile={profile} level={level} streak={streak} onEdit={handleEdit} onDelete={handleDelete} />
+              <div className="flex flex-col">
+                {filteredEntries.map(entry => (
+                  <EntryCard 
+                    key={entry.id} 
+                    entry={entry} 
+                    profile={profile} 
+                    level={level} 
+                    streak={streak} 
+                    onEdit={handleEdit} 
+                    onDeleteTrigger={(id) => setDeleteTargetId(id)} 
+                  />
                 ))}
-                {compactEntries.length > 0 && (
-                  <div className="mx-4 mb-3" style={{ border: '1px solid #211D2C' }}>
-                    <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid #211D2C', background: '#100E16' }}>
-                      <span className="font-mono text-xs text-text-dim uppercase tracking-widest">{compactEntries.length} Sesi Lainnya</span>
-                    </div>
-                    {compactEntries.map(entry => (
-                      <CompactRow key={entry.id} entry={entry} onEdit={handleEdit} onDelete={handleDelete} />
-                    ))}
-                  </div>
-                )}
-              </>
+              </div>
             )}
           </>
         )}
@@ -386,6 +391,34 @@ export default function Home({ session }) {
         </button>
       </div>
 
+      {/* 🎯 FIX 3: MODAL DIALOG KONFIRMASI HAPUS LOG HARIAN CUSTOM PREMIUM (TIDAK DEFAULT BROWSER) */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
+            <div className="text-center">
+              <h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Destruksi Log</h3>
+              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">Sesi ini akan dihapus secara permanen dari server awan Cloud database. Lanjutkan?</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
+              <button
+                type="button"
+                onClick={() => setDeleteTargetId(null)}
+                className="py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-lg hover:text-white active:scale-95 transition-all"
+              >
+                BATAL
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteSesi}
+                className="py-2.5 bg-[#EF4444] text-white font-black rounded-lg shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all"
+              >
+                HAPUS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* OVERLAY DIALOG MODAL KONFIRMASI LOG OUT PREMIUM */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -416,7 +449,21 @@ export default function Home({ session }) {
 
       {/* MODAL MODAL PENDUKUNG APLIKASI */}
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
-      {showLogModal && <LogModal userId={userId} maxDayNumber={maxDayNumber} editEntry={editEntry} onClose={() => { setShowLogModal(false); setEditEntry(null) }} onSaved={fetchEntries} />}
+      
+      {/* 🎯 FIX 4: MEMASTIKAN ON SAVED MEMICU FETCH DATA TERBARU SECARA OTOMATIS */}
+      {showLogModal && (
+        <LogModal 
+          userId={userId} 
+          maxDayNumber={maxDayNumber} 
+          editEntry={editEntry} 
+          onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
+          onSaved={() => {
+            fetchEntries()
+            setActiveFilter('Semua')
+          }} 
+        />
+      )}
+      
       {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
       {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
 
