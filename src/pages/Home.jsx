@@ -30,7 +30,7 @@ import AboutModal from '../components/AboutModal'
 import CompanionAI from '../components/CompanionAI'
 import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
-import FitnessFoodMap from '../components/FitnessFoodMap' // Import komponen radar peta lu
+import FitnessFoodMap from '../components/FitnessFoodMap' // Import komponen radar baru lu
 
 function filterEntries(entries, filter) {
   const now = new Date()
@@ -90,8 +90,8 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  // 🎯 STATE CONTROL TAB NAVIGASI BARU LU
-  const [activeTab, setActiveTab] = useState('grind') // 'grind' atau 'radar'
+  // 🎯 STATE UTAMA UNTUK PERPINDAHAN HALAMAN DOCK BAR
+  const [activeTab, setActiveTab] = useState('grind') // Opsi: 'grind' atau 'radar'
 
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
@@ -248,10 +248,10 @@ export default function Home({ session }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between">
-      {/* KONTEN UTAMA DENGAN PENGKONDISIAN TAB */}
-      <div className="max-w-lg mx-auto pb-24 w-full flex-1">
+      {/* AREA KONTEN UTAMA */}
+      <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
-        {/* HEADER UTAMA: Tetap tampil di kedua halaman agar konsisten */}
+        {/* HEADER UTAMA GLOBAL */}
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
           <span className="font-display font-bold text-base text-accent tracking-widest">DAILY GRIND LOG</span>
           <div className="flex items-center gap-1">
@@ -264,7 +264,7 @@ export default function Home({ session }) {
           </div>
         </div>
 
-        {/* TAB 1: DASHBOARD UTAMA (GRIND LOG) */}
+        {/* HALAMAN 1: DASHBOARD UTAMA (LOG HARIAN) */}
         {activeTab === 'grind' && (
           <>
             <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
@@ -349,45 +349,51 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* 🎯 TAB 2: RADAR PETA KEBUGARAN & MAKANAN SEHAT */}
+        {/* HALAMAN 2: HUB DATA FITNESS & FOOD (MAPS, CODEX, KALKULATOR) */}
         {activeTab === 'radar' && <FitnessFoodMap />}
 
       </div>
 
-      {/* FLOATING ACTION BUTTONS (DI-REPOSISI KE BOTTOM-20 BIAR AMAN) */}
-      {activeTab === 'grind' && (
-        <button type="button" onClick={handleNewLog} className="fixed bottom-20 right-24 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Plus size={24} className="text-white" /></button>
-      )}
-      <button type="button" onClick={() => setShowCompanion(true)} className="fixed bottom-20 right-6 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Bot size={24} className="text-white" /></button>
-
-      {/* 🧭 NAVIGATION BAR BAWAH (AMOLED HIGH-CONTRAST THEME) */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#100E16] border-t border-[#211D2C] px-8 py-2.5 flex justify-around items-center z-40">
-        {/* Tombol Tab Grind */}
+      {/* 🧭 NAVIGATION DOCK MELAYANG PREMIUM (STRUKTUR 3 TOMBOL SEJAJAR JEMPOL MOBILE) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[90%] w-max">
+        
+        {/* Tombol Kiri: Upload Log Baru (+) */}
         <button 
           type="button" 
-          onClick={() => setActiveTab('grind')} 
-          className={`flex flex-col items-center gap-1 text-[10px] font-mono uppercase tracking-wider transition-all ${
-            activeTab === 'grind' ? 'text-[#7C5CFF] font-black' : 'text-[#EDEAF6]/40'
-          }`}
+          onClick={handleNewLog} 
+          className="w-12 h-12 rounded-xl bg-[#211D2C] border border-[#312C42] hover:bg-[#7C5CFF]/20 flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
+          title="Tambah Log Harian"
         >
-          <Sparkles size={18} className={activeTab === 'grind' ? 'text-[#7C5CFF]' : 'text-[#EDEAF6]/40'} />
-          <span>Grind</span>
+          <Plus size={22} />
         </button>
 
-        {/* Tombol Tab Radar */}
+        {/* Tombol Tengah: Tombol FitnessFood Raksasa (🧭) */}
         <button 
           type="button" 
-          onClick={() => setActiveTab('radar')} 
-          className={`flex flex-col items-center gap-1 text-[10px] font-mono uppercase tracking-wider transition-all ${
-            activeTab === 'radar' ? 'text-[#7C5CFF] font-black' : 'text-[#EDEAF6]/40'
+          onClick={() => setActiveTab(activeTab === 'radar' ? 'grind' : 'radar')} 
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
+            activeTab === 'radar' 
+              ? 'bg-[#7C5CFF] text-white shadow-[0_0_20px_rgba(124,92,255,0.6)] border border-[#a28eff]' 
+              : 'bg-[#1A1625] text-[#7C5CFF] border border-[#2B243C] hover:bg-[#7C5CFF]/10'
           }`}
+          title="Fitness & Food Radar Hub"
         >
-          <Map size={18} className={activeTab === 'radar' ? 'text-[#7C5CFF] drop-shadow-[0_0_5px_rgba(124,92,255,0.4)]' : 'text-[#EDEAF6]/40'} />
-          <span>Radar</span>
+          <Map size={24} className={activeTab === 'radar' ? 'animate-pulse' : ''} />
         </button>
+
+        {/* Tombol Kanan: Asisten Kecerdasan Buatan AI Seolha (🤖) */}
+        <button 
+          type="button" 
+          onClick={() => setShowCompanion(true)} 
+          className="w-12 h-12 rounded-xl bg-[#211D2C] border border-[#312C42] hover:bg-[#7C5CFF]/20 flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
+          title="Asisten AI Seolha"
+        >
+          <Bot size={22} />
+        </button>
+
       </div>
 
-      {/* MODAL MODAL PENDUKUNG */}
+      {/* MODAL MODAL PENDUKUNG APLIKASI */}
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
       {showLogModal && <LogModal userId={userId} maxDayNumber={maxDayNumber} editEntry={editEntry} onClose={() => { setShowLogModal(false); setEditEntry(null) }} onSaved={fetchEntries} />}
       {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
