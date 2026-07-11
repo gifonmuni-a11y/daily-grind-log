@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Dumbbell, Utensils, MapPin, Loader2, AlertCircle, Search, BookOpen, Calculator, ChevronRight } from 'lucide-react';
+import { Dumbbell, Utensils, MapPin, Loader2, AlertCircle, BookOpen, Calculator } from 'lucide-react';
 
-// ==================== DATA CODEX BERGAMBAR (MINIMAL 10 GYM & 10 FOOD) ====================
+// ==================== DATA CODEX BERGAMBAR (10 GYM & 10 FOOD) ====================
 const GYM_EQUIPMENT = [
   { name: 'Dumbbell', function: 'Melatih otot dada, bahu, lengan (bicep/tricep), dan punggung secara isolasi.', beginner: '3 Set x 12 Reps (Beban: 4 - 8 kg)', pro: '4 Set x 8 Reps (Beban: 16 - 32+ kg)', img: 'https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?w=400&auto=format&fit=crop&q=60' },
   { name: 'Barbell', function: 'Gerakan compound untuk squat, bench press, dan deadlift menambah massa otot total.', beginner: '3 Set x 8 Reps (Stik Kosong atau +5 kg)', pro: '5 Set x 5 Reps (Beban: 60 - 120+ kg)', img: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&auto=format&fit=crop&q=60' },
@@ -29,21 +29,20 @@ const HEALTHY_FOOD = [
 ];
 
 export default function FitnessFoodMap() {
-  const [subTab, setSubTab] = useState('maps'); // 'maps', 'codex', 'matrix'
-  const [mapCategory, setMapCategory] = useState('gym'); // 'gym' atau 'food'
+  const [subTab, setSubTab] = useState('maps'); 
+  const [mapCategory, setMapCategory] = useState('gym'); 
   const [userCoords, setUserCoords] = useState(null);
   const [geoLoading, setGeoLoading] = useState(true);
   const [geoError, setGeoError] = useState('');
 
-  // STATE KALKULATOR KALORI (MATRIX)
+  // STATE KALKULATOR KALORI
   const [age, setAge] = useState(25);
   const [gender, setGender] = useState('pria');
   const [height, setHeight] = useState(180);
   const [weight, setWeight] = useState(65);
-  const [activity, setActivity] = useState(1.465); // Default berolahraga 4-5 kali seminggu sesuai gambar
+  const [activity, setActivity] = useState(1.465); 
   const [calResult, setCalResult] = useState(null);
 
-  // Efek Ambil GPS HP Perangkat
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -64,7 +63,6 @@ export default function FitnessFoodMap() {
     }
   }, []);
 
-  // Handler hitung kalori berbasis persamaan terakurat Mifflin-St Jeor
   const calculateCalories = (e) => {
     e.preventDefault();
     let bmr = 0;
@@ -95,7 +93,8 @@ export default function FitnessFoodMap() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#000000] text-[#EDEAF6] px-4 pt-2 pb-32 select-none flex flex-col gap-4">
+    // 🎯 FIX: Membuang min-h-screen, bg-black, dan pb-32 bawaan agar tidak bentrok dengan layout dock Home.jsx
+    <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4">
       
       {/* 🧭 NAVIGASI SUB-TAB UTAMA (MAPS, CODEX, MATRIX) */}
       <div className="flex bg-[#100E16] p-1 border border-[#211D2C] rounded-xl z-10 sticky top-0 backdrop-blur-md">

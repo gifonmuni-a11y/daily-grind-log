@@ -200,7 +200,6 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
-  bin
   function handleNewLog() {
     setEditEntry(null)
     setShowLogModal(true)
