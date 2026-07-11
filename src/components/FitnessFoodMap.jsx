@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Dumbbell, Utensils, Navigation, Loader2, AlertCircle } from 'lucide-react';
+import { MapPin, Dumbbell, Utensils, Navigation, Loader2, AlertCircle, Search } from 'lucide-react';
 import { fetchLocationsWithAutoExpand } from '../utils/geoServices';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -13,9 +13,8 @@ export default function FitnessFoodMap() {
   
   const mapRef = useRef(null); 
   const mapInstance = useRef(null); 
-  const drawLayer = useRef(null); // 🎯 Layer tunggal untuk semua gambar (User, Radar, dan Marker)
+  const drawLayer = useRef(null);
 
-  // Efek 1: Inisialisasi Deteksi GPS Perangkat Mobile
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -29,28 +28,37 @@ export default function FitnessFoodMap() {
         { enableHighAccuracy: true, timeout: 15000 }
       );
     } else {
-      setStatusMsg('Browser HP lu tidak mendukung deteksi lokasi.');
+      setStatusMsg('Browser HP lu tidak mendukung deteksi lokasi GPS.');
     }
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
   }, []);
 
-  // Efek 2: Inisialisasi Peta Dasar (Hanya Sekali di Awal)
   useEffect(() => {
     if (!userCoords || !mapRef.current) return;
 
     if (!mapInstance.current) {
-      // Buka peta awal dengan zoom medium
       mapInstance.current = L.map(mapRef.current, { zoomControl: false }).setView([userCoords.lat, userCoords.lon], 12);
       
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '© OpenStreetMap contributors © CARTO'
       }).addTo(mapInstance.current);
 
-      // Buat wadah layer gambar dinamis
       drawLayer.current = L.layerGroup().addTo(mapInstance.current);
+
+      setTimeout(() => {
+        if (mapInstance.current) {
+          mapInstance.current.invalidateSize();
+        }
+      }, 250);
     }
   }, [userCoords]);
 
-  // Efek 3: Memicu Pemindaian Data saat Kategori atau Lokasi Siap
   useEffect(() => {
     if (userCoords) {
       triggerSearch();
@@ -61,16 +69,14 @@ export default function FitnessFoodMap() {
     if (!mapInstance.current || !drawLayer.current) return;
 
     setLoading(true);
-    setStatusMsg('Memindai jaringan data regional (Auto-expanding)...');
+    setStatusMsg('Memindai jaringan regional (Auto-expanding radius)...');
     
-    // 🎯 BERSIHKAN TOTAL: Hapus paksa semua gambar/radar/marker lama dari peta
     drawLayer.current.clearLayers();
 
     const results = await fetchLocationsWithAutoExpand(userCoords.lat, userCoords.lon, category);
     setPlaces(results);
     setLoading(false);
 
-    // 1. Gambar ulang marker kecil posisi lu sekarang
     L.circleMarker([userCoords.lat, userCoords.lon], {
       radius: 6,
       color: '#ffffff',
@@ -79,41 +85,34 @@ export default function FitnessFoodMap() {
       weight: 2
     }).addTo(drawLayer.current).bindPopup('Posisi Lu Sekarang');
 
-    // 2. KONDISI JIKA KOSONG (Gak ketemu data sampai radius maksimal 50 KM)
     if (results.length === 0) {
-      setStatusMsg('Zonasi kosong! Tidak ada lokasi terdata dalam radius jangkauan 50 KM.');
+      setStatusMsg('Zonasi OSM kosong! Coba gunakan Google Engine di bawah.');
       
-      // Gambar lingkaran radar raksasa 50 KM beneran (Pake garis putus-putus biar keren)
       L.circle([userCoords.lat, userCoords.lon], {
-        radius: 50000, // 50.000 meter = 50 KM
+        radius: 50000,
         color: '#7C5CFF',
         fillColor: '#7C5CFF',
-        fillOpacity: 0.06,
+        fillOpacity: 0.05,
         weight: 1.5,
-        dashArray: '6, 6'
+        dashArray: '5, 8'
       }).addTo(drawLayer.current);
 
-      // Paksa kamera mundur total (Zoom 9) biar lingkaran 50KM kelihatan membentang luas
-      mapInstance.current.setView([userCoords.lat, userCoords.lon], 9);
+      mapInstance.current.setView([userCoords.lat, userCoords.lon], 10);
       return;
     }
 
-    // 3. KONDISI JIKA KETEMU DATA LOKASI
     setStatusMsg('');
     
-    // Ambil jangkauan radius terjauh dari data yang berhasil didapatkan (10, 25, atau 50 KM)
     const activeRadiusMeters = results[results.length - 1].currentRadiusKM * 1000;
 
-    // Gambar lingkaran radar aktif sesuai dengan jangkauan radius ekspansinya
     L.circle([userCoords.lat, userCoords.lon], {
       radius: activeRadiusMeters,
       color: '#7C5CFF',
       fillColor: '#7C5CFF',
-      fillOpacity: 0.09,
+      fillOpacity: 0.08,
       weight: 1.5
     }).addTo(drawLayer.current);
 
-    // Tandai semua pin lokasi gym / makanan sehat yang berhasil ditemukan
     const bounds = [[userCoords.lat, userCoords.lon]];
     results.forEach(p => {
       bounds.push([p.lat, p.lon]);
@@ -122,19 +121,25 @@ export default function FitnessFoodMap() {
         .bindPopup(`<b style="color:#000">${p.name}</b><br/><span style="color:#555;font-size:11px">${p.address}</span>`);
     });
 
-    // Kamera otomatis menyesuaikan frame agar semua titik lokasi masuk ke dalam layar HP
     mapInstance.current.fitBounds(bounds, { padding: [40, 40] });
   };
 
   const handleLaunchGoogleMaps = (destLat, destLon) => {
-    // FIX: Gunakan format tautan intent arah navigasi resmi Google Maps universal
     const intentUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLon}&travelmode=driving`;
     window.open(intentUrl, '_blank');
   };
 
+  // 🎯 TANGKAP GOOGLE MAPS ENGINE PENCARIAN LANGSUNG SECARA DINAMIS
+  const handleGoogleSearchFallback = () => {
+    if (!userCoords) return;
+    const queryKeyword = category === 'gym' ? 'gym+terdekat' : 'makanan+sehat+terdekat';
+    const googleFallbackUrl = `https://www.google.com/maps/search/${queryKeyword}/@${userCoords.lat},${userCoords.lon},14z`;
+    window.open(googleFallbackUrl, '_blank');
+  };
+
   return (
     <div className="w-full min-h-screen bg-[#000000] text-[#EDEAF6] p-4 select-none flex flex-col gap-3">
-      {/* HEADER NAVIGASI TAB KATEGORI */}
+      {/* TOMBOL TAB KATEGORI */}
       <div className="flex gap-2 bg-[#100E16] p-1 border border-[#211D2C] rounded-lg">
         <button
           type="button"
@@ -156,18 +161,18 @@ export default function FitnessFoodMap() {
         </button>
       </div>
 
-      {/* PETA PREVIEW CONTAINER */}
-      <div className="w-full h-[220px] bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative z-10">
+      {/* FRAME PETA MAPS */}
+      <div className="w-full h-[225px] bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative z-10">
         <div ref={mapRef} className="w-full h-full" />
         {loading && (
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-20 flex items-center justify-center font-mono text-xs text-[#EDEAF6]/60 gap-2">
             <Loader2 className="animate-spin text-[#7C5CFF]" size={16} />
-            <span>Memindai Peta Kota...</span>
+            <span>Memindai Geografis Wilayah...</span>
           </div>
         )}
       </div>
 
-      {/* STATUS NOTIFIKASI REGIONAL */}
+      {/* NOTIFIKASI STATUS */}
       {statusMsg && (
         <div className="p-3 bg-[#100E16] border border-[#211D2C] rounded-lg text-xs font-mono text-[#EDEAF6]/60 flex items-center gap-2">
           <AlertCircle size={14} className="text-[#7C5CFF]" />
@@ -175,8 +180,23 @@ export default function FitnessFoodMap() {
         </div>
       )}
 
-      {/* LIST KARTU LOKASI DARI DEKAT KE JAUH */}
+      {/* DAFTAR KARTU JURUSAN TEMPAT ATAU FALLBACK ENGINE */}
       <div className="flex-1 overflow-y-auto space-y-2.5 max-h-[calc(100vh-340px)]">
+        {!loading && places.length === 0 && userCoords && (
+          <div className="p-6 bg-[#100E16] border border-[#211D2C] border-dashed rounded-xl text-center space-y-4">
+            <p className="font-body text-xs text-[#EDEAF6]/50 leading-relaxed">
+              OpenStreetMap regional belum memetakan lokasi kategori ini di sekitar area lu. Pakai jalur pintas Google Maps satelit untuk akurasi instan:
+            </p>
+            <button
+              type="button"
+              onClick={handleGoogleSearchFallback}
+              className="w-full py-3 bg-[#7C5CFF] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(124,92,255,0.3)] hover:bg-[#684be3] active:scale-[0.98] transition-all"
+            >
+              <Search size={14} /> Cari via Google Maps Live
+            </button>
+          </div>
+        )}
+
         {!loading && places.map((place) => (
           <div 
             key={place.id}
@@ -195,7 +215,7 @@ export default function FitnessFoodMap() {
                   ~{place.distance.toFixed(1)} KM
                 </span>
                 <span className="font-mono text-[9px] px-1.5 py-0.5 bg-black border border-[#211D2C] rounded text-[#EDEAF6]/40">
-                  Radar: {place.currentRadiusKM}KM
+                  Jangkauan: {place.currentRadiusKM}KM
                 </span>
               </div>
             </div>
@@ -204,7 +224,7 @@ export default function FitnessFoodMap() {
               type="button"
               onClick={() => handleLaunchGoogleMaps(place.lat, place.lon)}
               className="w-9 h-9 rounded-lg bg-[#7C5CFF]/10 border border-[#7C5CFF]/30 hover:bg-[#7C5CFF] text-[#7C5CFF] hover:text-white flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
-              title="Navigasi Google Maps"
+              title="Navigasi Arah Jalan"
             >
               <Navigation size={14} fill="currentColor" className="transform rotate-45" />
             </button>

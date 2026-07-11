@@ -12,20 +12,21 @@ export function getHaversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// Skema Query Overpass API dengan Tag Spesifik OSM
+// 🎯 UPGRADE: Tambahkan pencarian kata mentah (~"gym|fitness",i) untuk mengatasi salah tag di Indonesia
 function buildOverpassQuery(lat, lon, radiusInMeters, type) {
   const gymQuery = `
     node["leisure"="fitness_centre"](around:${radiusInMeters},${lat},${lon});
     way["leisure"="fitness_centre"](around:${radiusInMeters},${lat},${lon});
     node["sport"="fitness"](around:${radiusInMeters},${lat},${lon});
+    node["name"~"gym|fitness|sanggar",i](around:${radiusInMeters},${lat},${lon});
+    way["name"~"gym|fitness|sanggar",i](around:${radiusInMeters},${lat},${lon});
   `;
 
   const foodQuery = `
     node["shop"="health_food"](around:${radiusInMeters},${lat},${lon});
     node["amenity"="restaurant"]["diet:vegetarian"="yes"](around:${radiusInMeters},${lat},${lon});
-    node["amenity"="restaurant"]["diet:vegan"="yes"](around:${radiusInMeters},${lat},${lon});
-    node["amenity"="restaurant"]["cuisine"="salad"](around:${radiusInMeters},${lat},${lon});
-    node["amenity"="restaurant"]["cuisine"="healthy"](around:${radiusInMeters},${lat},${lon});
+    node["name"~"salad|sehat|vegetarian|vegan|organik|juice",i](around:${radiusInMeters},${lat},${lon});
+    way["name"~"salad|sehat|vegetarian|vegan|organik|juice",i](around:${radiusInMeters},${lat},${lon});
   `;
 
   return `[out:json][timeout:30];(
@@ -33,9 +34,8 @@ function buildOverpassQuery(lat, lon, radiusInMeters, type) {
   );out center;`;
 }
 
-// Logika Auto-Expand Radius untuk User Pedesaan
 export async function fetchLocationsWithAutoExpand(lat, lon, type) {
-  const checkpoints = [10000, 25000, 50000]; // Rentang jarak: 10km, 25km, 50km
+  const checkpoints = [10000, 25000, 50000];
   
   for (let radius of checkpoints) {
     try {
@@ -47,24 +47,23 @@ export async function fetchLocationsWithAutoExpand(lat, lon, type) {
       const rawData = await res.json();
       const elements = rawData.elements || [];
       
-      // Validasi: Jika hasil memadai atau jangkauan sudah mentok 50KM, eksekusi pemetaan data
-      if (elements.length >= 3 || radius === 50000) {
+      if (elements.length >= 2 || radius === 50000) {
         return elements.map(item => {
           const itemLat = item.lat || item.center?.lat;
           const itemLon = item.lon || item.center?.lon;
           return {
             id: item.id,
-            name: item.tags.name || (type === 'gym' ? 'Pusat Kebugaran Klandestin' : 'Kedai Makanan Nutrisi'),
+            name: item.tags.name || (type === 'gym' ? 'Pusat Kebugaran Lokal' : 'Kedai Nutrisi Sehat'),
             lat: itemLat,
             lon: itemLon,
-            address: item.tags['addr:street'] || item.tags['addr:full'] || 'Lokasi terpetakan di sistem OSM',
+            address: item.tags['addr:street'] || item.tags['addr:full'] || 'Terpetakan di jaringan regional',
             distance: getHaversineDistance(lat, lon, itemLat, itemLon),
             currentRadiusKM: radius / 1000
           };
         }).sort((a, b) => a.distance - b.distance);
       }
     } catch (err) {
-      console.error(`Eror pemindaian radius ${radius} meter:`, err);
+      console.error(`Eror radius ${radius}m:`, err);
     }
   }
   return [];
