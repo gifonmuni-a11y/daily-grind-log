@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel, getRankTier } from '../lib/expSystem'
@@ -30,6 +30,7 @@ import AboutModal from '../components/AboutModal'
 import CompanionAI from '../components/CompanionAI'
 import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
+import FitnessFoodMap from '../components/FitnessFoodMap' // Import komponen radar peta lu
 
 function filterEntries(entries, filter) {
   const now = new Date()
@@ -88,6 +89,9 @@ export default function Home({ session }) {
   const [questClaims, setQuestClaims] = useState([])
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
+
+  // 🎯 STATE CONTROL TAB NAVIGASI BARU LU
+  const [activeTab, setActiveTab] = useState('grind') // 'grind' atau 'radar'
 
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
@@ -150,7 +154,6 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  // FIX SINKRONISASI LEVEL UP: Selalu update Ref agar saat level turun-naik, animasi meledak tetap kepicu!
   useEffect(() => {
     if (loading) return
 
@@ -171,7 +174,6 @@ export default function Home({ session }) {
       }
     }
 
-    // Kunci utama perbaikan: Selalu sinkronkan Ref level baik saat naik maupun turun log latihannya
     prevLevelRef.current = level
 
     if (prevUnlockedIdsRef.current) {
@@ -245,8 +247,11 @@ export default function Home({ session }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto pb-24">
+    <div className="min-h-screen bg-background flex flex-col justify-between">
+      {/* KONTEN UTAMA DENGAN PENGKONDISIAN TAB */}
+      <div className="max-w-lg mx-auto pb-24 w-full flex-1">
+        
+        {/* HEADER UTAMA: Tetap tampil di kedua halaman agar konsisten */}
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
           <span className="font-display font-bold text-base text-accent tracking-widest">DAILY GRIND LOG</span>
           <div className="flex items-center gap-1">
@@ -259,91 +264,130 @@ export default function Home({ session }) {
           </div>
         </div>
 
-        <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
-
-        <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
-          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
-            <Target size={14} className="text-accent" />
-            <span className="font-mono text-xs text-text-dim uppercase tracking-widest">Daily Quest</span>
-          </div>
-          <div className="p-3 flex flex-col gap-2">
-            {todaysQuests.map(quest => {
-              const isDone = quest.check(entriesToday)
-              const isClaimed = claimedTodayIds.includes(quest.id)
-              return (
-                <div key={quest.id} className="flex items-center justify-between gap-3 px-3 py-3" style={{ background: isClaimed ? 'transparent' : (isDone ? 'rgba(124,92,255,0.08)' : '#0A0A0E'), border: '1px solid ' + (isDone && !isClaimed ? 'rgba(124,92,255,0.4)' : '#211D2C'), opacity: isClaimed ? 0.5 : 1 }}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    {isClaimed ? <CheckCircle2 size={18} className="text-accent flex-shrink-0" /> : <Circle size={18} className={isDone ? 'text-accent flex-shrink-0' : 'text-text-dim flex-shrink-0'} />}
-                    <div className="min-w-0">
-                      <p className="font-body text-sm truncate" style={{ color: '#EDEAF6' }}>{quest.label}</p>
-                      <p className="font-body text-xs text-text-dim truncate">{quest.desc}</p>
-                    </div>
-                  </div>
-                  {isClaimed ? <span className="font-mono text-xs text-text-dim flex-shrink-0">Selesai</span> : isDone ? (
-                    <button onClick={() => handleClaimQuest(quest)} disabled={claimingId === quest.id} className="font-mono text-xs px-3 py-1.5 flex-shrink-0" style={{ background: '#7C5CFF', color: '#fff' }}>
-                      {claimingId === quest.id ? <Loader2 size={12} className="animate-spin" /> : `+${quest.exp} EXP`}
-                    </button>
-                  ) : <span className="font-mono text-xs text-text-dim flex-shrink-0">+{quest.exp} EXP</span>}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="mx-4 mb-4" style={{ border: '1px solid #211D2C' }}>
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
-            <div className="flex items-center gap-2">
-              <Award size={14} className="text-accent" />
-              <span className="font-mono text-xs text-text-dim uppercase tracking-widest">Achievements ({unlockedAchievements.length}/{ACHIEVEMENTS.length})</span>
-            </div>
-            {equippedAchievement && <span className="font-mono text-xs text-accent">Title: {equippedAchievement.title}</span>}
-          </div>
-          <div className="p-3 grid grid-cols-3 gap-2">
-            {ACHIEVEMENTS.map(ach => {
-              const unlocked = unlockedAchievements.some(u => u.id === ach.id)
-              const isEquipped = equippedTitleId === ach.id
-              return (
-                <button key={ach.id} onClick={() => unlocked && handleToggleTitle(ach.id)} disabled={!unlocked} className="flex flex-col items-center justify-center text-center px-2 py-3 gap-1.5" style={{ background: isEquipped ? 'rgba(124,92,255,0.15)' : '#0A0A0E', border: '1px solid ' + (isEquipped ? '#7C5CFF' : '#211D2C'), opacity: unlocked ? 1 : 0.35 }}>
-                  {unlocked ? <Trophy size={20} className={isEquipped ? 'text-accent' : 'text-text-dim'} /> : <Lock size={20} className="text-text-dim" />}
-                  <span className="font-mono text-xs text-text-dim uppercase">{ach.title}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <StatusPanel entries={entries} />
-        <StatsDashboard entries={entries} />
-        <FilterTabs active={activeFilter} onChange={setActiveFilter} />
-
-        {filteredEntries.length === 0 ? (
-          <div className="mx-4 py-16 text-center">
-            <p className="font-display text-2xl font-bold text-text-dim mb-2">NO ENTRIES</p>
-            <button onClick={handleNewLog} className="font-display font-semibold text-base px-6 py-3" style={{ background: '#7C5CFF', color: '#EDEAF6' }}>LOG SESI PERTAMA</button>
-          </div>
-        ) : (
+        {/* TAB 1: DASHBOARD UTAMA (GRIND LOG) */}
+        {activeTab === 'grind' && (
           <>
-            {cardEntries.map(entry => (
-              <EntryCard key={entry.id} entry={entry} profile={profile} level={level} streak={streak} onEdit={handleEdit} onDelete={handleDelete} />
-            ))}
-            {compactEntries.length > 0 && (
-              <div className="mx-4 mb-3" style={{ border: '1px solid #211D2C' }}>
-                <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid #211D2C', background: '#100E16' }}>
-                  <span className="font-mono text-xs text-text-dim uppercase tracking-widest">{compactEntries.length} Sesi Lainnya</span>
-                </div>
-                {compactEntries.map(entry => (
-                  <CompactRow key={entry.id} entry={entry} onEdit={handleEdit} onDelete={handleDelete} />
-                ))}
+            <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
+
+            <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
+              <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
+                <Target size={14} className="text-accent" />
+                <span className="font-mono text-xs text-text-dim uppercase tracking-widest">Daily Quest</span>
               </div>
+              <div className="p-3 flex flex-col gap-2">
+                {todaysQuests.map(quest => {
+                  const isDone = quest.check(entriesToday)
+                  const isClaimed = claimedTodayIds.includes(quest.id)
+                  return (
+                    <div key={quest.id} className="flex items-center justify-between gap-3 px-3 py-3" style={{ background: isClaimed ? 'transparent' : (isDone ? 'rgba(124,92,255,0.08)' : '#0A0A0E'), border: '1px solid ' + (isDone && !isClaimed ? 'rgba(124,92,255,0.4)' : '#211D2C'), opacity: isClaimed ? 0.5 : 1 }}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        {isClaimed ? <CheckCircle2 size={18} className="text-accent flex-shrink-0" /> : <Circle size={18} className={isDone ? 'text-accent flex-shrink-0' : 'text-text-dim flex-shrink-0'} />}
+                        <div className="min-w-0">
+                          <p className="font-body text-sm truncate" style={{ color: '#EDEAF6' }}>{quest.label}</p>
+                          <p className="font-body text-xs text-text-dim truncate">{quest.desc}</p>
+                        </div>
+                      </div>
+                      {isClaimed ? <span className="font-mono text-xs text-text-dim flex-shrink-0">Selesai</span> : isDone ? (
+                        <button onClick={() => handleClaimQuest(quest)} disabled={claimingId === quest.id} className="font-mono text-xs px-3 py-1.5 flex-shrink-0" style={{ background: '#7C5CFF', color: '#fff' }}>
+                          {claimingId === quest.id ? <Loader2 size={12} className="animate-spin" /> : `+${quest.exp} EXP`}
+                        </button>
+                      ) : <span className="font-mono text-xs text-text-dim flex-shrink-0">+{quest.exp} EXP</span>}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="mx-4 mb-4" style={{ border: '1px solid #211D2C' }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
+                <div className="flex items-center gap-2">
+                  <Award size={14} className="text-accent" />
+                  <span className="font-mono text-xs text-text-dim uppercase tracking-widest">Achievements ({unlockedAchievements.length}/{ACHIEVEMENTS.length})</span>
+                </div>
+                {equippedAchievement && <span className="font-mono text-xs text-accent">Title: {equippedAchievement.title}</span>}
+              </div>
+              <div className="p-3 grid grid-cols-3 gap-2">
+                {ACHIEVEMENTS.map(ach => {
+                  const unlocked = unlockedAchievements.some(u => u.id === ach.id)
+                  const isEquipped = equippedTitleId === ach.id
+                  return (
+                    <button key={ach.id} onClick={() => unlocked && handleToggleTitle(ach.id)} disabled={!unlocked} className="flex flex-col items-center justify-center text-center px-2 py-3 gap-1.5" style={{ background: isEquipped ? 'rgba(124,92,255,0.15)' : '#0A0A0E', border: '1px solid ' + (isEquipped ? '#7C5CFF' : '#211D2C'), opacity: unlocked ? 1 : 0.35 }}>
+                      {unlocked ? <Trophy size={20} className={isEquipped ? 'text-accent' : 'text-text-dim'} /> : <Lock size={20} className="text-text-dim" />}
+                      <span className="font-mono text-xs text-text-dim uppercase">{ach.title}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <StatusPanel entries={entries} />
+            <StatsDashboard entries={entries} />
+            <FilterTabs active={activeFilter} onChange={setActiveFilter} />
+
+            {filteredEntries.length === 0 ? (
+              <div className="mx-4 py-16 text-center">
+                <p className="font-display text-2xl font-bold text-text-dim mb-2">NO ENTRIES</p>
+                <button onClick={handleNewLog} className="font-display font-semibold text-base px-6 py-3" style={{ background: '#7C5CFF', color: '#EDEAF6' }}>LOG SESI PERTAMA</button>
+              </div>
+            ) : (
+              <>
+                {cardEntries.map(entry => (
+                  <EntryCard key={entry.id} entry={entry} profile={profile} level={level} streak={streak} onEdit={handleEdit} onDelete={handleDelete} />
+                ))}
+                {compactEntries.length > 0 && (
+                  <div className="mx-4 mb-3" style={{ border: '1px solid #211D2C' }}>
+                    <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid #211D2C', background: '#100E16' }}>
+                      <span className="font-mono text-xs text-text-dim uppercase tracking-widest">{compactEntries.length} Sesi Lainnya</span>
+                    </div>
+                    {compactEntries.map(entry => (
+                      <CompactRow key={entry.id} entry={entry} onEdit={handleEdit} onDelete={handleDelete} />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
+
+        {/* 🎯 TAB 2: RADAR PETA KEBUGARAN & MAKANAN SEHAT */}
+        {activeTab === 'radar' && <FitnessFoodMap />}
+
       </div>
 
-      <button onClick={handleNewLog} className="fixed bottom-6 right-24 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Plus size={24} className="text-white" /></button>
-      <button onClick={() => setShowCompanion(true)} className="fixed bottom-6 right-6 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Bot size={24} className="text-white" /></button>
+      {/* FLOATING ACTION BUTTONS (DI-REPOSISI KE BOTTOM-20 BIAR AMAN) */}
+      {activeTab === 'grind' && (
+        <button type="button" onClick={handleNewLog} className="fixed bottom-20 right-24 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Plus size={24} className="text-white" /></button>
+      )}
+      <button type="button" onClick={() => setShowCompanion(true)} className="fixed bottom-20 right-6 w-14 h-14 flex items-center justify-center z-40" style={{ background: '#7C5CFF', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}><Bot size={24} className="text-white" /></button>
 
-      {/* BERHASIL DISINKRONISASI: Menambahkan prop profile={profile} ke CompanionAI */}
+      {/* 🧭 NAVIGATION BAR BAWAH (AMOLED HIGH-CONTRAST THEME) */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#100E16] border-t border-[#211D2C] px-8 py-2.5 flex justify-around items-center z-40">
+        {/* Tombol Tab Grind */}
+        <button 
+          type="button" 
+          onClick={() => setActiveTab('grind')} 
+          className={`flex flex-col items-center gap-1 text-[10px] font-mono uppercase tracking-wider transition-all ${
+            activeTab === 'grind' ? 'text-[#7C5CFF] font-black' : 'text-[#EDEAF6]/40'
+          }`}
+        >
+          <Sparkles size={18} className={activeTab === 'grind' ? 'text-[#7C5CFF]' : 'text-[#EDEAF6]/40'} />
+          <span>Grind</span>
+        </button>
+
+        {/* Tombol Tab Radar */}
+        <button 
+          type="button" 
+          onClick={() => setActiveTab('radar')} 
+          className={`flex flex-col items-center gap-1 text-[10px] font-mono uppercase tracking-wider transition-all ${
+            activeTab === 'radar' ? 'text-[#7C5CFF] font-black' : 'text-[#EDEAF6]/40'
+          }`}
+        >
+          <Map size={18} className={activeTab === 'radar' ? 'text-[#7C5CFF] drop-shadow-[0_0_5px_rgba(124,92,255,0.4)]' : 'text-[#EDEAF6]/40'} />
+          <span>Radar</span>
+        </button>
+      </div>
+
+      {/* MODAL MODAL PENDUKUNG */}
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
       {showLogModal && <LogModal userId={userId} maxDayNumber={maxDayNumber} editEntry={editEntry} onClose={() => { setShowLogModal(false); setEditEntry(null) }} onSaved={fetchEntries} />}
       {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
