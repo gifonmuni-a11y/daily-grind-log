@@ -2,8 +2,7 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Warna Tema untuk Status Bar HP -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <meta name="theme-color" content="#0A0A0E" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
@@ -16,7 +15,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     
-    <!-- CSS Custom Scrollbar & Dark Theme -->
     <style>
       ::-webkit-scrollbar {
         width: 5px;
@@ -38,6 +36,15 @@
         padding: 0;
         scrollbar-color: #7C5CFF #000000;
         scrollbar-width: thin;
+        
+        /* 🎯 FIX SECURITY LAYER 1: Mematikan highlight sorotan biru & seleksi teks di level global CSS browser mobile */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
       }
     </style>
     

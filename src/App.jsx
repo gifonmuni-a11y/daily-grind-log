@@ -3,6 +3,8 @@ import { supabase } from './lib/supabaseClient'
 import SplashScreen from './components/SplashScreen'
 import LoginScreen from './components/LoginScreen'
 import Home from './pages/Home'
+// 🎯 IMPORT SECURITY: Menghubungkan pelindung data kustom lu
+import SecurityGuard from './components/SecurityGuard'
 
 function parseAuthErrorFromUrl() {
   const hash = window.location.hash
@@ -68,8 +70,20 @@ export default function App() {
   }
 
   if (!session) {
-    return <LoginScreen initialError={authError} />
+    return (
+      <>
+        {/* 🎯 Menjaga layar login tetap aman */}
+        <SecurityGuard />
+        <LoginScreen initialError={authError} />
+      </>
+    )
   }
 
-  return <Home key={session.user.id} session={session} />
+  return (
+    <>
+      {/* 🎯 AKTIVASI SECURITY GUARDIAN: Menjaga dashboard utama dari scrapping & mendeteksi interupsi screenshot */}
+      <SecurityGuard />
+      <Home key={session.user.id} session={session} />
+    </>
+  )
 }
