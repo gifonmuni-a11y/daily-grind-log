@@ -5,11 +5,14 @@ import { supabase } from '../lib/supabaseClient'
 export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onSaved }) {
   const [loading, setLoading] = useState(false)
   const [dayNumber, setDayNumber] = useState(maxDayNumber + 1)
-  const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0])
+  
+  // 🎯 FIX PALING AKURAT: Pake 'en-CA' biar otomatis ngikutin timezone lokal HP lu (WIB/WITA/WIT aman)
+  const [entryDate, setEntryDate] = useState(() => new Date().toLocaleDateString('en-CA'))
+
   const [title, setTitle] = useState('')
   const [rank, setRank] = useState('B')
   const [category, setCategory] = useState('Push')
-  const [customCategory, setCustomCategory] = useState('') // 🎯 STATE BARU
+  const [customCategory, setCustomCategory] = useState('')
   const [note, setNote] = useState('')
   const [duration, setDuration] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -35,8 +38,7 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
       setDuration(editEntry.duration || '')
       setNote(editEntry.note || editEntry.notes || '')
       setImageUrl(editEntry.image_url || '')
-
-      // Deteksi kategori kustom
+      
       if (categories.includes(editEntry.category)) {
         setCategory(editEntry.category)
         setCustomCategory('')
@@ -57,7 +59,7 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   const handleImageChange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-
+    
     setUploadingImage(true)
     const fileExt = file.name.split('.').pop()
     const fileName = `${userId}/${Date.now()}.${fileExt}`
@@ -80,7 +82,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     if (!title.trim()) return
     setLoading(true)
 
-    // 🎯 LOGIKA: Pakai customCategory kalau pilih + Lainnya
     const finalCategory = category === '+ Lainnya' ? customCategory : category;
 
     const payload = {
