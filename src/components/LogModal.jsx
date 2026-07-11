@@ -38,10 +38,8 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     }
   }, [editEntry])
 
-  // 🎯 HELPERS UNTUK MENENTUKAN WARNA ADAP TIER SESUAI KELAS GAME RPG
   const getRankStyle = (r, isActive) => {
     if (!isActive) return { border: '1px solid #211D2C', color: '#8B8696', backgroundColor: 'rgba(0,0,0,0.4)' }
-    
     if (r === 'S') return { border: '1px solid #7C5CFF', color: '#7C5CFF', boxShadow: '0 0 10px rgba(124,92,255,0.4)', backgroundColor: 'rgba(124,92,255,0.1)' }
     if (r === 'A') return { border: '1px solid #2DD4BF', color: '#2DD4BF', boxShadow: '0 0 10px rgba(45,212,191,0.4)', backgroundColor: 'rgba(45,212,191,0.1)' }
     return { border: '1px solid #FFFFFF', color: '#FFFFFF', boxShadow: '0 0 10px rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)' }
