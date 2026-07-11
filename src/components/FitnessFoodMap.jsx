@@ -30,12 +30,16 @@ export default function FitnessFoodMap() {
     }
   }, []);
 
-  // Racik URL pencarian live Google Maps berdasarkan GPS asli lu
+  // 🎯 URL ENGINE RESMI: Memaksa Google mencari keyword di sekitar titik koordinat GPS rumah lu
   const getGoogleMapsEmbedUrl = () => {
     if (!userCoords) return '';
-    const keyword = category === 'gym' ? 'gym+fitness+terdekat' : 'makanan+sehat+restoran+terdekat';
-    // Mengunci titik pusat peta pada koordinat GPS user dengan akurasi data live dari Google
-    return `https://maps.google.com/maps?q=${keyword}&ll=${userCoords.lat},${userCoords.lon}&z=14&output=embed`;
+    
+    // Gunakan keyword pencarian lokal
+    const keyword = category === 'gym' ? 'Gym+Fitness' : 'Makanan+Sehat+Restoran';
+    
+    // Trik kuncian: q=${keyword}+${lat},${lon} memaksa Google maps melakukan search massal 
+    // dan menjatuhkan banyak pin merah sekaligus di radius sekitar koordinat tersebut.
+    return `https://maps.google.com/maps?q=${keyword}+${userCoords.lat},${userCoords.lon}&z=14&output=embed`;
   };
 
   return (
@@ -62,12 +66,12 @@ export default function FitnessFoodMap() {
         </button>
       </div>
 
-      {/* FRAME UTAMA GOOGLE MAPS LIVE ENGINE */}
-      <div className="flex-1 w-full bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative min-h-[400px] shadow-[0_0_20px_rgba(124,92,255,0.02)]">
+      {/* FRAME UTAMA GOOGLE MAPS LIVE ENGINE (DENGAN EMULASI DARK MODE) */}
+      <div className="flex-1 w-full bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative min-h-[440px] shadow-[0_0_20px_rgba(124,92,255,0.02)]">
         {loading && (
           <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center font-mono text-xs text-[#EDEAF6]/60 gap-3">
             <Loader2 className="animate-spin text-[#7C5CFF]" size={20} />
-            <span>Membuka Google Maps Engine...</span>
+            <span>Menghubungkan ke Google Live Radar...</span>
           </div>
         )}
 
@@ -81,7 +85,7 @@ export default function FitnessFoodMap() {
         {userCoords && (
           <iframe
             title="Google Maps Live Radar"
-            className="w-full h-full border-0 invert-[0.9] hue-rotate-[180deg] contrast-[1.2]" 
+            className="w-full h-full border-0 invert-[0.92] hue-rotate-[180deg] contrast-[1.2] sat-[0.8]" 
             src={getGoogleMapsEmbedUrl()}
             allowFullScreen=""
             loading="lazy"
@@ -94,7 +98,7 @@ export default function FitnessFoodMap() {
       {userCoords && (
         <div className="p-3 bg-[#100E16] border border-[#211D2C] rounded-lg text-[10px] font-mono text-[#EDEAF6]/40 flex items-center gap-2 justify-center">
           <MapPin size={12} className="text-[#7C5CFF]" />
-          <span>Ditenagai data live Google Maps wilayah lu secara real-time</span>
+          <span>Mencari fasilitas fisik terdekat dari koordinat HP lu secara real-time</span>
         </div>
       )}
     </div>
