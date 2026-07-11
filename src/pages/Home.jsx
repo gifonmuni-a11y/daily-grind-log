@@ -30,7 +30,7 @@ import AboutModal from '../components/AboutModal'
 import CompanionAI from '../components/CompanionAI'
 import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
-import FitnessFoodMap from '../components/FitnessFoodMap' // Import komponen radar baru lu
+import FitnessFoodMap from '../components/FitnessFoodMap'
 
 function filterEntries(entries, filter) {
   const now = new Date()
@@ -90,8 +90,11 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  // 🎯 STATE UTAMA UNTUK PERPINDAHAN HALAMAN DOCK BAR
-  const [activeTab, setActiveTab] = useState('grind') // Opsi: 'grind' atau 'radar'
+  // STATE HALAMAN UTAMA DOCK BAR
+  const [activeTab, setActiveTab] = useState('grind') 
+  
+  // 🎯 STATE BARU: KONTROL POPUP LOGOUT AMAN
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
@@ -202,6 +205,7 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
+  // LOGOUT FINAL DIJALANKAN DI SINI
   async function handleSignOut() {
     await supabase.auth.signOut()
   }
@@ -228,6 +232,7 @@ export default function Home({ session }) {
     setClaimingId(null)
   }
 
+  @Object
   function handleToggleTitle(achievementId) {
     if (equippedTitleId === achievementId) {
       setEquippedTitle(userId, null)
@@ -258,7 +263,8 @@ export default function Home({ session }) {
             <button onClick={() => setShowAboutModal(true)} className="p-2 hover:bg-border-hover transition-colors">
               <HelpCircle size={16} className="text-text-dim" />
             </button>
-            <button onClick={handleSignOut} className="p-2 hover:bg-border-hover transition-colors">
+            {/* 🎯 Memicu popup dialog konfirmasi log out, tidak langsung auto keluar */}
+            <button onClick={() => setShowLogoutConfirm(true)} className="p-2 hover:bg-border-hover transition-colors">
               <LogOut size={16} className="text-text-dim" />
             </button>
           </div>
@@ -349,25 +355,21 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* HALAMAN 2: HUB DATA FITNESS & FOOD (MAPS, CODEX, KALKULATOR) */}
+        {/* HALAMAN 2: HUB DATA FITNESS & FOOD */}
         {activeTab === 'radar' && <FitnessFoodMap />}
 
       </div>
 
-      {/* 🧭 NAVIGATION DOCK MELAYANG PREMIUM (STRUKTUR 3 TOMBOL SEJAJAR JEMPOL MOBILE) */}
+      {/* 🧭 PREMIUM FLOATING DOCK BAR MELAYANG */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[90%] w-max">
-        
-        {/* Tombol Kiri: Upload Log Baru (+) */}
         <button 
           type="button" 
           onClick={handleNewLog} 
           className="w-12 h-12 rounded-xl bg-[#211D2C] border border-[#312C42] hover:bg-[#7C5CFF]/20 flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
-          title="Tambah Log Harian"
         >
           <Plus size={22} />
         </button>
 
-        {/* Tombol Tengah: Tombol FitnessFood Raksasa (🧭) */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'radar' ? 'grind' : 'radar')} 
@@ -376,22 +378,46 @@ export default function Home({ session }) {
               ? 'bg-[#7C5CFF] text-white shadow-[0_0_20px_rgba(124,92,255,0.6)] border border-[#a28eff]' 
               : 'bg-[#1A1625] text-[#7C5CFF] border border-[#2B243C] hover:bg-[#7C5CFF]/10'
           }`}
-          title="Fitness & Food Radar Hub"
         >
           <Map size={24} className={activeTab === 'radar' ? 'animate-pulse' : ''} />
         </button>
 
-        {/* Tombol Kanan: Asisten Kecerdasan Buatan AI Seolha (🤖) */}
         <button 
           type="button" 
           onClick={() => setShowCompanion(true)} 
           className="w-12 h-12 rounded-xl bg-[#211D2C] border border-[#312C42] hover:bg-[#7C5CFF]/20 flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
-          title="Asisten AI Seolha"
         >
           <Bot size={22} />
         </button>
-
       </div>
+
+      {/* 🎯 OVERLAY DIALOG MODAL KONFIRMASI LOG OUT PREMIUM */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
+            <div className="text-center">
+              <h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Konfirmasi Keluar</h3>
+              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">Lu yakin mau log out dari akun Daily Grind Log ini? Sesi latihan lu bakal dikunci aman di server.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-lg hover:text-white active:scale-95 transition-all"
+              >
+                BATAL
+              </button>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="py-2.5 bg-[#EF4444] text-white font-black rounded-lg shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all"
+              >
+                SETUJU
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL MODAL PENDUKUNG APLIKASI */}
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
