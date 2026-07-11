@@ -27,7 +27,7 @@ const AVATAR_LINKS = {
 }
 
 const MASTER_34_CATEGORIES = [
-  { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), dan lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
+  { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), and lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
   { name: 'Push Up', tokoh_terkenal: 'Ade Rai: Otot dada, bahu, dan tricep dibangun dari dorongan beban tubuh yang konstan dan terkontrol.', apa_itu: 'Latihan beban tubuh (calisthenics) posisi telungkup fungsional dengan cara mendorong bobot badan ke atas menggunakan kekuatan lengan.', manfaatnya: 'Membangun kekuatan dan volume otot dada (pectoralis), deltoid bagian depan (bahu), dan otot lengan belakang (triceps).', tata_cara_atau_gerakan: 'Posisikan tubuh lurus seperti plank, turunkan dada secara perlahan hingga hampir menyentuh lantai dengan siku membentuk sudut 45 derajat, lalu dorong kuat kembali ke atas.', id_video: 'VZUDAOL2LI8' },
   { name: 'Squat', tokoh_terkenal: 'Tom Platz: Batas bawah squat adalah tempat di mana karakter mental asli seorang pria diuji.', apa_itu: 'Latihan compound tubuh bagian bawah yang meniru gerakan fundamental manusia saat hendak duduk dan berdiri kembali.', manfaatnya: 'Memperkuat rantai kekuatan otot paha depan (quadriceps), paha belakang (hamstring), bokong (glutes), serta melatih kekuatan tulang punggung.', tata_cara_atau_gerakan: 'Buka kaki selebar bahu, turunkan pinggul ke bawah and ke belakang seolah hendak duduk hingga paha sejajar lantai, pastikan lutut tidak maju melebihi ujung jari kaki, lalu berdiri tegak kembali.', id_video: 'Xb2Lm40nlGo' },
   { name: 'Plank', tokoh_terkenal: 'David Goggins: Mengunci core dalam plank adalah perang statis melawan rasa ingin menyerah di dalam otak.', apa_itu: 'Latihan kekuatan isometrik statis yang mengharuskan Anda menahan satu posisi tubuh garis lurus dalam durasi waktu tertentu.', manfaatnya: 'Mengunci stabilitas seluruh dinding otot perut (core), memperkuat otot panggul bawah, serta memperbaiki postur tubuh bungkuk.', tata_cara_atau_gerakan: 'Tumpu bobot badan Anda pada kedua siku lengan bawah dan ujung jari kaki di atas matras, kunci otot perut and bokong sekencang mungkin, pastikan posisi pinggul tidak naik atau merosot.', id_video: 'Gr1GtwTp_ko' },
@@ -180,22 +180,15 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  // PROTEKSI TOTAL: Putus paksa event listener sisa audio lama agar tidak menimpa state avatar baru
   const stopSpeechSafely = () => {
     if (utteranceRef.current) {
       utteranceRef.current.onend = null
       utteranceRef.current.onerror = null
     }
-    if (window.currentSeolhaAudio) {
-      window.currentSeolhaAudio.pause()
-      window.currentSeolhaAudio.onended = null
-      window.currentSeolhaAudio.onerror = null
-    }
     window.speechSynthesis.cancel()
   }
 
-  // INTEGRASI ELEVENLABS + FALLBACK GOOGLE LOKAL ANTI-MACET
-  const speakText = async (text, customEndState = null, customStartState = null) => {
+  const speakText = (text, customEndState = null, customStartState = null) => {
     if (isMuted) return
     
     stopSpeechSafely()
@@ -205,51 +198,22 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     setInteractionId(prev => prev + 1)
     setAvatarState(customStartState || 'ngomong')
 
-    try {
-      const response = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: cleanText }),
-      })
+    const utterance = new SpeechSynthesisUtterance(cleanText)
+    utterance.lang = 'id-ID'
+    utterance.rate = 1.05
+    
+    utteranceRef.current = utterance
+    window.currentUtterance = utterance 
 
-      if (!response.ok) throw new Error('API down / limit')
-
-      const audioBlob = await response.blob()
-      const audioUrl = URL.createObjectURL(audioBlob)
-      const audio = new Audio(audioUrl)
-      
-      window.currentSeolhaAudio = audio
-
-      audio.onended = () => {
-        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-        URL.revokeObjectURL(audioUrl)
-      }
-      audio.onerror = () => {
-        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-        URL.revokeObjectURL(audioUrl)
-      }
-
-      await audio.play()
-
-    } catch (err) {
-      console.warn('ElevenLabs bermasalah/limit, otomatis fallback ke Google lokal:', err)
-      
-      const utterance = new SpeechSynthesisUtterance(cleanText)
-      utterance.lang = 'id-ID'
-      utterance.rate = 1.05
-      
-      utteranceRef.current = utterance
-      window.currentUtterance = utterance 
-
-      utterance.onend = () => {
-        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-      }
-      utterance.onerror = () => {
-        setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
-      }
-      
-      window.speechSynthesis.speak(utterance)
+    utterance.onend = () => {
+      setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
     }
+    utterance.onerror = (e) => {
+      console.error("Google SpeechSynthesis Error:", e)
+      setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
+    }
+    
+    window.speechSynthesis.speak(utterance)
   }
 
   useEffect(() => {
@@ -292,7 +256,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     if (!isFaq && dailyCount >= 5) {
       const failMsg = `Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya, ${userName}!`
       setMessages(prev => [...prev, { sender: 'user', text: msgToSend }, { sender: 'seolha', text: failMsg, mediaSources: null }])
-      speakText(failMsg)
+      failMsg
       if (!customMsg) setInput('')
       return
     }
