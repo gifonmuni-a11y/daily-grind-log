@@ -9,8 +9,9 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   const [title, setTitle] = useState('')
   const [rank, setRank] = useState('B')
   const [category, setCategory] = useState('Push')
+  const [customCategory, setCustomCategory] = useState('') // 🎯 STATE BARU
+  const [note, setNote] = useState('')
   const [duration, setDuration] = useState('')
-  const [notes, setNotes] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
 
@@ -31,10 +32,18 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
       setEntryDate(editEntry.entry_date)
       setTitle(editEntry.title || '')
       setRank(editEntry.rank || 'B')
-      setCategory(editEntry.category || 'Push')
       setDuration(editEntry.duration || '')
-      setNotes(editEntry.notes || '')
+      setNote(editEntry.note || editEntry.notes || '')
       setImageUrl(editEntry.image_url || '')
+
+      // Deteksi kategori kustom
+      if (categories.includes(editEntry.category)) {
+        setCategory(editEntry.category)
+        setCustomCategory('')
+      } else {
+        setCategory('+ Lainnya')
+        setCustomCategory(editEntry.category || '')
+      }
     }
   }, [editEntry])
 
@@ -48,7 +57,7 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   const handleImageChange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    
+
     setUploadingImage(true)
     const fileExt = file.name.split('.').pop()
     const fileName = `${userId}/${Date.now()}.${fileExt}`
@@ -57,7 +66,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
       const bucketName = 'entry-images'
       const { data, error: uploadError } = await supabase.storage.from(bucketName).upload(fileName, file)
       if (uploadError) throw uploadError
-      
       const { data: publicData } = supabase.storage.from(bucketName).getPublicUrl(fileName)
       setImageUrl(publicData.publicUrl)
     } catch (err) {
@@ -72,15 +80,18 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     if (!title.trim()) return
     setLoading(true)
 
+    // 🎯 LOGIKA: Pakai customCategory kalau pilih + Lainnya
+    const finalCategory = category === '+ Lainnya' ? customCategory : category;
+
     const payload = {
       user_id: userId,
       day_number: parseInt(dayNumber),
       entry_date: entryDate,
       title: title.trim(),
       rank,
-      category,
+      category: finalCategory,
       duration: duration.trim(),
-      notes: notes.trim(),
+      note: note.trim(),
       image_url: imageUrl.trim() !== '' ? imageUrl : null
     }
 
@@ -128,47 +139,33 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
             <label className="text-[10px] uppercase text-[#8B8696] tracking-wide">RANK</label>
             <div className="grid grid-cols-6 gap-1.5">
               {['S', 'A', 'B', 'C', 'D', 'E'].map(r => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRank(r)}
-                  style={getRankStyle(r, rank === r)}
-                  className="py-2.5 font-bold text-xs transition-all rounded-md uppercase tracking-wider text-center"
-                >
-                  {r}
-                </button>
+                <button key={r} type="button" onClick={() => setRank(r)} style={getRankStyle(r, rank === r)} className="py-2.5 font-bold text-xs transition-all rounded-md uppercase tracking-wider text-center">{r}</button>
               ))}
             </div>
           </div>
 
           <div className="flex flex-col gap-1 relative">
             <label className="text-[10px] uppercase text-[#8B8696] tracking-wide">KATEGORI</label>
-            <button
-              type="button"
-              onClick={() => setShowCategorySelector(true)}
-              className="w-full bg-black border border-[#211D2C] p-2.5 text-white rounded-lg font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF] outline-none"
-            >
-              <span>{category}</span>
+            <button type="button" onClick={() => setShowCategorySelector(true)} className="w-full bg-black border border-[#211D2C] p-2.5 text-white rounded-lg font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF] outline-none">
+              <span>{category === '+ Lainnya' ? (customCategory || '+ Lainnya') : category}</span>
               <ChevronDown size={14} className="text-[#7C5CFF]" />
             </button>
 
             {showCategorySelector && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 max-h-[70vh]">
-                  <span className="font-mono text-xs uppercase font-black text-white border-b border-[#211D2C] pb-2 tracking-wider">PILIH KATEGORI GRIND</span>
+                  <span className="font-mono text-xs uppercase font-black text-white border-b border-[#211D2C] pb-2 tracking-wider">PILIH KATEGORI</span>
                   <div className="overflow-y-auto flex flex-col gap-1 pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#7C5CFF #0A0A0E' }}>
                     {categories.map(cat => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => { setCategory(cat); setShowCategorySelector(false); }}
-                        className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${category === cat ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}
-                      >
+                      <button key={cat} type="button" onClick={() => { setCategory(cat); if(cat !== '+ Lainnya') setShowCategorySelector(false); }} className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${category === cat ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}>
                         {cat}
                       </button>
                     ))}
                   </div>
-                  <button type="button" onClick={() => setShowCategorySelector(false)} className="w-full py-2.5 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white font-bold uppercase">Batal</button>
+                  {category === '+ Lainnya' && (
+                    <input autoFocus type="text" placeholder="Ketik kategori baru..." value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} className="w-full bg-black border border-[#7C5CFF] p-2.5 text-white rounded-lg text-xs mt-2 outline-none" />
+                  )}
+                  <button type="button" onClick={() => setShowCategorySelector(false)} className="w-full py-2.5 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white font-bold uppercase mt-2">Selesai</button>
                 </div>
               </div>
             )}
@@ -181,7 +178,7 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
 
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase text-[#8B8696] tracking-wide">CATATAN</label>
-            <textarea placeholder="PR baru, perasaan saat latihan, dll..." value={notes} onChange={(e) => setNotes(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-lg outline-none focus:border-[#7C5CFF]" rows="3" />
+            <textarea placeholder="PR baru, perasaan saat latihan, dll..." value={note} onChange={(e) => setNote(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-lg outline-none focus:border-[#7C5CFF]" rows="3" />
           </div>
 
           <div className="flex flex-col gap-1">
@@ -203,12 +200,9 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
           </div>
 
           <div className="grid grid-cols-2 gap-3 mt-3 font-mono">
-            <button type="button" onClick={onClose} className="py-3 bg-transparent border border-[#211D2C] text-[#EDEAF6] rounded-lg hover:bg-[#211D2C] transition-colors uppercase tracking-wider font-bold">
-              Batal
-            </button>
+            <button type="button" onClick={onClose} className="py-3 bg-transparent border border-[#211D2C] text-[#EDEAF6] rounded-lg hover:bg-[#211D2C] transition-colors uppercase tracking-wider font-bold">Batal</button>
             <button type="submit" disabled={loading || uploadingImage} className="py-3 bg-[#7C5CFF] text-white font-black rounded-lg hover:bg-[#6b52e0] transition-colors uppercase tracking-wider shadow-lg flex items-center justify-center gap-2">
-              {loading && <Loader2 size={14} className="animate-spin" />}
-              SIMPAN SESI
+              {loading && <Loader2 size={14} className="animate-spin" />} SIMPAN SESI
             </button>
           </div>
         </form>
