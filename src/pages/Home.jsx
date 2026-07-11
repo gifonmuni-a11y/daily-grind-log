@@ -31,13 +31,18 @@ import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
 
+// 🎯 LOGIKA FILTER FIXED: Benerin timezone dan hitungan awal minggu (Senin-Minggu)
 function filterEntries(entries, filter) {
+  if (!filter || filter === 'Semua') return entries
+
   const now = new Date()
   const startOf = (unit) => {
     const d = new Date(now)
     if (unit === 'week') {
+      // Bikin awal minggu dimulai dari hari Senin secara internasional biar tanggal 10 July (Jumat) aman masuk hitungan
       const day = d.getDay()
-      d.setDate(d.getDate() - day)
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+      d.setDate(diff)
     } else if (unit === 'month') {
       d.setDate(1)
     } else if (unit === 'lastMonth') {
@@ -92,7 +97,7 @@ export default function Home({ session }) {
   const [activeTab, setActiveTab] = useState('grind') 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   
-  // Custom dialog state hapus kustom
+  // State kustom dialog modal hapus premium
   const [deleteTargetId, setDeleteTargetId] = useState(null)
 
   const prevLevelRef = useRef(null)
@@ -186,7 +191,6 @@ export default function Home({ session }) {
     }
   }, [loading, level, unlockedAchievements])
 
-  // Handler pemicu modal kustom
   function handleDeleteRequest(id) {
     setDeleteTargetId(id)
   }
@@ -326,12 +330,12 @@ export default function Home({ session }) {
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
             
-            {/* 🎯 FIX 1: Jarak tab filter diturunkan sedikit agar renggang */}
+            {/* 🎯 TAB FILTER DIBERI JARAK TURUN DIKIT */}
             <div className="mt-6 mb-3">
               <FilterTabs active={activeFilter} onChange={setActiveFilter} />
             </div>
 
-            {/* 🎯 FIX 2: Render seluruh list data ke dalam Card utuh tanpa batas slice */}
+            {/* 🎯 FIX TOTAL: Seluruh entries dirender utuh sebagai Card tanpa dibatasi/slice(0,3) lagi */}
             {filteredEntries.length === 0 ? (
               <div className="mx-4 py-16 text-center">
                 <p className="font-display text-2xl font-bold text-text-dim mb-2">NO ENTRIES</p>
@@ -347,7 +351,7 @@ export default function Home({ session }) {
                     level={level} 
                     streak={streak} 
                     onEdit={handleEdit} 
-                    onDelete={handleDeleteRequest} // 🎯 FIX SINKRONISASI: Mengikat nama properti onDelete asli dari EntryCard lu
+                    onDelete={handleDeleteRequest} 
                   />
                 ))}
               </div>
@@ -358,7 +362,7 @@ export default function Home({ session }) {
         {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
       </div>
 
-      {/* 🧭 NAVIGATION DOCK MELAYANG PREMIUM */}
+      {/* 🧭 NAVIGATION DOCK MELAYANG */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[90%] w-max">
         <button 
           type="button" 
@@ -389,7 +393,7 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* 🎯 FIX 3: Dialog kustom konfirmasi hapus AMOLED premium */}
+      {/* MODAL DIALOG HAPUS CUSTOM */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
@@ -436,7 +440,7 @@ export default function Home({ session }) {
           onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
           onSaved={() => {
             fetchEntries()
-            setActiveFilter('Semua')
+            setActiveFilter('Semua') // Banting otomatis ke filter Semua biar data baru nampil
           }} 
         />
       )}
