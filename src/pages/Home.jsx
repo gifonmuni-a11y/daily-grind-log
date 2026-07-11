@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, LogOut, HelpCircle, Loader2, Bot, Target, Award, Map } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel, getRankTier } from '../lib/expSystem'
@@ -89,11 +89,10 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  // STATE MANAGEMENT HALAMAN UTAMA DOCK BAR
   const [activeTab, setActiveTab] = useState('grind') 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   
-  // 🎯 CUSTOM STATE MODAL HAPUS SESI (BUKAN DEFAULT BROWSER)
+  // Custom dialog state hapus kustom
   const [deleteTargetId, setDeleteTargetId] = useState(null)
 
   const prevLevelRef = useRef(null)
@@ -187,7 +186,11 @@ export default function Home({ session }) {
     }
   }, [loading, level, unlockedAchievements])
 
-  // 🎯 FUNGSI EKSEKUSI HAPUS MODAL KUSTOM KITA
+  // Handler pemicu modal kustom
+  function handleDeleteRequest(id) {
+    setDeleteTargetId(id)
+  }
+
   const confirmDeleteSesi = async () => {
     if (!deleteTargetId) return
     await supabase.from('entries').delete().eq('id', deleteTargetId)
@@ -251,10 +254,8 @@ export default function Home({ session }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between">
-      {/* AREA KONTEN UTAMA */}
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
-        {/* HEADER UTAMA GLOBAL */}
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
           <span className="font-display font-bold text-base text-accent tracking-widest">DAILY GRIND LOG</span>
           <div className="flex items-center gap-1">
@@ -267,7 +268,6 @@ export default function Home({ session }) {
           </div>
         </div>
 
-        {/* HALAMAN 1: DASHBOARD UTAMA (LOG HARIAN) */}
         {activeTab === 'grind' && (
           <>
             <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
@@ -326,12 +326,12 @@ export default function Home({ session }) {
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
             
-            {/* 🎯 FIX 1: MENURUNKAN JARAK TAB FILTER SEDIKIT AGAR TIDAK TERLALU MEPEt KE ATAS PANEL */}
+            {/* 🎯 FIX 1: Jarak tab filter diturunkan sedikit agar renggang */}
             <div className="mt-6 mb-3">
               <FilterTabs active={activeFilter} onChange={setActiveFilter} />
             </div>
 
-            {/* 🎯 FIX 2: MENAMPILKAN SEMUA CARD UTUH SECARA UTUH TANPA PEMOTONGAN ATAUPUN SLICE */}
+            {/* 🎯 FIX 2: Render seluruh list data ke dalam Card utuh tanpa batas slice */}
             {filteredEntries.length === 0 ? (
               <div className="mx-4 py-16 text-center">
                 <p className="font-display text-2xl font-bold text-text-dim mb-2">NO ENTRIES</p>
@@ -347,7 +347,7 @@ export default function Home({ session }) {
                     level={level} 
                     streak={streak} 
                     onEdit={handleEdit} 
-                    onDeleteTrigger={(id) => setDeleteTargetId(id)} 
+                    onDelete={handleDeleteRequest} // 🎯 FIX SINKRONISASI: Mengikat nama properti onDelete asli dari EntryCard lu
                   />
                 ))}
               </div>
@@ -355,9 +355,7 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* HALAMAN 2: HUB DATA FITNESS & FOOD DENGAN INJEKSI ACTION CALLBACK BACK TO GRIND */}
         {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
-
       </div>
 
       {/* 🧭 NAVIGATION DOCK MELAYANG PREMIUM */}
@@ -391,13 +389,13 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* 🎯 FIX 3: MODAL DIALOG KONFIRMASI HAPUS LOG HARIAN CUSTOM PREMIUM (TIDAK DEFAULT BROWSER) */}
+      {/* 🎯 FIX 3: Dialog kustom konfirmasi hapus AMOLED premium */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
             <div className="text-center">
               <h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Destruksi Log</h3>
-              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">Sesi ini akan dihapus secara permanen dari server awan Cloud database. Lanjutkan?</p>
+              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">Sesi ini akan dihapus secara permanen dari server database. Lanjutkan?</p>
             </div>
             <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
               <button
@@ -419,38 +417,17 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* OVERLAY DIALOG MODAL KONFIRMASI LOG OUT PREMIUM */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-center">
-              <h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Konfirmasi Keluar</h3>
-              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">Lu yakin mau log out dari akun Daily Grind Log ini? Sesi latihan lu bakal dikunci aman di server.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-              <button
-                type="button"
-                onClick={() => setShowLogoutConfirm(false)}
-                className="py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-lg hover:text-white active:scale-95 transition-all"
-              >
-                BATAL
-              </button>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="py-2.5 bg-[#EF4444] text-white font-black rounded-lg shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all"
-              >
-                SETUJU
-              </button>
-            </div>
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-lg flex flex-col gap-4">
+            <div className="text-center"><h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Konfirmasi Keluar</h3><p className="font-body text-[10px] text-[#EDEAF6]/50">Lu yakin mau log out dari akun Daily Grind Log ini?</p></div>
+            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]"><button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 bg-[#211D2C] border border-[#312C42] text-white rounded-lg">BATAL</button><button type="button" onClick={handleSignOut} className="py-2.5 bg-[#EF4444] text-white font-black rounded-lg">SETUJU</button></div>
           </div>
         </div>
       )}
 
-      {/* MODAL MODAL PENDUKUNG APLIKASI */}
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
       
-      {/* 🎯 FIX 4: MEMASTIKAN ON SAVED MEMICU FETCH DATA TERBARU SECARA OTOMATIS */}
       {showLogModal && (
         <LogModal 
           userId={userId} 
