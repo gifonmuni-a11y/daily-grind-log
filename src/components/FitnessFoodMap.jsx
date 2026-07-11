@@ -22,7 +22,7 @@ const HEALTHY_FOOD = [
   { name: 'Sayur Brokoli Hijau', lowBudget: 'Dipotong kecil lalu dikukus 5 menit bersama garam dapur. Menjaga serat alami tubuh.', richBudget: 'Brokoli organik ditumis ringan menggunakan minyak kelapa premium dan udang kupas laut dalam.', img: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&auto=format&fit=crop&q=60' },
   { name: 'Oatmeal / Gandum Utuh', lowBudget: 'Diseduh air panas biasa ditambah pisang lokal potongan kecil sebagai pemanis alami.', richBudget: 'Rolled Oats organik dimasak susu almond, topping chia seeds, buah blueberry, madu asli.', img: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&auto=format&fit=crop&q=60' },
   { name: 'Beras Merah / Hitam', lowBudget: 'Dimasak di rice cooker biasa dicampur sedikit beras putih agar tekstur tidak terlalu seret.', richBudget: 'Beras organik hitam aromatik disajikan dengan taburan bawang bombay karamel zaitun.', img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop&q=60' },
-  { name: 'Jus Alpukat Murni', lowBudget: 'Alpukat mentega dikerok blender air es, gunakan sedikit susu kental manis di pinggiran gelas.', richBudget: 'Alpukat organik diblender kental dengan susu UHT low-fat dan pemanis alami tetes stevia.', img: 'https://images.unsplash.com/photo-1554998171-89445e31c52b?w=400&auto=format&fit=crop&q=60' },
+  { name: 'Jus Alpukat Murni', lowBudget: 'Alpukat mentega dikerok blender air es, gunakan sedikit susu kental manis di pinggiran gelas.', richBudget: 'Alpukat organik diblender kental dengan susu UHT low-fat and pemanis alami tetes stevia.', img: 'https://images.unsplash.com/photo-1554998171-89445e31c52b?w=400&auto=format&fit=crop&q=60' },
   { name: 'Infused Water Detoks', lowBudget: 'Air matang galon di dalam botol diisi potongan timun dan jeruk nipis terjangkau pasar.', richBudget: 'Air mineral premium pH tinggi diisi irisan strawberry impor, lemon California, daun mint segar.', img: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?w=400&auto=format&fit=crop&q=60' },
   { name: 'Teh Hijau Murni', lowBudget: 'Teh hijau celup lokal seduh air panas tanpa gula sama sekali. Bagus untuk bakar lemak harian.', richBudget: 'Matcha bubuk murni kualitas upacara (ceremonial grade) Jepang diseduh air hangat suam-suam kuku.', img: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&auto=format&fit=crop&q=60' }
 ];
@@ -56,8 +56,6 @@ export default function FitnessFoodMap({ onBackToHome }) {
   const [selectedFoodId, setSelectedFoodId] = useState('1');
   const [foodWeight, setFoodWeight] = useState(100);
   const [foodResult, setFoodResult] = useState(null);
-  
-  // 🎯 STATE UNTUK MODAL DROPDOWN CUSTOM
   const [showFoodSelector, setShowFoodSelector] = useState(false);
 
   useEffect(() => {
@@ -90,7 +88,6 @@ export default function FitnessFoodMap({ onBackToHome }) {
       bmr: Math.round(bmr),
       maintenance: Math.round(tdee),
       loss: Math.round(tdee - 500),
-      extremeLoss: Math.round(tdee - 1000),
       gain: Math.round(tdee + 500)
     });
   };
@@ -111,7 +108,7 @@ export default function FitnessFoodMap({ onBackToHome }) {
   const currentFoodItem = FOOD_NUTRITION_BASE.find(f => f.id === selectedFoodId);
 
   return (
-    <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4">
+    <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-20">
       
       <div className="flex items-center gap-3 bg-[#100E16] border border-[#211D2C] p-3 rounded-xl shadow-lg">
         <button
@@ -123,7 +120,7 @@ export default function FitnessFoodMap({ onBackToHome }) {
         </button>
         <div className="flex flex-col">
           <span className="font-mono text-xs uppercase font-black text-white tracking-widest">Radar Fitur Utama</span>
-          <span className="text-[9px] font-mono text-[#EDEAF6]/40">Klik panah kiri untuk kembali melatih log harian</span>
+          <span className="text-[9px] font-mono text-[#EDEAF6]/40">Kembali melatih log harian</span>
         </div>
       </div>
 
@@ -156,15 +153,15 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <div className="space-y-3">
               {GYM_EQUIPMENT.map((item, idx) => (
                 <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden flex flex-col gap-3 p-3 shadow-md">
-                  <div className="w-full aspect-square overflow-hidden rounded-lg border border-[#211D2C]">
+                  <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
                     <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
                     <p className="text-[10px] text-[#EDEAF6]/50 mt-1 leading-relaxed">{item.function}</p>
                     <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#211D2C]/60 pt-2 text-[9px] font-mono">
-                      <div><span className="text-emerald-400 font-bold block">🟢 PEMULA:</span><span className="text-[#EDEAF6]/60">{item.beginner}</span></div>
-                      <div><span className="text-purple-400 font-bold block">🔥 PRO:</span><span className="text-[#EDEAF6]/60">{item.pro}</span></div>
+                      <div className="flex items-center gap-1"><ShieldCheck size={12} className="text-emerald-400" /><div><span className="text-emerald-400 font-bold block">PEMULA:</span><span className="text-[#EDEAF6]/60">{item.beginner}</span></div></div>
+                      <div className="flex items-center gap-1"><Flame size={12} className="text-purple-400" /><div><span className="text-purple-400 font-bold block">PRO:</span><span className="text-[#EDEAF6]/60">{item.pro}</span></div></div>
                     </div>
                   </div>
                 </div>
@@ -180,13 +177,13 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <div className="space-y-3">
               {HEALTHY_FOOD.map((item, idx) => (
                 <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden flex flex-col gap-3 p-3 shadow-md">
-                  <div className="w-full aspect-square overflow-hidden rounded-lg border border-[#211D2C]">
+                  <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
                     <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
                     <div className="mt-3 space-y-2 text-[10px]">
-                      {/* 🎯 UBAH EMOJI MENTAH MENJADI SVGS UI DESIGN KEREN */}
+                      {/* 🎯 FIX: Emoji mentah dibuang total dari UI pangan */}
                       <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
                         <Scale size={14} className="text-amber-500 shrink-0 mt-0.5" />
                         <div>
@@ -195,9 +192,9 @@ export default function FitnessFoodMap({ onBackToHome }) {
                         </div>
                       </div>
                       <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
-                        <Flame size={14} className="text-violet-400 shrink-0 mt-0.5" />
+                        <Flame size={14} className="text-purple-400 shrink-0 mt-0.5" />
                         <div>
-                          <span className="font-mono text-[9px] text-violet-400 font-bold block">MENU SULTAN MINDSET</span>
+                          <span className="font-mono text-[9px] text-purple-400 font-bold block">MENU SULTAN MINDSET</span>
                           <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed">{item.richBudget}</p>
                         </div>
                       </div>
@@ -221,8 +218,6 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <form onSubmit={handleFoodCalculate} className="space-y-3 text-xs font-mono">
               <div className="flex flex-col gap-1 relative">
                 <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Pilih Jenis Pangan:</label>
-                
-                {/* 🎯 MODAL SELECT KUSTOM ELEGAN RPG UNTUK DROPDOWN */}
                 <button
                   type="button"
                   onClick={() => setShowFoodSelector(true)}
@@ -283,26 +278,8 @@ export default function FitnessFoodMap({ onBackToHome }) {
               </div>
               <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase">Tinggi Badan (cm):</label><input type="number" min="50" max="250" required value={height} onChange={(e) => setHeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
               <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase">Berat Badan (kg):</label><input type="number" min="20" max="300" required value={weight} onChange={(e) => setWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Tingkat Aktivitas:</label>
-                <div className="bg-black border border-[#211D2C] rounded-lg p-2.5 space-y-2 text-[9px]">
-                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.0" checked={activity === 1.0} onChange={() => setActivity(1.0)} className="mt-0.5 accent-[#7C5CFF]" /><span>Tingkat Metabolisme Basal (BMR)</span></label>
-                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.2" checked={activity === 1.2} onChange={() => setActivity(1.2)} className="mt-0.5 accent-[#7C5CFF]" /><span>Sedikit / tidak olahraga</span></label>
-                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.375" checked={activity === 1.375} onChange={() => setActivity(1.375)} className="mt-0.5 accent-[#7C5CFF]" /><span>Olahraga Ringan (1-3x seminggu)</span></label>
-                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.465" checked={activity === 1.465} onChange={() => setActivity(1.465)} className="mt-0.5 accent-[#7C5CFF]" /><span>Olahraga Sedang (4-5x seminggu)</span></label>
-                </div>
-              </div>
               <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Kalori Tubuh</button>
             </form>
-
-            {calResult && (
-              <div className="mt-3 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2.5 font-mono text-[10px]">
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Metabolisme Basal (BMR):</span><span className="text-[#7C5CFF] font-black">{calResult.bmr} kkal</span></div>
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Kebutuhan TDEE:</span><span className="text-white font-black">{calResult.maintenance} kkal</span></div>
-                <div className="flex justify-between items-center bg-emerald-950/30 p-2 border border-emerald-900/40 rounded-lg"><span className="text-emerald-400">Turun Berat Badan:</span><span className="text-emerald-400 font-black">{calResult.loss} kkal</span></div>
-                <div className="flex justify-between items-center bg-purple-950/30 p-2 border border-purple-900/40 rounded-lg"><span className="text-purple-400">Naik Berat Badan:</span><span className="text-purple-400 font-black">{calResult.gain} kkal</span></div>
-              </div>
-            )}
           </div>
         </div>
       )}

@@ -28,9 +28,8 @@ function drawImageCover(ctx, img, x, y, w, h) {
 
 export async function generateShareCard({ profile, entry, level, streak }) {
   const canvas = document.createElement('canvas')
-  // 🎯 SET RASIO KOTAK 1080x1080 UNTUK GENERATOR SHARE CARD
   canvas.width = 1080
-  canvas.height = 1080
+  canvas.height = 1920
   const ctx = canvas.getContext('2d')
 
   const bg = '#0A0A0E'
@@ -43,9 +42,9 @@ export async function generateShareCard({ profile, entry, level, streak }) {
   const rankColors = { S: '#7C5CFF', A: '#2DD4BF', B: '#4ADE80', C: '#FACC15', D: '#FB923C', E: '#F87171' }
 
   ctx.fillStyle = bg
-  ctx.fillRect(0, 0, 1080, 1080)
+  ctx.fillRect(0, 0, 1080, 1920)
 
-  const drawCornerBrackets = (x, y, w, h, size = 20, color = accent) => {
+  const drawCornerBrackets = (x, y, w, h, size = 24, color = accent) => {
     ctx.strokeStyle = color
     ctx.lineWidth = 3
     ctx.beginPath()
@@ -57,78 +56,113 @@ export async function generateShareCard({ profile, entry, level, streak }) {
   }
 
   ctx.fillStyle = panel
-  ctx.fillRect(40, 40, 1000, 1000)
-  drawCornerBrackets(40, 40, 1000, 1000, 24)
+  ctx.fillRect(60, 80, 960, 1760)
+  drawCornerBrackets(60, 80, 960, 1760, 32)
 
-  ctx.font = '700 48px Rajdhani, sans-serif'
+  ctx.font = '700 72px Rajdhani, sans-serif'
   ctx.fillStyle = accent
-  ctx.textAlign = 'left'
-  ctx.fillText('DAILY GRIND LOG', 80, 100)
+  ctx.textAlign = 'center'
+  ctx.fillText('DAILY GRIND LOG', 540, 200)
 
-  ctx.font = '500 24px Inter, sans-serif'
+  ctx.font = '500 36px Inter, sans-serif'
   ctx.fillStyle = textMuted
-  ctx.fillText('TRAINING RECORD', 80, 140)
+  ctx.fillText('Training Record', 540, 260)
 
-  let contentY = 180
+  let contentY = 320
+  let imageLoadFailed = false
 
   if (entry.image_url) {
     try {
       const img = await loadImage(entry.image_url)
-      const imgX = 80, imgW = 340, imgH = 340
+      const imgX = 120, imgW = 840, imgH = 420
       drawImageCover(ctx, img, imgX, contentY, imgW, imgH)
-      drawCornerBrackets(imgX, contentY, imgW, imgH, 16, accent)
+      drawCornerBrackets(imgX, contentY, imgW, imgH, 24, accent)
+      contentY += imgH + 40
     } catch (e) {
-      console.error(e)
+      console.error('Gagal memuat gambar entry untuk share card (CORS/network):', e)
+      imageLoadFailed = true
     }
   }
 
   const rankColor = rankColors[entry.rank] || accent
-  ctx.fillStyle = rankColor + '22'
-  ctx.fillRect(450, contentY, 550, 90)
-  drawCornerBrackets(450, contentY, 550, 90, 14, rankColor)
+  const rankBoxY = contentY
+  ctx.fillStyle = rankColor + '33'
+  ctx.fillRect(120, rankBoxY, 840, 200)
+  drawCornerBrackets(120, rankBoxY, 840, 200, 20, rankColor)
 
-  ctx.font = '700 54px Rajdhani, sans-serif'
+  ctx.font = '700 120px Rajdhani, sans-serif'
   ctx.fillStyle = rankColor
   ctx.textAlign = 'center'
-  ctx.fillText(`RANK: ${entry.rank}`, 725, contentY + 62)
+  ctx.fillText(entry.rank, 540, rankBoxY + 150)
 
-  ctx.font = '600 36px Rajdhani, sans-serif'
+  ctx.font = '600 52px Rajdhani, sans-serif'
   ctx.fillStyle = textHigh
-  ctx.textAlign = 'left'
-  ctx.fillText(entry.title || 'Untitled Session', 450, contentY + 140)
+  ctx.textAlign = 'center'
+  const titleY = rankBoxY + 260
+  const titleLines = wrapText(ctx, entry.title, 800, '600 52px Rajdhani, sans-serif')
+  titleLines.forEach((line, i) => {
+    ctx.fillText(line, 540, titleY + i * 60)
+  })
 
-  ctx.font = '500 22px JetBrains Mono, monospace'
-  ctx.fillStyle = textMuted
-  ctx.fillText(`DAY #${entry.day_number}  |  ${entry.category || 'GENERAL'}  |  ${entry.duration || '—'}`, 450, contentY + 185)
+  const statsY = titleY + 60 + (titleLines.length - 1) * 60
+  const stats = [
+    { label: 'DAY', value: `#${entry.day_number}` },
+    { label: 'CATEGORY', value: entry.category },
+    { label: 'DURATION', value: entry.duration || '—' },
+  ]
 
-  if (entry.note) {
-    ctx.font = '400 22px Inter, sans-serif'
+  stats.forEach((stat, i) => {
+    const x = 120 + i * 300
+    ctx.fillStyle = border
+    ctx.fillRect(x, statsY, 260, 120)
+    ctx.font = '500 28px JetBrains Mono, monospace'
     ctx.fillStyle = textMuted
-    const noteLines = wrapText(ctx, entry.note, 550, '400 22px Inter, sans-serif')
-    noteLines.slice(0, 4).forEach((line, i) => {
-      ctx.fillText(line, 450, contentY + 230 + i * 30)
+    ctx.textAlign = 'center'
+    ctx.fillText(stat.label, x + 130, statsY + 42)
+    ctx.font = '600 38px JetBrains Mono, monospace'
+    ctx.fillStyle = textHigh
+    ctx.fillText(stat.value, x + 130, statsY + 95)
+  })
+
+  let noteBottomY = statsY + 160
+  if (entry.note) {
+    const noteY = noteBottomY
+    ctx.font = '400 34px Inter, sans-serif'
+    ctx.fillStyle = textMuted
+    ctx.textAlign = 'left'
+    const noteLines = wrapText(ctx, entry.note, 800, '400 34px Inter, sans-serif')
+    noteLines.slice(0, 5).forEach((line, i) => {
+      ctx.fillText(line, 140, noteY + i * 48)
     })
+    noteBottomY = noteY + noteLines.slice(0, 5).length * 48
   }
 
-  const footerY = 920
+  const profileY = Math.max(1600, noteBottomY + 40)
   ctx.fillStyle = accent
-  ctx.fillRect(80, footerY, 4, 60)
-
-  ctx.font = '600 36px Rajdhani, sans-serif'
+  ctx.fillRect(120, profileY, 6, 80)
+  ctx.font = '600 48px Rajdhani, sans-serif'
   ctx.fillStyle = textHigh
   ctx.textAlign = 'left'
-  ctx.fillText(profile?.name || 'Trainer', 95, footerY + 25)
+  ctx.fillText(profile?.name || 'Trainer', 140, profileY + 54)
 
-  ctx.font = '500 24px JetBrains Mono, monospace'
+  ctx.font = '500 32px JetBrains Mono, monospace'
   ctx.fillStyle = accentJade
-  ctx.fillText(`LVL ${level}  •  ${streak} DAY STREAK`, 95, footerY + 52)
+  ctx.fillText(`LVL ${level}  •  ${streak} DAY STREAK`, 140, profileY + 100)
 
-  ctx.font = '400 22px Inter, sans-serif'
+  ctx.font = '400 28px Inter, sans-serif'
   ctx.fillStyle = textMuted
-  ctx.textAlign = 'right'
-  ctx.fillText('daily-grind-log.app', 1000, footerY + 40)
+  ctx.textAlign = 'center'
+  ctx.fillText('daily-grind-log.app', 540, 1840)
 
-  return { dataUrl: canvas.toDataURL('image/png'), imageLoadFailed: false }
+  let dataUrl
+  try {
+    dataUrl = canvas.toDataURL('image/png')
+  } catch (e) {
+    console.error('Canvas tainted, gagal export share card:', e)
+    throw new Error('CANVAS_TAINTED')
+  }
+
+  return { dataUrl, imageLoadFailed }
 }
 
 function wrapText(ctx, text, maxWidth, font) {
@@ -138,7 +172,8 @@ function wrapText(ctx, text, maxWidth, font) {
   let currentLine = words[0] || ''
   for (let i = 1; i < words.length; i++) {
     const testLine = currentLine + ' ' + words[i]
-    if (ctx.measureText(testLine).width > maxWidth) {
+    const metrics = ctx.measureText(testLine)
+    if (metrics.width > maxWidth) {
       lines.push(currentLine)
       currentLine = words[i]
     } else {
