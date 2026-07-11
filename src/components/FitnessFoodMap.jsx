@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dumbbell, Utensils, MapPin, Loader2, AlertCircle, BookOpen, Calculator, ArrowLeft, ShieldCheck, Flame, Scale, Search } from 'lucide-react';
+import { Dumbbell, Utensils, MapPin, Loader2, BookOpen, Calculator, ArrowLeft, ShieldCheck, Flame, Scale, ChevronDown } from 'lucide-react';
 
 const GYM_EQUIPMENT = [
   { name: 'Dumbbell', function: 'Melatih otot dada, bahu, lengan (bicep/tricep), dan punggung secara isolasi.', beginner: '3 Set x 12 Reps (Beban: 4 - 8 kg)', pro: '4 Set x 8 Reps (Beban: 16 - 32+ kg)', img: 'https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?w=400&auto=format&fit=crop&q=60' },
@@ -27,10 +27,9 @@ const HEALTHY_FOOD = [
   { name: 'Teh Hijau Murni', lowBudget: 'Teh hijau celup lokal seduh air panas tanpa gula sama sekali. Bagus untuk bakar lemak harian.', richBudget: 'Matcha bubuk murni kualitas upacara (ceremonial grade) Jepang diseduh air hangat suam-suam kuku.', img: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&auto=format&fit=crop&q=60' }
 ];
 
-// 📊 DATABASE KALORI & PROTEIN PER 1 GRAM UNTUK KALKULATOR DATA MAKANAN LOKAL
 const FOOD_NUTRITION_BASE = [
   { id: '1', name: 'Dada Ayam (Matang)', caloriesPerGram: 2.38, proteinPerGram: 0.31 },
-  { id: '2', name: 'Telur Ayam (Utuh/Butir besar ~50g)', caloriesPerGram: 1.56, proteinPerGram: 0.13 },
+  { id: '2', name: 'Telur Ayam (Utuh/Butir ~50g)', caloriesPerGram: 1.56, proteinPerGram: 0.13 },
   { id: '3', name: 'Ikan Salmon (Matang)', caloriesPerGram: 2.06, proteinPerGram: 0.22 },
   { id: '4', name: 'Ikan Kembung (Matang)', caloriesPerGram: 2.38, proteinPerGram: 0.22 },
   { id: '5', name: 'Nasi Putih (Matang)', caloriesPerGram: 1.30, proteinPerGram: 0.027 },
@@ -46,9 +45,7 @@ export default function FitnessFoodMap({ onBackToHome }) {
   const [mapCategory, setMapCategory] = useState('gym'); 
   const [userCoords, setUserCoords] = useState(null);
   const [geoLoading, setGeoLoading] = useState(true);
-  const [geoError, setGeoError] = useState('');
-
-  // STATE RUMUS METABOLISME BASAL TUBUH
+  
   const [age, setAge] = useState(25);
   const [gender, setGender] = useState('pria');
   const [height, setHeight] = useState(180);
@@ -56,29 +53,26 @@ export default function FitnessFoodMap({ onBackToHome }) {
   const [activity, setActivity] = useState(1.465); 
   const [calResult, setCalResult] = useState(null);
 
-  // 🎯 STATE BARU: KALKULATOR KALORI DAN NUTRISI MAKANAN UMUM
   const [selectedFoodId, setSelectedFoodId] = useState('1');
   const [foodWeight, setFoodWeight] = useState(100);
   const [foodResult, setFoodResult] = useState(null);
+  
+  // 🎯 STATE UNTUK MODAL DROPDOWN CUSTOM
+  const [showFoodSelector, setShowFoodSelector] = useState(false);
 
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setUserCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-          setGeoError('');
           setGeoLoading(false);
         },
         () => {
-          setGeoError('Akses GPS ditolak. Menggunakan peta jangkar default Indonesia.');
-          setUserCoords({ lat: -6.2000, lon: 106.8166 }); // Jakarta fallback
+          setUserCoords({ lat: -6.2000, lon: 106.8166 });
           setGeoLoading(false);
         },
         { enableHighAccuracy: true, timeout: 15000 }
       );
-    } else {
-      setGeoError('Browser HP lu tidak mendukung pelacakan satelit GPS.');
-      setGeoLoading(false);
     }
   }, []);
 
@@ -88,12 +82,8 @@ export default function FitnessFoodMap({ onBackToHome }) {
     const w = parseFloat(weight);
     const h = parseFloat(height);
     const a = parseInt(age);
-
-    if (gender === 'pria') {
-      bmr = 10 * w + 6.25 * h - 5 * a + 5;
-    } else {
-      bmr = 10 * w + 6.25 * h - 5 * a - 161;
-    }
+    if (gender === 'pria') bmr = 10 * w + 6.25 * h - 5 * a + 5;
+    else bmr = 10 * w + 6.25 * h - 5 * a - 161;
 
     const tdee = bmr * parseFloat(activity);
     setCalResult({
@@ -105,12 +95,10 @@ export default function FitnessFoodMap({ onBackToHome }) {
     });
   };
 
-  // LOGIKA HITUNG NUTRISI MAKANAN BERDASARKAN BERAT GRAM
   const handleFoodCalculate = (e) => {
     e.preventDefault();
     const foodItem = FOOD_NUTRITION_BASE.find(f => f.id === selectedFoodId);
     if (!foodItem) return;
-    
     const grams = parseFloat(foodWeight) || 0;
     setFoodResult({
       name: foodItem.name,
@@ -120,25 +108,12 @@ export default function FitnessFoodMap({ onBackToHome }) {
     });
   };
 
-  const getGoogleMapsEmbedUrl = () => {
-    if (!userCoords) return '';
-    const keyword = mapCategory === 'gym' ? 'gym+fitness' : 'makanan+sehat+restoran';
-    return `https://maps.google.com/maps?q=${keyword}&sll=${userCoords.lat},${userCoords.lon}&z=14&output=embed`;
-  };
-
-  // FIX POPUP BLOCKER: Menggunakan penembakan tautan terenkripsi yang aman bagi mobile browser
-  const handleOpenGoogleMapsApp = () => {
-    if (!userCoords) return;
-    const keyword = mapCategory === 'gym' ? 'Gym Terdekat' : 'Makanan Sehat';
-    const nativeUrl = `geo:${userCoords.lat},${userCoords.lon}?q=${encodeURIComponent(keyword)}`;
-    window.location.href = nativeUrl;
-  };
+  const currentFoodItem = FOOD_NUTRITION_BASE.find(f => f.id === selectedFoodId);
 
   return (
     <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4">
       
-      {/* ⬅️ TOP HEADER BAR DENGAN TOMBOL PANGKAS BALIK KE HOME DASHBOARD */}
-      <div className="flex items-center gap-3 bg-[#100E16] border border-[#211D2C] p-3 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.4)]">
+      <div className="flex items-center gap-3 bg-[#100E16] border border-[#211D2C] p-3 rounded-xl shadow-lg">
         <button
           type="button"
           onClick={onBackToHome}
@@ -152,91 +127,25 @@ export default function FitnessFoodMap({ onBackToHome }) {
         </div>
       </div>
 
-      {/* 🧭 NAVIGASI HUB INTERNAL SUB-TAB */}
       <div className="flex bg-[#100E16] p-1 border border-[#211D2C] rounded-xl sticky top-0 backdrop-blur-md z-10 shadow-lg">
-        <button
-          type="button"
-          onClick={() => setSubTab('maps')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono uppercase tracking-wider font-black transition-all rounded-lg ${
-            subTab === 'maps' ? 'bg-[#7C5CFF] text-white shadow-[0_0_10px_rgba(124,92,255,0.3)]' : 'text-[#EDEAF6]/40'
-          }`}
-        >
-          <MapPin size={12} /> Radar Peta
-        </button>
-        <button
-          type="button"
-          onClick={() => setSubTab('codex')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono uppercase tracking-wider font-black transition-all rounded-lg ${
-            subTab === 'codex' ? 'bg-[#7C5CFF] text-white shadow-[0_0_10px_rgba(124,92,255,0.3)]' : 'text-[#EDEAF6]/40'
-          }`}
-        >
-          <BookOpen size={12} /> Codex Data
-        </button>
-        <button
-          type="button"
-          onClick={() => setSubTab('matrix')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono uppercase tracking-wider font-black transition-all rounded-lg ${
-            subTab === 'matrix' ? 'bg-[#7C5CFF] text-white shadow-[0_0_10px_rgba(124,92,255,0.3)]' : 'text-[#EDEAF6]/40'
-          }`}
-        >
-          <Calculator size={12} /> Kalkulator
-        </button>
+        <button type="button" onClick={() => setSubTab('maps')} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono uppercase tracking-wider font-black transition-all rounded-lg ${subTab === 'maps' ? 'bg-[#7C5CFF] text-white' : 'text-[#EDEAF6]/40'}`}><MapPin size={12} /> Radar Peta</button>
+        <button type="button" onClick={() => setSubTab('codex')} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono uppercase tracking-wider font-black transition-all rounded-lg ${subTab === 'codex' ? 'bg-[#7C5CFF] text-white' : 'text-[#EDEAF6]/40'}`}><BookOpen size={12} /> Codex Data</button>
+        <button type="button" onClick={() => setSubTab('matrix')} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono uppercase tracking-wider font-black transition-all rounded-lg ${subTab === 'matrix' ? 'bg-[#7C5CFF] text-white' : 'text-[#EDEAF6]/40'}`}><Calculator size={12} /> Kalkulator</button>
       </div>
 
-      {/* ==================== SUB-TAB 1: GOOGLE LIVE MAPS ENGINE ==================== */}
       {subTab === 'maps' && (
         <div className="flex flex-col gap-3">
           <div className="flex gap-2 bg-[#0A0A0E] p-1 border border-[#211D2C] rounded-lg">
-            <button
-              type="button"
-              onClick={() => setMapCategory('gym')}
-              className={`flex-1 py-2 text-[10px] font-mono uppercase font-bold transition-all ${
-                mapCategory === 'gym' ? 'text-white border-b-2 border-[#7C5CFF]' : 'text-[#EDEAF6]/30'
-              }`}
-            >
-              Cari Gym Terdekat
-            </button>
-            <button
-              type="button"
-              onClick={() => setMapCategory('food')}
-              className={`flex-1 py-2 text-[10px] font-mono uppercase font-bold transition-all ${
-                mapCategory === 'food' ? 'text-white border-b-2 border-[#7C5CFF]' : 'text-[#EDEAF6]/30'
-              }`}
-            >
-              Cari Kuliner Sehat
-            </button>
+            <button type="button" onClick={() => setMapCategory('gym')} className={`flex-1 py-2 text-[10px] font-mono uppercase font-bold transition-all ${mapCategory === 'gym' ? 'text-white border-b-2 border-[#7C5CFF]' : 'text-[#EDEAF6]/30'}`}>Cari Gym Terdekat</button>
+            <button type="button" onClick={() => setMapCategory('food')} className={`flex-1 py-2 text-[10px] font-mono uppercase font-bold transition-all ${mapCategory === 'food' ? 'text-white border-b-2 border-[#7C5CFF]' : 'text-[#EDEAF6]/30'}`}>Cari Kuliner Sehat</button>
           </div>
-
-          <div className="w-full h-[360px] bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative shadow-[0_0_25px_rgba(124,92,255,0.03)]">
-            {geoLoading && (
-              <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center font-mono text-xs text-[#EDEAF6]/60 gap-2">
-                <Loader2 className="animate-spin text-[#7C5CFF]" size={20} />
-                <span>Menghubungkan Satelit Google Maps...</span>
-              </div>
-            )}
-            {userCoords && (
-              <iframe
-                title="Google Live Engine"
-                className="w-full h-full border-0 invert-[0.91] hue-rotate-[180deg] contrast-[1.2] sat-[0.85]"
-                src={getGoogleMapsEmbedUrl()}
-                allowFullScreen=""
-                allow="geolocation"
-                loading="lazy"
-              />
-            )}
+          <div className="w-full h-[360px] bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative">
+            {geoLoading && <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center font-mono text-xs text-[#EDEAF6]/60"><Loader2 className="animate-spin text-[#7C5CFF]" size={20} /></div>}
+            {userCoords && <iframe title="Google Live" className="w-full h-full border-0 invert-[0.91] hue-rotate-[180deg] contrast-[1.2] sat-[0.85]" src={`https://maps.google.com/maps?q=${mapCategory === 'gym' ? 'gym+fitness' : 'makanan+sehat+restoran'}&sll=${userCoords.lat},${userCoords.lon}&z=14&output=embed`} loading="lazy" />}
           </div>
-          
-          <button
-            type="button"
-            onClick={handleOpenGoogleMapsApp}
-            className="w-full py-3 bg-[#1A1625] border border-[#2B243C] rounded-lg font-mono text-[10px] uppercase font-bold text-[#7C5CFF] tracking-wider text-center active:scale-95 transition-all shadow-md"
-          >
-            Buka Rute Di Aplikasi Google Maps HP ↗
-          </button>
         </div>
       )}
 
-      {/* ==================== SUB-TAB 2: CODEX ENSIKLOPEDIA BERGAMBAR PREMIUM ==================== */}
       {subTab === 'codex' && (
         <div className="flex flex-col gap-6">
           <div>
@@ -247,27 +156,15 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <div className="space-y-3">
               {GYM_EQUIPMENT.map((item, idx) => (
                 <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden flex flex-col gap-3 p-3 shadow-md">
-                  <img src={item.img} alt={item.name} className="w-full h-32 object-cover rounded-lg bg-[#0A0A0E] border border-[#211D2C]" />
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                      <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
-                      <p className="text-[10px] text-[#EDEAF6]/50 mt-1 leading-relaxed">{item.function}</p>
-                    </div>
+                  <div className="w-full aspect-square overflow-hidden rounded-lg border border-[#211D2C]">
+                    <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
+                    <p className="text-[10px] text-[#EDEAF6]/50 mt-1 leading-relaxed">{item.function}</p>
                     <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#211D2C]/60 pt-2 text-[9px] font-mono">
-                      <div className="flex items-start gap-1">
-                        <ShieldCheck size={11} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <span className="text-emerald-400 font-bold block">PEMULA:</span>
-                          <span className="text-[#EDEAF6]/60">{item.beginner}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-1">
-                        <Flame size={11} className="text-purple-400 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <span className="text-purple-400 font-bold block">SUHU (PRO):</span>
-                          <span className="text-[#EDEAF6]/60">{item.pro}</span>
-                        </div>
-                      </div>
+                      <div><span className="text-emerald-400 font-bold block">🟢 PEMULA:</span><span className="text-[#EDEAF6]/60">{item.beginner}</span></div>
+                      <div><span className="text-purple-400 font-bold block">🔥 PRO:</span><span className="text-[#EDEAF6]/60">{item.pro}</span></div>
                     </div>
                   </div>
                 </div>
@@ -283,17 +180,26 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <div className="space-y-3">
               {HEALTHY_FOOD.map((item, idx) => (
                 <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden flex flex-col gap-3 p-3 shadow-md">
-                  <img src={item.img} alt={item.name} className="w-full h-32 object-cover rounded-lg bg-[#0A0A0E] border border-[#211D2C]" />
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <div className="w-full aspect-square overflow-hidden rounded-lg border border-[#211D2C]">
+                    <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
                     <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
                     <div className="mt-3 space-y-2 text-[10px]">
-                      <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg">
-                        <span className="font-mono text-[9px] text-amber-500 font-bold block mb-0.5">🪙 MENU LOW BUDGET:</span>
-                        <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed">{item.lowBudget}</p>
+                      {/* 🎯 UBAH EMOJI MENTAH MENJADI SVGS UI DESIGN KEREN */}
+                      <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
+                        <Scale size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-mono text-[9px] text-amber-500 font-bold block">MENU LOW BUDGET</span>
+                          <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed">{item.lowBudget}</p>
+                        </div>
                       </div>
-                      <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg">
-                        <span className="font-mono text-[9px] text-violet-400 font-bold block mb-0.5">👑 MENU SULTAN MINDSET:</span>
-                        <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed">{item.richBudget}</p>
+                      <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
+                        <Flame size={14} className="text-violet-400 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-mono text-[9px] text-violet-400 font-bold block">MENU SULTAN MINDSET</span>
+                          <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed">{item.richBudget}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -304,190 +210,100 @@ export default function FitnessFoodMap({ onBackToHome }) {
         </div>
       )}
 
-      {/* ==================== SUB-TAB 3: KALKULATOR TOTAL MULTI-FUNGSI ==================== */}
       {subTab === 'matrix' && (
         <div className="flex flex-col gap-4">
-          
-          {/* BAGIAN 1: KALKULATOR KHUSUS TOTAL NUTRISI GRAM MAKANAN LOKAL */}
           <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3">
             <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
               <Scale size={14} className="text-[#7C5CFF]" />
-              <div>
-                <h3 className="font-mono text-xs uppercase font-black text-white tracking-wider">Kalkulator Nutrisi Makanan</h3>
-                <p className="text-[9px] text-[#EDEAF6]/40 font-mono">Hitung protein & energi per gram makanan secara presisi</p>
-              </div>
+              <h3 className="font-mono text-xs uppercase font-black text-white tracking-wider">Kalkulator Nutrisi Makanan</h3>
             </div>
 
             <form onSubmit={handleFoodCalculate} className="space-y-3 text-xs font-mono">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 relative">
                 <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Pilih Jenis Pangan:</label>
-                <select
-                  value={selectedFoodId}
-                  onChange={(e) => setSelectedFoodId(e.target.value)}
-                  className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono outline-none text-xs appearance-none focus:border-[#7C5CFF]"
+                
+                {/* 🎯 MODAL SELECT KUSTOM ELEGAN RPG UNTUK DROPDOWN */}
+                <button
+                  type="button"
+                  onClick={() => setShowFoodSelector(true)}
+                  className="w-full bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF]"
                 >
-                  {FOOD_NUTRITION_BASE.map(food => (
-                    <option key={food.id} value={food.id}>{food.name}</option>
-                  ))}
-                </select>
+                  <span>{currentFoodItem ? currentFoodItem.name : 'Pilih Makanan...'}</span>
+                  <ChevronDown size={14} className="text-[#7C5CFF]" />
+                </button>
+
+                {showFoodSelector && (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 max-h-[70vh]">
+                      <span className="font-mono text-xs uppercase font-black text-white border-b border-[#211D2C] pb-2">Database Nutrisi Pangan</span>
+                      <div className="overflow-y-auto flex flex-col gap-1 pr-1 custom-scroll">
+                        {FOOD_NUTRITION_BASE.map(food => (
+                          <button
+                            key={food.id}
+                            type="button"
+                            onClick={() => { setSelectedFoodId(food.id); setShowFoodSelector(false); }}
+                            className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${selectedFoodId === food.id ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}
+                          >
+                            {food.name}
+                          </button>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => setShowFoodSelector(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1">BATAL</button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Berat Makanan (Gram):</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5000"
-                  required
-                  value={foodWeight}
-                  onChange={(e) => setFoodWeight(e.target.value)}
-                  className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono outline-none focus:border-[#7C5CFF]"
-                  placeholder="Masukkan jumlah gram..."
-                />
+                <input type="number" min="1" max="5000" required value={foodWeight} onChange={(e) => setFoodWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono outline-none focus:border-[#7C5CFF]" />
               </div>
-
-              <button
-                type="submit"
-                className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg tracking-wider active:scale-95 transition-all text-center"
-              >
-                Hitung Nutrisi Makanan
-              </button>
+              <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Nutrisi</button>
             </form>
 
             {foodResult && (
               <div className="mt-2 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2 font-mono text-[10px]">
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
-                  <span className="text-[#EDEAF6]/50">Porsi Timbangan:</span>
-                  <span className="text-white font-black">{foodResult.weight} Gram</span>
-                </div>
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
-                  <span className="text-[#EDEAF6]/50">Total Kandungan Energi:</span>
-                  <span className="text-amber-400 font-black">{foodResult.totalCalories} kkal</span>
-                </div>
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
-                  <span className="text-[#EDEAF6]/50">Total Asupan Protein:</span>
-                  <span className="text-emerald-400 font-black">{foodResult.totalProtein} gram</span>
-                </div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Porsi Timbangan:</span><span className="text-white font-black">{foodResult.weight} Gram</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Total Kandungan Energi:</span><span className="text-amber-400 font-black">{foodResult.totalCalories} kkal</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Total Asupan Protein:</span><span className="text-emerald-400 font-black">{foodResult.totalProtein} gram</span></div>
               </div>
             )}
           </div>
 
-          {/* BAGIAN 2: KALKULATOR ENERGI HARIAN METRIK INDIVIDU */}
           <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3">
-            <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
-              <Calculator size={14} className="text-[#7C5CFF]" />
-              <div>
-                <h3 className="font-mono text-xs uppercase font-black text-white tracking-wider">Kalkulator Kalori Tubuh</h3>
-                <p className="text-[9px] text-[#EDEAF6]/40 font-mono">Algoritma Kebugaran Mifflin-St Jeor [Metrik]</p>
-              </div>
-            </div>
-
+            <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2"><Calculator size={14} className="text-[#7C5CFF]" /><h3 className="font-mono text-xs uppercase font-black text-white tracking-wider">Kalkulator Kalori Tubuh</h3></div>
             <form onSubmit={calculateCalories} className="space-y-3.5 text-xs font-mono">
-              <div className="flex flex-col gap-1">
-                <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Usia (15 - 80 tahun):</label>
-                <input 
-                  type="number" min="15" max="80" required value={age} 
-                  onChange={(e) => setAge(e.target.value)} 
-                  className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" 
-                />
-              </div>
-
+              <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase">Usia (15 - 80 tahun):</label><input type="number" min="15" max="80" required value={age} onChange={(e) => setAge(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
               <div className="flex flex-col gap-1">
                 <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Jenis Kelamin:</label>
                 <div className="flex gap-4 p-1 text-[10px]">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="gender" value="pria" checked={gender === 'pria'} onChange={() => setGender('pria')} className="accent-[#7C5CFF]" />
-                    <span>Pria</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="gender" value="perempuan" checked={gender === 'perempuan'} onChange={() => setGender('perempuan')} className="accent-[#7C5CFF]" />
-                    <span>Perempuan</span>
-                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" value="pria" checked={gender === 'pria'} onChange={() => setGender('pria')} className="accent-[#7C5CFF]" /><span>Pria</span></label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" value="perempuan" checked={gender === 'perempuan'} onChange={() => setGender('perempuan')} className="accent-[#7C5CFF]" /><span>Perempuan</span></label>
                 </div>
               </div>
-
+              <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase">Tinggi Badan (cm):</label><input type="number" min="50" max="250" required value={height} onChange={(e) => setHeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
+              <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase">Berat Badan (kg):</label><input type="number" min="20" max="300" required value={weight} onChange={(e) => setWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
               <div className="flex flex-col gap-1">
-                <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Tinggi Badan (cm):</label>
-                <input 
-                  type="number" min="50" max="250" required value={height} 
-                  onChange={(e) => setHeight(e.target.value)} 
-                  className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" 
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Berat Badan (kg):</label>
-                <input 
-                  type="number" min="20" max="300" required value={weight} 
-                  onChange={(e) => setWeight(e.target.value)} 
-                  className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" 
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Tingkat Aktivitas Fisik:</label>
+                <label className="text-[#EDEAF6]/60 text-[9px] uppercase">Tingkat Aktivitas:</label>
                 <div className="bg-black border border-[#211D2C] rounded-lg p-2.5 space-y-2 text-[9px]">
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="radio" name="act" value="1.0" checked={activity === 1.0} onChange={() => setActivity(1.0)} className="mt-0.5 accent-[#7C5CFF]" />
-                    <span>Tingkat Metabolisme Basal (BMR)</span>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="radio" name="act" value="1.2" checked={activity === 1.2} onChange={() => setActivity(1.2)} className="mt-0.5 accent-[#7C5CFF]" />
-                    <span>Sedikit atau tidak olahraga sama sekali</span>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="radio" name="act" value="1.375" checked={activity === 1.375} onChange={() => setActivity(1.375)} className="mt-0.5 accent-[#7C5CFF]" />
-                    <span>Berolahraga Ringan (1-3 kali seminggu)</span>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="radio" name="act" value="1.465" checked={activity === 1.465} onChange={() => setActivity(1.465)} className="mt-0.5 accent-[#7C5CFF]" />
-                    <span>Berolahraga Sedang (4-5 kali seminggu)</span>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="radio" name="act" value="1.725" checked={activity === 1.725} onChange={() => setActivity(1.725)} className="mt-0.5 accent-[#7C5CFF]" />
-                    <span>Olahraga harian / intensif (3-4 kali seminggu)</span>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="radio" name="act" value="1.9" checked={activity === 1.9} onChange={() => setActivity(1.9)} className="mt-0.5 accent-[#7C5CFF]" />
-                    <span>Latihan sangat intensif (6-7 kali seminggu)</span>
-                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.0" checked={activity === 1.0} onChange={() => setActivity(1.0)} className="mt-0.5 accent-[#7C5CFF]" /><span>Tingkat Metabolisme Basal (BMR)</span></label>
+                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.2" checked={activity === 1.2} onChange={() => setActivity(1.2)} className="mt-0.5 accent-[#7C5CFF]" /><span>Sedikit / tidak olahraga</span></label>
+                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.375" checked={activity === 1.375} onChange={() => setActivity(1.375)} className="mt-0.5 accent-[#7C5CFF]" /><span>Olahraga Ringan (1-3x seminggu)</span></label>
+                  <label className="flex items-start gap-2 cursor-pointer"><input type="radio" name="act" value="1.465" checked={activity === 1.465} onChange={() => setActivity(1.465)} className="mt-0.5 accent-[#7C5CFF]" /><span>Olahraga Sedang (4-5x seminggu)</span></label>
                 </div>
               </div>
-
-              <button 
-                type="submit" 
-                className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg tracking-wider active:scale-95 transition-all text-center"
-              >
-                Hitung Energi Harian
-              </button>
+              <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Kalori Tubuh</button>
             </form>
 
             {calResult && (
               <div className="mt-3 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2.5 font-mono text-[10px]">
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
-                  <span className="text-[#EDEAF6]/40">Metabolisme Basal (BMR):</span>
-                  <span className="text-[#7C5CFF] font-black">{calResult.bmr} kkal/hari</span>
-                </div>
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
-                  <span className="text-[#EDEAF6]/40">Kebutuhan Maintenance (TDEE):</span>
-                  <span className="text-white font-black">{calResult.maintenance} kkal/hari</span>
-                </div>
-                <div className="flex justify-between items-center bg-emerald-950/30 p-2 border border-emerald-900/40 rounded-lg">
-                  <span className="text-emerald-400">Turun Berat Badan (-500 kkal):</span>
-                  <span className="text-emerald-400 font-black">{calResult.loss} kkal/hari</span>
-                </div>
-                <div className="flex justify-between items-center bg-amber-950/30 p-2 border border-amber-900/40 rounded-lg">
-                  <span className="text-amber-400">Turun Berat Ekstrim (-1000 kkal):</span>
-                  <span className="text-amber-400 font-black">{calResult.extremeLoss} kkal/hari</span>
-                </div>
-                <div className="flex justify-between items-center bg-purple-950/30 p-2 border border-purple-900/40 rounded-lg">
-                  <span className="text-purple-400">Naik Berat Badan (+500 kkal):</span>
-                  <span className="text-purple-400 font-black">{calResult.gain} kkal/hari</span>
-                </div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Metabolisme Basal (BMR):</span><span className="text-[#7C5CFF] font-black">{calResult.bmr} kkal</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Kebutuhan TDEE:</span><span className="text-white font-black">{calResult.maintenance} kkal</span></div>
+                <div className="flex justify-between items-center bg-emerald-950/30 p-2 border border-emerald-900/40 rounded-lg"><span className="text-emerald-400">Turun Berat Badan:</span><span className="text-emerald-400 font-black">{calResult.loss} kkal</span></div>
+                <div className="flex justify-between items-center bg-purple-950/30 p-2 border border-purple-900/40 rounded-lg"><span className="text-purple-400">Naik Berat Badan:</span><span className="text-purple-400 font-black">{calResult.gain} kkal</span></div>
               </div>
             )}
           </div>
-
         </div>
       )}
     </div>
