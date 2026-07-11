@@ -13,7 +13,7 @@ export default function FitnessFoodMap() {
   
   const mapRef = useRef(null); 
   const mapInstance = useRef(null); 
-  const markersLayer = useRef(null);
+  const drawLayer = useRef(null); // 🎯 Layer tunggal untuk semua gambar (User, Radar, dan Marker)
 
   // Efek 1: Inisialisasi Deteksi GPS Perangkat Mobile
   useEffect(() => {
@@ -29,38 +29,28 @@ export default function FitnessFoodMap() {
         { enableHighAccuracy: true, timeout: 15000 }
       );
     } else {
-      setStatusMsg('Browser HP lu purba, tidak mendukung deteksi lokasi.');
+      setStatusMsg('Browser HP lu tidak mendukung deteksi lokasi.');
     }
   }, []);
 
-  // Efek 2: Render Peta Inti Leaflet secara Native
+  // Efek 2: Inisialisasi Peta Dasar (Hanya Sekali di Awal)
   useEffect(() => {
     if (!userCoords || !mapRef.current) return;
 
     if (!mapInstance.current) {
-      // Setup dasar peta dengan koordinat user
-      mapInstance.current = L.map(mapRef.current, { zoomControl: false }).setView([userCoords.lat, userCoords.lon], 13);
+      // Buka peta awal dengan zoom medium
+      mapInstance.current = L.map(mapRef.current, { zoomControl: false }).setView([userCoords.lat, userCoords.lon], 12);
       
-      // Inject tile layer gratisan OpenStreetMap dengan filter dark-mode tiruan via CSS
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        attribution: '© OpenStreetMap contributors © CARTO'
       }).addTo(mapInstance.current);
 
-      // Beri tanda pin biru di posisi asli user sekarang
-      L.circle([userCoords.lat, userCoords.lon], {
-        radius: 200,
-        color: '#7C5CFF',
-        fillColor: '#7C5CFF',
-        fillOpacity: 0.4
-      }).addTo(mapInstance.current).bindPopup('Posisi Lu Sekarang');
-
-      markersLayer.current = L.layerGroup().addTo(mapInstance.current);
-    } else {
-      mapInstance.current.setView([userCoords.lat, userCoords.lon], 12);
+      // Buat wadah layer gambar dinamis
+      drawLayer.current = L.layerGroup().addTo(mapInstance.current);
     }
   }, [userCoords]);
 
-  // Efek 3: Memicu Pemindaian Data saat Kategori Diubah
+  // Efek 3: Memicu Pemindaian Data saat Kategori atau Lokasi Siap
   useEffect(() => {
     if (userCoords) {
       triggerSearch();
@@ -68,38 +58,76 @@ export default function FitnessFoodMap() {
   }, [category, userCoords]);
 
   const triggerSearch = async () => {
+    if (!mapInstance.current || !drawLayer.current) return;
+
     setLoading(true);
     setStatusMsg('Memindai jaringan data regional (Auto-expanding)...');
     
-    if (markersLayer.current) markersLayer.current.clearLayers();
+    // 🎯 BERSIHKAN TOTAL: Hapus paksa semua gambar/radar/marker lama dari peta
+    drawLayer.current.clearLayers();
 
     const results = await fetchLocationsWithAutoExpand(userCoords.lat, userCoords.lon, category);
     setPlaces(results);
     setLoading(false);
 
+    // 1. Gambar ulang marker kecil posisi lu sekarang
+    L.circleMarker([userCoords.lat, userCoords.lon], {
+      radius: 6,
+      color: '#ffffff',
+      fillColor: '#7C5CFF',
+      fillOpacity: 1,
+      weight: 2
+    }).addTo(drawLayer.current).bindPopup('Posisi Lu Sekarang');
+
+    // 2. KONDISI JIKA KOSONG (Gak ketemu data sampai radius maksimal 50 KM)
     if (results.length === 0) {
       setStatusMsg('Zonasi kosong! Tidak ada lokasi terdata dalam radius jangkauan 50 KM.');
+      
+      // Gambar lingkaran radar raksasa 50 KM beneran (Pake garis putus-putus biar keren)
+      L.circle([userCoords.lat, userCoords.lon], {
+        radius: 50000, // 50.000 meter = 50 KM
+        color: '#7C5CFF',
+        fillColor: '#7C5CFF',
+        fillOpacity: 0.06,
+        weight: 1.5,
+        dashArray: '6, 6'
+      }).addTo(drawLayer.current);
+
+      // Paksa kamera mundur total (Zoom 9) biar lingkaran 50KM kelihatan membentang luas
+      mapInstance.current.setView([userCoords.lat, userCoords.lon], 9);
       return;
     }
 
+    // 3. KONDISI JIKA KETEMU DATA LOKASI
     setStatusMsg('');
+    
+    // Ambil jangkauan radius terjauh dari data yang berhasil didapatkan (10, 25, atau 50 KM)
+    const activeRadiusMeters = results[results.length - 1].currentRadiusKM * 1000;
 
-    // Plotting titik pin lokasi baru ke dalam peta mini Leaflet
+    // Gambar lingkaran radar aktif sesuai dengan jangkauan radius ekspansinya
+    L.circle([userCoords.lat, userCoords.lon], {
+      radius: activeRadiusMeters,
+      color: '#7C5CFF',
+      fillColor: '#7C5CFF',
+      fillOpacity: 0.09,
+      weight: 1.5
+    }).addTo(drawLayer.current);
+
+    // Tandai semua pin lokasi gym / makanan sehat yang berhasil ditemukan
     const bounds = [[userCoords.lat, userCoords.lon]];
     results.forEach(p => {
       bounds.push([p.lat, p.lon]);
       L.marker([p.lat, p.lon])
-        .addTo(markersLayer.current)
+        .addTo(drawLayer.current)
         .bindPopup(`<b style="color:#000">${p.name}</b><br/><span style="color:#555;font-size:11px">${p.address}</span>`);
     });
 
-    // Posisikan kamera peta agar mencakup semua pin secara otomatis
-    if (mapInstance.current && results.length > 0) {
-      mapInstance.current.fitBounds(bounds, { padding: [30, 30] });
-    }
+    // Kamera otomatis menyesuaikan frame agar semua titik lokasi masuk ke dalam layar HP
+    mapInstance.current.fitBounds(bounds, { padding: [40, 40] });
   };
 
   const handleLaunchGoogleMaps = (destLat, destLon) => {
+    // FIX: Gunakan format tautan intent arah navigasi resmi Google Maps universal
     const intentUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLon}&travelmode=driving`;
     window.open(intentUrl, '_blank');
   };
@@ -139,7 +167,7 @@ export default function FitnessFoodMap() {
         )}
       </div>
 
-      {/* STATUS NOTIFIKASI NOTIFIKASI */}
+      {/* STATUS NOTIFIKASI REGIONAL */}
       {statusMsg && (
         <div className="p-3 bg-[#100E16] border border-[#211D2C] rounded-lg text-xs font-mono text-[#EDEAF6]/60 flex items-center gap-2">
           <AlertCircle size={14} className="text-[#7C5CFF]" />
