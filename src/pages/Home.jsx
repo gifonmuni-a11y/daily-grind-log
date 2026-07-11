@@ -90,10 +90,8 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  // STATE HALAMAN UTAMA DOCK BAR
+  // STATE MANAGEMENT HALAMAN UTAMA DOCK BAR
   const [activeTab, setActiveTab] = useState('grind') 
-  
-  // STATE KONTROL POPUP LOGOUT AMAN
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const prevLevelRef = useRef(null)
@@ -352,8 +350,8 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* HALAMAN 2: HUB DATA FITNESS & FOOD */}
-        {activeTab === 'radar' && <FitnessFoodMap />}
+        {/* HALAMAN 2: HUB DATA FITNESS & FOOD DENGAN INJEKSI ACTION CALLBACK BACK TO GRIND */}
+        {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
 
       </div>
 
