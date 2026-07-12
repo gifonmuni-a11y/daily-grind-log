@@ -6,7 +6,7 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   const [loading, setLoading] = useState(false)
   const [dayNumber, setDayNumber] = useState(maxDayNumber + 1)
   
-  // 🎯 Timezone aman dengan en-CA (Format: YYYY-MM-DD)
+  // Timezone aman dengan format en-CA (YYYY-MM-DD)
   const [entryDate, setEntryDate] = useState(() => new Date().toLocaleDateString('en-CA'))
 
   const [title, setTitle] = useState('')
@@ -20,10 +20,11 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
 
   const [showCategorySelector, setShowCategorySelector] = useState(false)
   
-  // 🎯 STATE UNTUK CUSTOM RPG SYSTEM CALENDAR PICKER
+  // STATE CUSTOM RPG SYSTEM CALENDAR
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear())
   const [calendarMonth, setCalendarMonth] = useState(() => new Date().getMonth()) // 0-11
+  const [calendarViewMode, setCalendarViewMode] = useState('days') // 'days' atau 'years'
 
   const categories = [
     'Push', 'Pull', 'Legs', 'Upper Body', 'Lower Body', 'Full Body',
@@ -38,6 +39,9 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
+
+  // List daftar tahun untuk selector taktis RPG
+  const yearOptions = Array.from({ length: 16 }, (_, i) => 2020 + i);
 
   useEffect(() => {
     if (editEntry) {
@@ -57,7 +61,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
         setCustomCategory(editEntry.category || '')
       }
 
-      // Sync data tanggal edit ke state kalender kustom
       if (editEntry.entry_date) {
         const parsedDate = new Date(editEntry.entry_date);
         if (!isNaN(parsedDate.getTime())) {
@@ -68,24 +71,20 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     }
   }, [editEntry])
 
-  // Helper formatting display tanggal di form utama modal
   const getDisplayDateLabel = (dateStr) => {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return 'Pilih Tanggal';
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  // Logika Generator Grid Hari Kalok RPG
   const generateCalendarDays = () => {
-    const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay(); // Hari pertama jatuh di hari apa (0 = Minggu)
-    const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate(); // Total hari bulan ini
+    const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+    const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
     
     const dayCells = [];
-    // Isi cell kosong untuk menyelaraskan indeks hari pertama awal bulan
     for (let i = 0; i < firstDayIndex; i++) {
       dayCells.push(null);
     }
-    // Isi angka tanggal
     for (let day = 1; day <= totalDays; day++) {
       dayCells.push(day);
     }
@@ -94,7 +93,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
 
   const handleSelectDay = (day) => {
     if (!day) return;
-    // Format pad string biar selalu YYYY-MM-DD aman di database Supabase
     const mm = String(calendarMonth + 1).padStart(2, '0');
     const dd = String(day).padStart(2, '0');
     setEntryDate(`${calendarYear}-${mm}-${dd}`);
@@ -184,14 +182,14 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   return (
     <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
       
-      {/* CONTAINER MODAL UTAMA DENGAN FRAME SIKU UNGU */}
+      {/* CONTIANER MODAL UTAMA DENGAN ADJUSTMENT BINGKAI SIKU UNGU PRESISI */}
       <div className="w-full max-w-md bg-[#100E16] border border-[#211D2C] p-6 rounded-2xl flex flex-col gap-5 max-h-[88vh] overflow-y-auto relative border-box [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         
         {/* SIKU SYSTEM UNGU PRESISI DI 4 SUDUT CONTAINER UTAMA MODAL */}
-        <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-45" />
-        <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-45" />
-        <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-45" />
-        <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-45" />
+        <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-45 rounded-tl-2xl" />
+        <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-45 rounded-tr-2xl" />
+        <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-45 rounded-bl-2xl" />
+        <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-45 rounded-br-2xl" />
 
         <div className="flex justify-between items-center border-b border-[#211D2C]/60 pb-2">
           <h2 className="text-white font-display font-black text-sm uppercase tracking-wider">{editEntry ? 'EDIT SESI' : 'LOG SESI BARU'}</h2>
@@ -205,12 +203,12 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               <input type="number" value={dayNumber} onChange={(e) => setDayNumber(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-lg outline-none focus:border-[#7C5CFF] font-mono" required />
             </div>
             
-            {/* 🎯 TANGGAL FIELD: Menggunakan Custom Button bergaya RPG Interface */}
+            {/* TANGGAL INTERFACE FIELD BUTTON */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">TANGGAL</label>
               <button
                 type="button"
-                onClick={() => setShowDatePicker(true)}
+                onClick={() => { setCalendarViewMode('days'); setShowDatePicker(true); }}
                 className="w-full bg-black border border-[#211D2C] p-2.5 text-white rounded-lg font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF] outline-none hover:bg-black/80"
               >
                 <span className="truncate">{getDisplayDateLabel(entryDate)}</span>
@@ -219,55 +217,116 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
             </div>
           </div>
 
-          {/* 🎯 MODAL POPUP: CUSTOM SYSTEM RPG CALENDAR SELECTOR OVERLAY */}
+          {/* 🎯 CUSTOM OVERLAY KALENDER RPG SYSTEM DENGAN SELECTOR TAHUN + PENANDA HIJAU HARI INI */}
           {showDatePicker && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 relative shadow-2xl">
-                {/* SIKU UNGU DI MODAL KALENDER UTAMA */}
-                <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-                <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-                <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in zoom-in-95 duration-100">
+              <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 relative shadow-2xl">
+                
+                {/* SIKU UNGU MODAL KALENDER UTAMA */}
+                <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40 rounded-tl-xl" />
+                <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40 rounded-tr-xl" />
+                <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40 rounded-bl-xl" />
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40 rounded-br-xl" />
 
-                {/* Header Navigasi Bulan / Tahun */}
-                <div className="flex justify-between items-center border-b border-[#211D2C] pb-2">
-                  <button type="button" onClick={() => changeMonth('prev')} className="p-1 hover:bg-[#211D2C] rounded text-[#7C5CFF] transition-colors"><ChevronLeft size={16} /></button>
-                  <span className="font-display font-black text-xs uppercase tracking-wider text-white">
-                    {indonesianMonths[calendarMonth]} {calendarYear}
-                  </span>
-                  <button type="button" onClick={() => changeMonth('next')} className="p-1 hover:bg-[#211D2C] rounded text-[#7C5CFF] transition-colors"><ChevronRight size={16} /></button>
+                {/* HEADER NAVIGASI / SWITCHER BULAN & EDIT TAHUN INTERAKTIF */}
+                <div className="flex justify-between items-center border-b border-[#211D2C] pb-2 text-xs">
+                  <button type="button" onClick={() => { if(calendarViewMode==='years') setCalendarViewMode('days'); else changeMonth('prev'); }} className="p-1.5 hover:bg-[#211D2C] rounded text-[#7C5CFF] transition-colors"><ChevronLeft size={16} /></button>
+                  
+                  <div className="flex gap-1.5 font-display font-black uppercase tracking-wider items-center">
+                    <button 
+                      type="button" 
+                      onClick={() => setCalendarViewMode('days')} 
+                      className={`hover:text-[#7C5CFF] transition-colors ${calendarViewMode === 'days' ? 'text-white' : 'text-[#8B8696]'}`}
+                    >
+                      {indonesianMonths[calendarMonth]}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setCalendarViewMode(calendarViewMode === 'years' ? 'days' : 'years')} 
+                      className={`px-1.5 py-0.5 rounded border border-[#211D2C] bg-black/60 flex items-center gap-1 hover:border-[#7C5CFF] text-[#7C5CFF] transition-all font-mono`}
+                    >
+                      <span>{calendarYear}</span>
+                      <ChevronDown size={10} className="mt-0.5" />
+                    </button>
+                  </div>
+
+                  <button type="button" onClick={() => { if(calendarViewMode==='years') setCalendarViewMode('days'); else changeMonth('next'); }} className="p-1.5 hover:bg-[#211D2C] rounded text-[#7C5CFF] transition-colors"><ChevronRight size={16} /></button>
                 </div>
 
-                {/* Nama Hari Singkat Grid Header */}
-                <div className="grid grid-cols-7 text-center font-mono text-[9px] font-bold text-[#8B8696] mb-1">
-                  {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map(dayName => (
-                    <span key={dayName}>{dayName}</span>
-                  ))}
-                </div>
+                {/* 🎯 KONDISI 1: TAMPILAN GRID EDIT TAHUN ALA RPG INTERFACE */}
+                {calendarViewMode === 'years' ? (
+                  <div className="flex flex-col gap-2">
+                    <span className="font-mono text-[9px] uppercase text-[#8B8696] tracking-widest pl-1 block">Pilih Tahun Ekspedisi:</span>
+                    <div className="grid grid-cols-4 gap-1.5 p-1 max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                      {yearOptions.map(yr => (
+                        <button
+                          key={yr}
+                          type="button"
+                          onClick={() => { setCalendarYear(yr); setCalendarViewMode('days'); }}
+                          className={`py-2 rounded-lg font-mono text-xs border text-center transition-all ${
+                            calendarYear === yr 
+                              ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white font-bold shadow-[0_0_8px_rgba(124,92,255,0.3)]' 
+                              : 'bg-black/40 border-[#211D2C] text-[#EDEAF6]/60 hover:text-white hover:border-[#7C5CFF]'
+                          }`}
+                        >
+                          {yr}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* 🎯 KONDISI 2: TAMPILAN GRID UTAMA HARI KALENDER */
+                  <>
+                    {/* Header Grid Hari */}
+                    <div className="grid grid-cols-7 text-center font-mono text-[9px] font-bold text-[#8B8696] mb-1">
+                      {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map(dayName => (
+                        <span key={dayName}>{dayName}</span>
+                      ))}
+                    </div>
 
-                {/* Grid Angka Hari Tanggal */}
-                <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
-                  {generateCalendarDays().map((day, idx) => {
-                    const isSelected = day && entryDate === `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        disabled={!day}
-                        onClick={() => handleSelectDay(day)}
-                        className={`py-1.5 rounded text-center transition-all ${
-                          !day ? 'bg-transparent cursor-default' :
-                          isSelected ? 'bg-[#7C5CFF] text-white font-bold shadow-[0_0_8px_rgba(124,92,255,0.4)]' :
-                          'text-[#EDEAF6] hover:bg-[#211D2C] hover:text-[#7C5CFF]'
-                        }`}
-                      >
-                        {day || ''}
-                      </button>
-                    );
-                  })}
-                </div>
+                    {/* Grid Angka Hari Tanggal */}
+                    <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
+                      {generateCalendarDays().map((day, idx) => {
+                        if (!day) return <div key={idx} className="bg-transparent" />;
 
-                <button type="button" onClick={() => setShowDatePicker(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1 uppercase tracking-wider font-bold">Tutup</button>
+                        const mmStr = String(calendarMonth + 1).padStart(2, '0');
+                        const ddStr = String(day).padStart(2, '0');
+                        const cellDateStr = `${calendarYear}-${mmStr}-${ddStr}`;
+                        
+                        // Validasi Status Tanggal
+                        const isSelected = entryDate === cellDateStr;
+                        const isToday = new Date().toLocaleDateString('en-CA') === cellDateStr;
+
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSelectDay(day)}
+                            className={`py-1.5 rounded-lg text-center transition-all relative font-mono text-xs ${
+                              isSelected 
+                                ? 'bg-[#7C5CFF] text-white font-bold shadow-[0_0_8px_rgba(124,92,255,0.4)]' 
+                                : isToday 
+                                  ? 'bg-emerald-950/40 border-2 border-emerald-500 text-emerald-400 font-bold' 
+                                  : 'text-[#EDEAF6] hover:bg-[#211D2C] hover:text-[#7C5CFF]'
+                            } ${isSelected && isToday ? 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black' : ''}`}
+                          >
+                            <span>{day}</span>
+                            {/* Dot indicator kecil tambahan di bawah angka jika hari ini */}
+                            {isToday && <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-400 rounded-full" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
+                <button 
+                  type="button" 
+                  onClick={() => setShowDatePicker(false)} 
+                  className="w-full py-2.5 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1 uppercase tracking-wider font-bold"
+                >
+                  Tutup Kalender
+                </button>
               </div>
             </div>
           )}
@@ -296,10 +355,10 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
             {showCategorySelector && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
-                  <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-                  <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-                  <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-                  <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40 rounded-tl-xl" />
+                  <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40 rounded-tr-xl" />
+                  <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40 rounded-bl-xl" />
+                  <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40 rounded-br-xl" />
 
                   <span className="font-mono text-xs uppercase font-black text-white border-b border-[#211D2C] pb-2 tracking-wider font-mono">PILIH KATEGORI</span>
                   <div className="overflow-y-auto flex flex-col gap-1 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
