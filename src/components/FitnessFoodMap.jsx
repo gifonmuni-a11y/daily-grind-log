@@ -17,7 +17,7 @@ const GYM_EQUIPMENT = [
 const HEALTHY_FOOD = [
   { name: 'Dada Ayam Fillet', lowBudget: 'Direbus dengan bawang putih geprek, garam, lada hitam. Murah, tinggi protein bebas minyak.', richBudget: 'Dimasak pakai Air Fryer diolesi mentega zaitun (olive oil), rosemary segar, lemon juice.', img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&auto=format&fit=crop&q=60' },
   { name: 'Telur Ayam Kampung', lowBudget: 'Direbus matang atau setengah matang 2-3 butir sehari. Sumber protein termurah sejagat raya.', richBudget: 'Dibuat telur dadar putih telur organik dengan campuran jamur portobello dan bayam Jepang.', img: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=400&auto=format&fit=crop&q=60' },
-  { name: 'Ikan Salmon / Kembung', lowBudget: 'Diganti ikan kembung lokal segar (nutrisi Omega-3 hampir setara salmon tapi harga merakyat).', richBudget: 'Pan-seared Norwegian Salmon dengan saus mentega bawang garlic dan taburan wijen organik.', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&auto=format&fit=crop&q=60' },
+  { name: 'Ikan Salmon / Kembung', lowBudget: 'Diganti ikan kembung lokal segar (nutrisi Omega-3 hampir setara salmon tapi harga merakyat).', richBudget: 'Pan-seared Norwegian Salmon dengan saus mentega bawang putih dan taburan wijen organik.', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&auto=format&fit=crop&q=60' },
   { name: 'Tahu & Tempe Fresh', lowBudget: 'Dikukus atau dipanggang teflon tanpa minyak. Karbo dan protein nabati super hemat.', richBudget: 'Dibuat steak tempe bumbu barbeque zaitun disajikan dengan salad asparagus segar.', img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60' },
   { name: 'Sayur Brokoli Hijau', lowBudget: 'Dipotong kecil lalu dikukus 5 menit bersama garam dapur. Menjaga serat alami tubuh.', richBudget: 'Brokoli organik ditumis ringan menggunakan minyak kelapa premium dan udang kupas laut dalam.', img: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&auto=format&fit=crop&q=60' },
   { name: 'Oatmeal / Gandum Utuh', lowBudget: 'Diseduh air panas biasa ditambah pisang lokal potongan kecil sebagai pemanis alami.', richBudget: 'Rolled Oats organik dimasak susu almond, topping chia seeds, buah blueberry, madu asli.', img: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&auto=format&fit=crop&q=60' },
@@ -40,6 +40,16 @@ const FOOD_NUTRITION_BASE = [
   { id: '10', name: 'Daging Sapi (Masak Tanpa Lemak)', caloriesPerGram: 2.50, proteinPerGram: 0.26 }
 ];
 
+const ACTIVITY_OPTIONS = [
+  { value: 1.0, label: 'Tingkat Metabolisme Basal (BMR)' },
+  { value: 1.2, label: 'Sedikit atau tidak ada olahraga sama sekali' },
+  { value: 1.375, label: 'Berolahraga 1-3 kali seminggu' },
+  { value: 1.465, label: 'Berolahraga 4-5 kali seminggu' },
+  { value: 1.55, label: 'Olahraga harian atau olahraga intensif 3-4 kali seminggu' },
+  { value: 1.725, label: 'Latihan intensif 6-7 kali seminggu' },
+  { value: 1.9, label: 'Olahraga yang sangat intens setiap hari, atau pekerjaan fisik' }
+];
+
 export default function FitnessFoodMap({ onBackToHome }) {
   const [subTab, setSubTab] = useState('maps'); 
   const [mapCategory, setMapCategory] = useState('gym'); 
@@ -52,6 +62,7 @@ export default function FitnessFoodMap({ onBackToHome }) {
   const [weight, setWeight] = useState(65);
   const [activity, setActivity] = useState(1.465); 
   const [calResult, setCalResult] = useState(null);
+  const [showActivitySelector, setShowActivitySelector] = useState(false);
 
   const [selectedFoodId, setSelectedFoodId] = useState('1');
   const [foodWeight, setFoodWeight] = useState(100);
@@ -106,9 +117,11 @@ export default function FitnessFoodMap({ onBackToHome }) {
   };
 
   const currentFoodItem = FOOD_NUTRITION_BASE.find(f => f.id === selectedFoodId);
+  const currentActivityItem = ACTIVITY_OPTIONS.find(a => a.value === parseFloat(activity)) || ACTIVITY_OPTIONS[3];
 
   return (
-    <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-20">
+    /* 🎯 FIX PADDING BOTTOM DITAIKIN JADI pb-36 BIAR TIDAK TERTUTUP MENU UTAMA PWA */
+    <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-36">
       
       {/* HEADER UTAMA FEATURE DENGAN BINGKAI SIKU UNGU */}
       <div className="flex items-center gap-3 bg-[#100E16] border border-[#211D2C] p-3 rounded-xl shadow-lg relative">
@@ -143,7 +156,6 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <button type="button" onClick={() => setMapCategory('food')} className={`flex-1 py-2 text-[10px] font-mono uppercase font-bold transition-all ${mapCategory === 'food' ? 'text-white border-b-2 border-[#7C5CFF]' : 'text-[#EDEAF6]/30'}`}>Cari Kuliner Sehat</button>
           </div>
           
-          {/* 🎯 FIX MINI MAPS: Siku ditarik keluar border 1px agar tidak terpotong overflow */}
           <div className="w-full h-[360px] bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative">
             <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
             <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
@@ -165,7 +177,6 @@ export default function FitnessFoodMap({ onBackToHome }) {
             </div>
             <div className="space-y-3">
               {GYM_EQUIPMENT.map((item, idx) => (
-                /* 🎯 FIX CODEX GYM CARD: Siku ditarik keluar 1px untuk menimpa frame box terluar */
                 <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
                   <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
                   <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
@@ -195,7 +206,6 @@ export default function FitnessFoodMap({ onBackToHome }) {
             </div>
             <div className="space-y-3">
               {HEALTHY_FOOD.map((item, idx) => (
-                /* 🎯 FIX CODEX FOOD CARD: Siku ditarik keluar 1px untuk menimpa frame box terluar */
                 <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
                   <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
                   <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
@@ -301,7 +311,7 @@ export default function FitnessFoodMap({ onBackToHome }) {
             )}
           </div>
 
-          {/* KOTAK KALKULATOR KALORI TUBUH */}
+          {/* KOTAK KALKULATOR KALORI TUBUH (FIXED TOTAL) */}
           <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3 relative">
             <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
             <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
@@ -324,8 +334,70 @@ export default function FitnessFoodMap({ onBackToHome }) {
               </div>
               <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Tinggi Badan (cm):</label><input type="number" min="50" max="250" required value={height} onChange={(e) => setHeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
               <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Berat Badan (kg):</label><input type="number" min="20" max="300" required value={weight} onChange={(e) => setWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
+              
+              {/* 🎯 BALIKIN DATA: Dropdown Pemilihan Tingkat Aktivitas yang Hilang */}
+              <div className="flex flex-col gap-1 relative">
+                <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Tingkat Aktivitas:</label>
+                <button
+                  type="button"
+                  onClick={() => setShowActivitySelector(true)}
+                  className="w-full bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF]"
+                >
+                  <span className="truncate">{currentActivityItem.label}</span>
+                  <ChevronDown size={14} className="text-[#7C5CFF] flex-shrink-0" />
+                </button>
+
+                {showActivitySelector && (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
+                      <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+
+                      <span className="font-display font-bold text-xs uppercase text-white border-b border-[#211D2C] pb-2">Pilih Tingkat Aktivitas Harian</span>
+                      <div className="overflow-y-auto flex flex-col gap-1 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        {ACTIVITY_OPTIONS.map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => { setActivity(opt.value); setShowActivitySelector(false); }}
+                            className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${parseFloat(activity) === opt.value ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => setShowActivitySelector(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1">BATAL</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Kalori Tubuh</button>
             </form>
+
+            {/* 🎯 BALIKIN DATA: Kotak Ngerender Seluruh Hasil Hitungan TDEE & BMR */}
+            {calResult && (
+              <div className="mt-2 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2 font-mono text-[10px]">
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
+                  <span>Tingkat Metabolisme Basal (BMR):</span>
+                  <span className="text-white font-black">{calResult.bmr} kkal</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
+                  <span>Maintenance Kalori (TDEE):</span>
+                  <span className="text-purple-400 font-black">{calResult.maintenance} kkal</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
+                  <span>Defisit (Turun Berat Badan):</span>
+                  <span className="text-emerald-400 font-black">{calResult.loss} kkal</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg">
+                  <span>Surplus (Naik Berat Badan):</span>
+                  <span className="text-amber-400 font-black">{calResult.gain} kkal</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
