@@ -74,7 +74,8 @@ export async function generateShareCard({ profile, entry, level, streak }) {
   if (entry.image_url) {
     try {
       const img = await loadImage(entry.image_url)
-      const imgX = 120, imgW = 840, imgH = 420
+      // 🎯 MODIFIKASI: Mengubah dimensi imgH menjadi 630 agar rasio kotak menjadi 4:3 murni
+      const imgX = 120, imgW = 840, imgH = 630
       drawImageCover(ctx, img, imgX, contentY, imgW, imgH)
       drawCornerBrackets(imgX, contentY, imgW, imgH, 24, accent)
       contentY += imgH + 40
