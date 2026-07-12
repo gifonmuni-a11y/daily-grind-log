@@ -17,7 +17,7 @@ const GYM_EQUIPMENT = [
 const HEALTHY_FOOD = [
   { name: 'Dada Ayam Fillet', lowBudget: 'Direbus dengan bawang putih geprek, garam, lada hitam. Murah, tinggi protein bebas minyak.', richBudget: 'Dimasak pakai Air Fryer diolesi mentega zaitun (olive oil), rosemary segar, lemon juice.', img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&auto=format&fit=crop&q=60' },
   { name: 'Telur Ayam Kampung', lowBudget: 'Direbus matang atau setengah matang 2-3 butir sehari. Sumber protein termurah sejagat raya.', richBudget: 'Dibuat telur dadar putih telur organik dengan campuran jamur portobello dan bayam Jepang.', img: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=400&auto=format&fit=crop&q=60' },
-  { name: 'Ikan Salmon / Kembung', lowBudget: 'Diganti ikan kembung lokal segar (nutrisi Omega-3 hampir setara salmon tapi harga merakyat).', richBudget: 'Pan-seared Norwegian Salmon dengan saus mentega bawang putih dan taburan wijen organik.', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&auto=format&fit=crop&q=60' },
+  { name: 'Ikan Salmon / Kembung', lowBudget: 'Diganti ikan kembung lokal segar (nutrisi Omega-3 hampir setara salmon tapi harga merakyat).', richBudget: 'Pan-seared Norwegian Salmon dengan saus mentega bawang garlic dan taburan wijen organik.', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&auto=format&fit=crop&q=60' },
   { name: 'Tahu & Tempe Fresh', lowBudget: 'Dikukus atau dipanggang teflon tanpa minyak. Karbo dan protein nabati super hemat.', richBudget: 'Dibuat steak tempe bumbu barbeque zaitun disajikan dengan salad asparagus segar.', img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60' },
   { name: 'Sayur Brokoli Hijau', lowBudget: 'Dipotong kecil lalu dikukus 5 menit bersama garam dapur. Menjaga serat alami tubuh.', richBudget: 'Brokoli organik ditumis ringan menggunakan minyak kelapa premium dan udang kupas laut dalam.', img: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&auto=format&fit=crop&q=60' },
   { name: 'Oatmeal / Gandum Utuh', lowBudget: 'Diseduh air panas biasa ditambah pisang lokal potongan kecil sebagai pemanis alami.', richBudget: 'Rolled Oats organik dimasak susu almond, topping chia seeds, buah blueberry, madu asli.', img: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&auto=format&fit=crop&q=60' },
@@ -110,13 +110,12 @@ export default function FitnessFoodMap({ onBackToHome }) {
   return (
     <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-20">
       
-      {/* HEADER UTAMA RADAR */}
+      {/* HEADER UTAMA FEATURE DENGAN BINGKAI SIKU UNGU */}
       <div className="flex items-center gap-3 bg-[#100E16] border border-[#211D2C] p-3 rounded-xl shadow-lg relative">
-        {/* SIKU UNGU HEADER */}
-        <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-        <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-        <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+        <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+        <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+        <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+        <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
         
         <button
           type="button"
@@ -144,12 +143,12 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <button type="button" onClick={() => setMapCategory('food')} className={`flex-1 py-2 text-[10px] font-mono uppercase font-bold transition-all ${mapCategory === 'food' ? 'text-white border-b-2 border-[#7C5CFF]' : 'text-[#EDEAF6]/30'}`}>Cari Kuliner Sehat</button>
           </div>
           
-          {/* 🎯 BINGKAI MINI MAPS DENGAN SIKU SYSTEM UNGU */}
+          {/* 🎯 FIX MINI MAPS: Siku ditarik keluar border 1px agar tidak terpotong overflow */}
           <div className="w-full h-[360px] bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-            <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-            <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+            <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
             {geoLoading && <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center font-mono text-xs text-[#EDEAF6]/60"><Loader2 className="animate-spin text-[#7C5CFF]" size={20} /></div>}
             {userCoords && <iframe title="Google Live" className="w-full h-full border-0 invert-[0.91] hue-rotate-[180deg] contrast-[1.2] sat-[0.85]" src={`https://maps.google.com/maps?q=${mapCategory === 'gym' ? 'gym+fitness' : 'makanan+sehat+restoran'}&sll=${userCoords.lat},${userCoords.lon}&z=14&output=embed`} loading="lazy" />}
@@ -166,12 +165,12 @@ export default function FitnessFoodMap({ onBackToHome }) {
             </div>
             <div className="space-y-3">
               {GYM_EQUIPMENT.map((item, idx) => (
-                <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden flex flex-col gap-3 p-3 shadow-md relative">
-                  {/* SIKU UNGU KARTU ALAT GYM */}
-                  <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+                /* 🎯 FIX CODEX GYM CARD: Siku ditarik keluar 1px untuk menimpa frame box terluar */
+                <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
+                  <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
                   <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
                     <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
@@ -196,12 +195,12 @@ export default function FitnessFoodMap({ onBackToHome }) {
             </div>
             <div className="space-y-3">
               {HEALTHY_FOOD.map((item, idx) => (
-                <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl overflow-hidden flex flex-col gap-3 p-3 shadow-md relative">
-                  {/* SIKU UNGU KARTU DIET */}
-                  <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+                /* 🎯 FIX CODEX FOOD CARD: Siku ditarik keluar 1px untuk menimpa frame box terluar */
+                <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
+                  <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
                   <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
                     <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
@@ -234,12 +233,13 @@ export default function FitnessFoodMap({ onBackToHome }) {
 
       {subTab === 'matrix' && (
         <div className="flex flex-col gap-4">
-          {/* 🎯 KOTAK KALKULATOR NUTRISI MAKANAN DENGAN SIKU SYSTEM UNGU */}
+          
+          {/* KOTAK KALKULATOR NUTRISI MAKANAN */}
           <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3 relative">
-            <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-            <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-            <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+            <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
             <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
               <Scale size={14} className="text-[#7C5CFF]" />
@@ -261,11 +261,10 @@ export default function FitnessFoodMap({ onBackToHome }) {
                 {showFoodSelector && (
                   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
-                      {/* SIKU UNGU POPUP KONTEN DROPDOWN */}
-                      <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-                      <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-                      <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+                      <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
                       <span className="font-display font-bold text-xs uppercase text-white border-b border-[#211D2C] pb-2">Database Nutrisi Pangan</span>
                       <div className="overflow-y-auto flex flex-col gap-1 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -302,12 +301,12 @@ export default function FitnessFoodMap({ onBackToHome }) {
             )}
           </div>
 
-          {/* 🎯 KOTAK KALKULATOR KALORI TUBUH DENGAN SIKU SYSTEM UNGU */}
+          {/* KOTAK KALKULATOR KALORI TUBUH */}
           <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3 relative">
-            <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-            <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-            <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+            <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
             <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
               <Calculator size={14} className="text-[#7C5CFF]" />

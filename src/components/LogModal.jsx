@@ -112,22 +112,25 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 flex items-end sm:items-center justify-center p-0 sm:p-4 select-none animate-in fade-in duration-150">
-      {/* 🎯 HAPUS SCROLLBAR & TAMBAH ABSOLUTE POSITION PADA CONTAINER UTAMA MODAL */}
-      <div className="w-full max-w-md bg-[#100E16] border-t sm:border border-[#211D2C] p-6 rounded-t-2xl sm:rounded-2xl flex flex-col gap-5 max-h-[92vh] overflow-y-auto relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    /* 🎯 FIX POSISI DI HP: Mengubah items-end menjadi items-center agar modal naik ke tengah & tidak terpotong bawah layar */
+    <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
+      
+      {/* CONTAINER MODAL UTAMA */}
+      <div className="w-full max-w-md bg-[#100E16] border border-[#211D2C] p-6 rounded-2xl flex flex-col gap-5 max-h-[88vh] overflow-y-auto relative border-box [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         
-        {/* 🎯 SIKU SYSTEM KUSTOM WARNA UNGU DI 4 SUDUT UTAMA MODAL */}
-        <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-        <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-        <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-        <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+        {/* 🎯 SIKU SYSTEM UNGU PRESISI DI 4 SUDUT CONTAINER UTAMA MODAL */}
+        <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+        <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+        <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+        <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
         <div className="flex justify-between items-center border-b border-[#211D2C]/60 pb-2">
           <h2 className="text-white font-display font-black text-sm uppercase tracking-wider">{editEntry ? 'EDIT SESI' : 'LOG SESI BARU'}</h2>
           <button type="button" onClick={onClose} className="text-gray-500 hover:text-white transition-colors"><X size={18} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 font-mono text-xs text-[#EDEAF6]">
+        {/* 🎯 INPUT ZONE: Diberi padding-bottom aman (pb-6) agar input paling bawah tidak menabrak batas frame */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 font-mono text-xs text-[#EDEAF6] pb-6">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">DAY #</label>
@@ -162,19 +165,16 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
 
             {showCategorySelector && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                {/* 🎯 HAPUS SCROLLBAR & TAMBAH SIKU UNGU DI DROPDOWN KUSTOM KATEGORI */}
-                <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
-                  <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+                <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
 
                   <span className="font-mono text-xs uppercase font-black text-white border-b border-[#211D2C] pb-2 tracking-wider font-mono">PILIH KATEGORI</span>
                   <div className="overflow-y-auto flex flex-col gap-1 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {categories.map(cat => (
-                      <button key={cat} type="button" onClick={() => { setCategory(cat); if(cat !== '+ Lainnya') setShowCategorySelector(false); }} className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${category === cat ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'} font-mono`}>
-                        {cat}
-                      </button>
+                      <button key={cat} type="button" onClick={() => { setCategory(cat); if(cat !== '+ Lainnya') setShowCategorySelector(false); }} className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${category === cat ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'} font-mono`}>{cat}</button>
                     ))}
                   </div>
                   {category === '+ Lainnya' && (
