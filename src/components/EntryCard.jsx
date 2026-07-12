@@ -87,6 +87,11 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
         size={14}
         style={{ border: '1px solid #211D2C' }}
       >
+        {/* 🎯 SIKU SYSTEM KUSTOM WARNA UNGU DI 4 SUDUT ENTRY CARD */}
+        <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
+        <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
+        <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
+        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
         
         {/* LANDSCAPE IMAGE AT TOP */}
         {entry.image_url && (
@@ -125,21 +130,21 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
             
             {/* Metadata Badges & Tags Line */}
             <div className="flex items-center gap-2 text-text-dim font-mono text-[11px] flex-wrap mb-1">
-              <span className="text-accent font-bold">DAY #{entry.day_number}</span>
+              <span className="text-accent font-bold font-mono">DAY #{entry.day_number}</span>
               {entry.category && (
-                <span className="bg-[#211D2C] px-1.5 py-0.5 text-[10px] text-gray-300 uppercase">
+                <span className="bg-[#211D2C] px-1.5 py-0.5 text-[10px] text-gray-300 uppercase font-mono">
                   {entry.category}
                 </span>
               )}
-              <div className="flex items-center gap-1 text-text-dim">
+              <div className="flex items-center gap-1 text-text-dim font-mono">
                 <Calendar size={11} />
-                <span>{formatDate(entry.entry_date)}</span>
+                <span className="font-mono">{formatDate(entry.entry_date)}</span>
               </div>
               {/* MENAMPILKAN TEKS DURASI SECARA AKURAT */}
               {displayDuration && (
-                <div className="flex items-center gap-1 text-text-dim">
+                <div className="flex items-center gap-1 text-text-dim font-mono">
                   <Clock size={11} />
-                  <span>{displayDuration}</span>
+                  <span className="font-mono">{displayDuration}</span>
                 </div>
               )}
             </div>
