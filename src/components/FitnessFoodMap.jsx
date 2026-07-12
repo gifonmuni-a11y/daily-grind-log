@@ -121,24 +121,8 @@ export default function FitnessFoodMap({ onBackToHome }) {
   const currentActivityItem = ACTIVITY_OPTIONS.find(a => a.value === parseFloat(activity)) || ACTIVITY_OPTIONS[3];
 
   return (
-    <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-24">
+    <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-36">
       
-      {/* 🎯 INJEKSI STYLING SCROLLBAR PENDEK DI DALAM HEAD */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .short-scroll-zone::-webkit-scrollbar {
-          width: 5px;
-        }
-        .short-scroll-zone::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: 10px;
-        }
-        .short-scroll-zone::-webkit-scrollbar-thumb {
-          background: #7C5CFF;
-          border-radius: 10px;
-          height: 30px !important; /* Memaksa ukuran scrollbar tetap pendek */
-        }
-      `}} />
-
       {/* HEADER UTAMA DETIL */}
       <div className="flex items-center gap-3 bg-[#100E16] border border-[#211D2C] p-3 rounded-xl shadow-lg relative">
         <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
@@ -162,284 +146,279 @@ export default function FitnessFoodMap({ onBackToHome }) {
         <button type="button" onClick={() => setSubTab('matrix')} className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-mono uppercase tracking-wider font-black transition-all rounded-lg ${subTab === 'matrix' ? 'bg-[#7C5CFF] text-white' : 'text-[#EDEAF6]/40'}`}><Calculator size={12} /> Kalkulator</button>
       </div>
 
-      {/* 🎯 WRAPPER AREA KONTEN: Dibatasi max-h-[58vh] biar panjang scrollbar-nya pendek & pas di tengah */}
-      <div className="w-full max-h-[58vh] overflow-y-auto pr-1 short-scroll-zone flex flex-col gap-4">
-        
-        {/* RADAR MAPS TAB */}
-        {subTab === 'maps' && (
-          <div className="flex flex-col gap-4 pb-4">
+      {/* RADAR MAPS TAB */}
+      {subTab === 'maps' && (
+        <div className="flex flex-col gap-4 animate-in fade-in duration-100">
+          
+          {/* CONTAINER MAP DENGAN DOUBLE WRAPPER SIKU UNGU */}
+          <div className="relative p-1 bg-transparent">
+            <div className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
             
-            {/* CONTAINER MAP DENGAN DOUBLE WRAPPER SIKU UNGU */}
-            <div className="relative p-1 bg-transparent">
-              <div className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
-              
-              <div className="w-full h-[220px] bg-[#100E16] border border-[#211D2C] rounded-2xl overflow-hidden relative shadow-inner">
-                {geoLoading && (
-                  <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center font-mono text-xs text-[#EDEAF6]/60">
-                    <Loader2 className="animate-spin text-[#7C5CFF]" size={20} />
-                  </div>
-                )}
-                {userCoords && (
-                  <iframe 
-                    title="Google Live Lock Radius" 
-                    className="w-full h-full border-0 invert-[0.91] hue-rotate-[180deg] contrast-[1.2] sat-[0.85]" 
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(activeQuery)}&ll=${userCoords.lat},${userCoords.lon}&z=16&output=embed`} 
-                    loading="lazy" 
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* KONTROL LAYOUT PANEL BUTTONS */}
-            <div className="flex flex-col gap-3.5 mt-1">
-              
-              {/* Gym Controls */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Gym</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {['gym terdekat', 'gym fitness'].map(q => (
-                    <button key={q} type="button" onClick={() => { setMapCategory('gym'); setActiveQuery(q); }} className={`py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
-                  ))}
+            <div className="w-full h-[220px] bg-[#100E16] border border-[#211D2C] rounded-2xl overflow-hidden relative shadow-inner">
+              {geoLoading && (
+                <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center font-mono text-xs text-[#EDEAF6]/60">
+                  <Loader2 className="animate-spin text-[#7C5CFF]" size={20} />
                 </div>
-              </div>
-
-              {/* Food Controls */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Kuliner Sehat</span>
-                <div className="flex flex-col gap-2">
-                  {['kuliner sehat', 'makanan sehat terdekat', 'makanan sehat restoran'].map(q => (
-                    <button key={q} type="button" onClick={() => { setMapCategory('food'); setActiveQuery(q); }} className={`w-full py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 🎯 CARI BUAH CONTROLS */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Buah</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {['toko buah', 'pasar buah'].map(q => (
-                    <button key={q} type="button" onClick={() => { setMapCategory('fruit'); setActiveQuery(q); }} className={`py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 🎯 CARI BAHAN DAPUR CONTROLS */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Bahan Dapur</span>
-                <div className="flex flex-col gap-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    {['pasar', 'pasar terdekat'].map(q => (
-                      <button key={q} type="button" onClick={() => { setMapCategory('kitchen'); setActiveQuery(q); }} className={`py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
-                    ))}
-                  </div>
-                  <button type="button" onClick={() => { setMapCategory('kitchen'); setActiveQuery('toko daging'); }} className={`w-full py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === 'toko daging' ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>toko daging</button>
-                </div>
-              </div>
-
+              )}
+              {userCoords && (
+                <iframe 
+                  title="Google Live Lock Radius" 
+                  className="w-full h-full border-0 invert-[0.91] hue-rotate-[180deg] contrast-[1.2] sat-[0.85]" 
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(activeQuery)}&ll=${userCoords.lat},${userCoords.lon}&z=16&output=embed`} 
+                  loading="lazy" 
+                />
+              )}
             </div>
           </div>
-        )}
 
-        {/* CODEX DATA TAB */}
-        {subTab === 'codex' && (
-          <div className="flex flex-col gap-6 pb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-3 border-l-4 border-[#7C5CFF] pl-2">
-                <Dumbbell size={14} className="text-[#7C5CFF]" />
-                <h3 className="font-display font-bold text-sm uppercase tracking-widest text-white">10 Panduan Alat Gym</h3>
-              </div>
-              <div className="space-y-3">
-                {GYM_EQUIPMENT.map((item, idx) => (
-                  <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
-                    <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-                    <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-                    <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-                    <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
-                    <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
-                      <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
-                      <p className="text-[10px] text-[#EDEAF6]/50 mt-1 leading-relaxed font-mono">{item.function}</p>
-                      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#211D2C]/60 pt-2 text-[9px] font-mono">
-                        <div className="flex items-center gap-1"><ShieldCheck size={12} className="text-emerald-400" /><div><span className="text-emerald-400 font-bold block">PEMULA:</span><span className="text-[#EDEAF6]/60">{item.beginner}</span></div></div>
-                        <div className="flex items-center gap-1"><Flame size={12} className="text-purple-400" /><div><span className="text-purple-400 font-bold block">PRO:</span><span className="text-[#EDEAF6]/60">{item.pro}</span></div></div>
-                      </div>
-                    </div>
-                  </div>
+          {/* PANEL TOMBOL KONTROL MAPS */}
+          <div className="flex flex-col gap-3.5 mt-1">
+            
+            {/* Gym Controls */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Gym</span>
+              <div className="grid grid-cols-2 gap-2">
+                {['gym terdekat', 'gym fitness'].map(q => (
+                  <button key={q} type="button" onClick={() => { setMapCategory('gym'); setActiveQuery(q); }} className={`py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
                 ))}
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-3 border-l-4 border-[#7C5CFF] pl-2">
-                <Utensils size={14} className="text-[#7C5CFF]" />
-                <h3 className="font-display font-bold text-sm uppercase tracking-widest text-white">10 Menu Diet Sehat</h3>
-              </div>
-              <div className="space-y-3">
-                {HEALTHY_FOOD.map((item, idx) => (
-                  <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
-                    <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-                    <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-                    <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-                    <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
-                    <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
-                      <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
-                      <div className="mt-3 space-y-2 text-[10px]">
-                        <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
-                          <Scale size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-mono text-[9px] text-amber-500 font-bold block">MENU LOW BUDGET</span>
-                            <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed font-mono">{item.lowBudget}</p>
-                          </div>
-                        </div>
-                        <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
-                          <Flame size={14} className="text-purple-400 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-mono text-[9px] text-purple-400 font-bold block">MENU SULTAN MINDSET</span>
-                            <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed font-mono">{item.richBudget}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            {/* Food Controls */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Kuliner Sehat</span>
+              <div className="flex flex-col gap-2">
+                {['kuliner sehat', 'makanan sehat terdekat', 'makanan sehat restoran'].map(q => (
+                  <button key={q} type="button" onClick={() => { setMapCategory('food'); setActiveQuery(q); }} className={`w-full py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
                 ))}
               </div>
             </div>
-          </div>
-        )}
 
-        {/* KALKULATOR MATRIX TAB */}
-        {subTab === 'matrix' && (
-          <div className="flex flex-col gap-4 pb-4">
-            
-            {/* KALKULATOR NUTRISI MAKANAN */}
-            <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3 relative">
-              <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
-
-              <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
-                <Scale size={14} className="text-[#7C5CFF]" />
-                <h3 className="font-display font-bold text-sm uppercase text-white tracking-wider">Kalkulator Nutrisi Makanan</h3>
+            {/* Cari Buah Controls */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Buah</span>
+              <div className="grid grid-cols-2 gap-2">
+                {['toko buah', 'pasar buah'].map(q => (
+                  <button key={q} type="button" onClick={() => { setMapCategory('fruit'); setActiveQuery(q); }} className={`py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
+                ))}
               </div>
-
-              <form onSubmit={handleFoodCalculate} className="space-y-3 text-xs font-mono">
-                <div className="flex flex-col gap-1 relative">
-                  <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Pilih Jenis Pangan:</label>
-                  <button type="button" onClick={() => setShowFoodSelector(true)} className="w-full bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF]">
-                    <span>{currentFoodItem ? currentFoodItem.name : 'Pilih Makanan...'}</span>
-                    <ChevronDown size={14} className="text-[#7C5CFF]" />
-                  </button>
-
-                  {showFoodSelector && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                      <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
-                        <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-                        <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-                        <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-                        <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
-                        <span className="font-display font-bold text-xs uppercase text-white border-b border-[#211D2C] pb-2">Database Nutrisi Pangan</span>
-                        <div className="overflow-y-auto flex flex-col gap-1 pr-1 short-scroll-zone">
-                          {FOOD_NUTRITION_BASE.map(food => (
-                            <button key={food.id} type="button" onClick={() => { setSelectedFoodId(food.id); setShowFoodSelector(false); }} className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${selectedFoodId === food.id ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}>{food.name}</button>
-                          ))}
-                        </div>
-                        <button type="button" onClick={() => setShowFoodSelector(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1">BATAL</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Berat Makanan (Gram):</label>
-                  <input type="number" min="1" max="5000" required value={foodWeight} onChange={(e) => setFoodWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono outline-none focus:border-[#7C5CFF]" />
-                </div>
-                <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Nutrisi</button>
-              </form>
-
-              {foodResult && (
-                <div className="mt-2 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2 font-mono text-[10px]">
-                  <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Porsi Timbangan:</span><span className="text-white font-black">{foodResult.weight} Gram</span></div>
-                  <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Total Kandungan Energi:</span><span className="text-amber-400 font-black">{foodResult.totalCalories} kkal</span></div>
-                  <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Total Asupan Protein:</span><span className="text-emerald-400 font-black">{foodResult.totalProtein} gram</span></div>
-                </div>
-              )}
             </div>
 
-            {/* KOTAK KALKULATOR KALORI TUBUH */}
-            <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3 relative">
-              <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-              <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
-
-              <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
-                <Calculator size={14} className="text-[#7C5CFF]" />
-                <h3 className="font-display font-bold text-sm uppercase text-white tracking-wider">Kalkulator Kalori Tubuh</h3>
+            {/* Cari Bahan Dapur Controls */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-[#8B8696] font-mono tracking-widest pl-1">Cari Bahan Dapur</span>
+              <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  {['pasar', 'pasar terdekat'].map(q => (
+                    <button key={q} type="button" onClick={() => { setMapCategory('kitchen'); setActiveQuery(q); }} className={`py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === q ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>{q}</button>
+                  ))}
+                </div>
+                <button type="button" onClick={() => { setMapCategory('kitchen'); setActiveQuery('toko daging'); }} className={`w-full py-2.5 rounded-xl text-[10px] font-mono font-bold uppercase border text-center transition-all ${activeQuery === 'toko daging' ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white shadow-[0_0_12px_rgba(124,92,255,0.2)]' : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/50'}`}>toko daging</button>
               </div>
-              
-              <form onSubmit={calculateCalories} className="space-y-3.5 text-xs font-mono">
-                <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Usia (15 - 80 tahun):</label><input type="number" min="15" max="80" required value={age} onChange={(e) => setAge(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Jenis Kelamin:</label>
-                  <div className="flex gap-4 p-1 text-[10px]">
-                    <label className="flex items-center gap-2 cursor-pointer font-mono"><input type="radio" name="gender" value="pria" checked={gender === 'pria'} onChange={() => setGender('pria')} className="accent-[#7C5CFF]" /><span>Pria</span></label>
-                    <label className="flex items-center gap-2 cursor-pointer font-mono"><input type="radio" name="gender" value="perempuan" checked={gender === 'perempuan'} onChange={() => setGender('perempuan')} className="accent-[#7C5CFF]" /><span>Perempuan</span></label>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* CODEX DATA TAB */}
+      {subTab === 'codex' && (
+        <div className="flex flex-col gap-6 animate-in fade-in duration-100">
+          <div>
+            <div className="flex items-center gap-2 mb-3 border-l-4 border-[#7C5CFF] pl-2">
+              <Dumbbell size={14} className="text-[#7C5CFF]" />
+              <h3 className="font-display font-bold text-sm uppercase tracking-widest text-white">10 Panduan Alat Gym</h3>
+            </div>
+            <div className="space-y-3">
+              {GYM_EQUIPMENT.map((item, idx) => (
+                <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
+                  <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
+                    <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
+                    <p className="text-[10px] text-[#EDEAF6]/50 mt-1 leading-relaxed font-mono">{item.function}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#211D2C]/60 pt-2 text-[9px] font-mono">
+                      <div className="flex items-center gap-1"><ShieldCheck size={12} className="text-emerald-400" /><div><span className="text-emerald-400 font-bold block">PEMULA:</span><span className="text-[#EDEAF6]/60">{item.beginner}</span></div></div>
+                      <div className="flex items-center gap-1"><Flame size={12} className="text-purple-400" /><div><span className="text-purple-400 font-bold block">PRO:</span><span className="text-[#EDEAF6]/60">{item.pro}</span></div></div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Tinggi Badan (cm):</label><input type="number" min="50" max="250" required value={height} onChange={(e) => setHeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Berat Badan (kg):</label><input type="number" min="20" max="300" required value={weight} onChange={(e) => setWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
-                
-                <div className="flex flex-col gap-1 relative">
-                  <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Tingkat Aktivitas:</label>
-                  <button type="button" onClick={() => setShowActivitySelector(true)} className="w-full bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF]">
-                    <span className="truncate">{currentActivityItem.label}</span>
-                    <ChevronDown size={14} className="text-[#7C5CFF] flex-shrink-0" />
-                  </button>
-
-                  {showActivitySelector && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                      <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
-                        <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-                        <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-                        <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-                        <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
-                        <span className="font-display font-bold text-xs uppercase text-white border-b border-[#211D2C] pb-2">Pilih Tingkat Aktivitas Harian</span>
-                        <div className="overflow-y-auto flex flex-col gap-1 pr-1 short-scroll-zone">
-                          {ACTIVITY_OPTIONS.map(opt => (
-                            <button key={opt.value} type="button" onClick={() => { setActivity(opt.value); setShowActivitySelector(false); }} className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${parseFloat(activity) === opt.value ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}>{opt.label}</button>
-                          ))}
-                        </div>
-                        <button type="button" onClick={() => setShowActivitySelector(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1">BATAL</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Kalori Tubuh</button>
-              </form>
-
-              {calResult && (
-                <div className="mt-2 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2 font-mono text-[10px]">
-                  <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Tingkat Metabolisme Basal (BMR):</span><span className="text-white font-black">{calResult.bmr} kkal</span></div>
-                  <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Maintenance Kalori (TDEE):</span><span className="text-purple-400 font-black">{calResult.maintenance} kkal</span></div>
-                  <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Defisit (Turun Berat Badan):</span><span className="text-emerald-400 font-black">{calResult.loss} kkal</span></div>
-                  <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Surplus (Naik Berat Badan):</span><span className="text-amber-400 font-black">{calResult.gain} kkal</span></div>
-                </div>
-              )}
+              ))}
             </div>
           </div>
-        )}
 
-      </div>
+          <div>
+            <div className="flex items-center gap-2 mb-3 border-l-4 border-[#7C5CFF] pl-2">
+              <Utensils size={14} className="text-[#7C5CFF]" />
+              <h3 className="font-display font-bold text-sm uppercase tracking-widest text-white">10 Menu Diet Sehat</h3>
+            </div>
+            <div className="space-y-3">
+              {HEALTHY_FOOD.map((item, idx) => (
+                <div key={idx} className="bg-[#100E16] border border-[#211D2C] rounded-xl flex flex-col gap-3 p-3 shadow-md relative">
+                  <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                  <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+                  <div className="w-full aspect-[16/9] overflow-hidden rounded-lg border border-[#211D2C]">
+                    <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono uppercase font-black text-[#7C5CFF] tracking-wide">{idx + 1}. {item.name}</h4>
+                    <div className="mt-3 space-y-2 text-[10px]">
+                      <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
+                        <Scale size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-mono text-[9px] text-amber-500 font-bold block">MENU LOW BUDGET</span>
+                          <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed font-mono">{item.lowBudget}</p>
+                        </div>
+                      </div>
+                      <div className="bg-black/40 border border-[#211D2C] p-2 rounded-lg flex gap-2">
+                        <Flame size={14} className="text-purple-400 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-mono text-[9px] text-purple-400 font-bold block">MENU SULTAN MINDSET</span>
+                          <p className="text-[#EDEAF6]/70 text-[9px] leading-relaxed font-mono">{item.richBudget}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {subTab === 'matrix' && (
+        <div className="flex flex-col gap-4 animate-in fade-in duration-100">
+          
+          {/* KALKULATOR NUTRISI MAKANAN */}
+          <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3 relative">
+            <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+
+            <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
+              <Scale size={14} className="text-[#7C5CFF]" />
+              <h3 className="font-display font-bold text-sm uppercase text-white tracking-wider">Kalkulator Nutrisi Makanan</h3>
+            </div>
+
+            <form onSubmit={handleFoodCalculate} className="space-y-3 text-xs font-mono">
+              <div className="flex flex-col gap-1 relative">
+                <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Pilih Jenis Pangan:</label>
+                <button type="button" onClick={() => setShowFoodSelector(true)} className="w-full bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF]">
+                  <span>{currentFoodItem ? currentFoodItem.name : 'Pilih Makanan...'}</span>
+                  <ChevronDown size={14} className="text-[#7C5CFF]" />
+                </button>
+
+                {showFoodSelector && (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
+                      <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+                      <span className="font-display font-bold text-xs uppercase text-white border-b border-[#211D2C] pb-2">Database Nutrisi Pangan</span>
+                      <div className="overflow-y-auto flex flex-col gap-1 pr-1">
+                        {FOOD_NUTRITION_BASE.map(food => (
+                          <button key={food.id} type="button" onClick={() => { setSelectedFoodId(food.id); setShowFoodSelector(false); }} className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${selectedFoodId === food.id ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}>{food.name}</button>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => setShowFoodSelector(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1">BATAL</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Berat Makanan (Gram):</label>
+                <input type="number" min="1" max="5000" required value={foodWeight} onChange={(e) => setFoodWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono outline-none focus:border-[#7C5CFF]" />
+              </div>
+              <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Nutrisi</button>
+            </form>
+
+            {foodResult && (
+              <div className="mt-2 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2 font-mono text-[10px]">
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Porsi Timbangan:</span><span className="text-white font-black">{foodResult.weight} Gram</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Total Kandungan Energi:</span><span className="text-amber-400 font-black">{foodResult.totalCalories} kkal</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Total Asupan Protein:</span><span className="text-emerald-400 font-black">{foodResult.totalProtein} gram</span></div>
+              </div>
+            )}
+          </div>
+
+          {/* KOTAK KALKULATOR KALORI TUBUH */}
+          <div className="bg-[#100E16] border border-[#211D2C] rounded-xl p-4 shadow-md flex flex-col gap-3 relative">
+            <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+
+            <div className="border-b border-[#211D2C] pb-2 flex items-center gap-2">
+              <Calculator size={14} className="text-[#7C5CFF]" />
+              <h3 className="font-display font-bold text-sm uppercase text-white tracking-wider">Kalkulator Kalori Tubuh</h3>
+            </div>
+            
+            <form onSubmit={calculateCalories} className="space-y-3.5 text-xs font-mono">
+              <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Usia (15 - 80 tahun):</label><input type="number" min="15" max="80" required value={age} onChange={(e) => setAge(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Jenis Kelamin:</label>
+                <div className="flex gap-4 p-1 text-[10px]">
+                  <label className="flex items-center gap-2 cursor-pointer font-mono"><input type="radio" name="gender" value="pria" checked={gender === 'pria'} onChange={() => setGender('pria')} className="accent-[#7C5CFF]" /><span>Pria</span></label>
+                  <label className="flex items-center gap-2 cursor-pointer font-mono"><input type="radio" name="gender" value="perempuan" checked={gender === 'perempuan'} onChange={() => setGender('perempuan')} className="accent-[#7C5CFF]" /><span>Perempuan</span></label>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Tinggi Badan (cm):</label><input type="number" min="50" max="250" required value={height} onChange={(e) => setHeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
+              <div className="flex flex-col gap-1"><label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Berat Badan (kg):</label><input type="number" min="20" max="300" required value={weight} onChange={(e) => setWeight(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono focus:border-[#7C5CFF] outline-none" /></div>
+              
+              <div className="flex flex-col gap-1 relative">
+                <label className="text-[#EDEAF6]/60 text-[9px] uppercase font-mono">Tingkat Aktivitas:</label>
+                <button type="button" onClick={() => setShowActivitySelector(true)} className="w-full bg-black border border-[#211D2C] p-2.5 rounded-lg text-white font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF]">
+                  <span className="truncate">{currentActivityItem.label}</span>
+                  <ChevronDown size={14} className="text-[#7C5CFF] flex-shrink-0" />
+                </button>
+
+                {showActivitySelector && (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
+                      <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                      <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+                      <span className="font-display font-bold text-xs uppercase text-white border-b border-[#211D2C] pb-2">Pilih Tingkat Aktivitas Harian</span>
+                      <div className="overflow-y-auto flex flex-col gap-1 pr-1">
+                        {ACTIVITY_OPTIONS.map(opt => (
+                          <button key={opt.value} type="button" onClick={() => { setActivity(opt.value); setShowActivitySelector(false); }} className={`w-full p-2.5 rounded-lg text-left text-xs font-mono border transition-all ${parseFloat(activity) === opt.value ? 'bg-[#7C5CFF]/20 border-[#7C5CFF] text-white' : 'bg-black/50 border-transparent text-[#EDEAF6]/60 hover:text-white'}`}>{opt.label}</button>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => setShowActivitySelector(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1">BATAL</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" className="w-full py-2.5 bg-[#7C5CFF] text-white font-mono uppercase font-black text-[10px] rounded-lg">Hitung Kalori Tubuh</button>
+            </form>
+
+            {calResult && (
+              <div className="mt-2 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2 font-mono text-[10px]">
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Tingkat Metabolisme Basal (BMR):</span><span className="text-white font-black">{calResult.Bmr} kkal</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Maintenance Kalori (TDEE):</span><span className="text-purple-400 font-black">{calResult.maintenance} kkal</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Defisit (Turun Berat Badan):</span><span className="text-emerald-400 font-black">{calResult.loss} kkal</span></div>
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Surplus (Naik Berat Badan):</span><span className="text-amber-400 font-black">{calResult.gain} kkal</span></div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
