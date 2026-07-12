@@ -93,9 +93,9 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
         <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
         <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
         
-        {/* LANDSCAPE IMAGE AT TOP */}
+        {/* 🎯 IMAGE SECTION: Menggunakan Aspek Rasio Kustom 4:3 Taktis */}
         {entry.image_url && (
-          <div className="relative w-full h-44 bg-[#0A0A0E] border border-[#211D2C] mb-3 overflow-hidden z-10">
+          <div className="relative w-full aspect-[4/3] bg-[#0A0A0E] border border-[#211D2C] mb-3 overflow-hidden z-10">
             <img
               src={entry.image_url}
               alt={entry.title}

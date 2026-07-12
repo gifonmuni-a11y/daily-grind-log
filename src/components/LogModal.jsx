@@ -26,14 +26,13 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   const [calendarMonth, setCalendarMonth] = useState(() => new Date().getMonth()) // 0-11
   const [calendarViewMode, setCalendarViewMode] = useState('days') // 'days' atau 'years'
 
-  // 🎯 STATE BARU UNTUK MANUAL IMAGE CROPPER ALA INTERFACE FB
+  // STATE UNTUK MANUAL IMAGE CROPPER DENGAN RASIO SINKRON 4:3
   const [showCropper, setShowCropper] = useState(false)
   const [cropImageSrc, setCropImageSrc] = useState('')
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const dragStart = useRef({ x: 0, y: 0 })
-  const imageMeta = useRef({ width: 0, height: 0, drawW: 0, drawH: 0 })
 
   const categories = [
     'Push', 'Pull', 'Legs', 'Upper Body', 'Lower Body', 'Full Body',
@@ -121,7 +120,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     return { border: '1px solid #FFFFFF', color: '#FFFFFF', boxShadow: '0 0 10px rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '0px' }
   }
 
-  // 🎯 STEP 1 MENCARI FILE & MODAL CROPPER MUNCUL
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -134,10 +132,9 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
       setShowCropper(true)
     }
     reader.readAsDataURL(file)
-    e.target.value = '' // Reset input file picker
+    e.target.value = ''
   }
 
-  // 🎯 STEP 2 LOGIKA DRAGGING/PANNING MENGGUNAKAN MOUSE & TOUCHSCREEN HP
   const startPan = (clientX, clientY) => {
     setIsDragging(true)
     dragStart.current = { x: clientX - pan.x, y: clientY - pan.y }
@@ -151,7 +148,7 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     })
   }
 
-  // 🎯 STEP 3 EXECUTE EKSPOR CANVAS DAN UPLOAD HASIL POTONGAN KE SUPABASE
+  // 🎯 SINKRONISASI 4:3 EKSPOR HD CANVAS KE SUPABASE BUCKET
   const handleApplyCrop = async () => {
     if (!cropImageSrc) return
     setUploadingImage(true)
@@ -161,14 +158,14 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     img.src = cropImageSrc
     img.onload = async () => {
       const canvas = document.createElement('canvas')
-      // Skala resolusi landscape HD pas untuk EntryCard
+      // 🎯 DIUBAH MENJADI ASPEK RASIO KOTAK 4:3 HD RESOLUSI (720 x 540)
       canvas.width = 720 
-      canvas.height = 405 
+      canvas.height = 540 
       const ctx = canvas.getContext('2d')
 
-      // Hitung dimensi base frame visual crop box (320x180)
+      // Dimensi base monitor viewport 4:3 kustom (320 x 240)
       const frameW = 320
-      const frameH = 180
+      const frameH = 240
       const scaleFit = Math.min(frameW / img.width, frameH / img.height) || 1
       const drawW = img.width * scaleFit
       const drawH = img.height * scaleFit
@@ -176,9 +173,8 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
       ctx.fillStyle = '#0A0A0E'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Sinkronisasi transformasi koordinat CSS ke Canvas internal 
       ctx.save()
-      const ratio = canvas.width / frameW // Mengikuti perbandingan resolusi HD
+      const ratio = canvas.width / frameW 
       ctx.scale(ratio, ratio)
       ctx.translate(frameW / 2 + pan.x, frameH / 2 + pan.y)
       ctx.scale(zoom, zoom)
@@ -245,13 +241,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     }
   }
 
-  // Hitung preview fit ukuran gambar di layar cropper secara aman
-  let fitW = 0, fitH = 0
-  if (cropImageSrc) {
-    const baseW = 320, baseH = 180
-    const scale = Math.min(baseW / 100, baseH / 100) 
-  }
-
   return (
     <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
       
@@ -273,7 +262,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 font-mono text-xs text-[#EDEAF6] pb-2">
             
-            {/* INPUT DAY DAN TOMBOL TANGGAL */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">DAY #</label>
@@ -355,13 +343,11 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               </div>
             )}
 
-            {/* INPUT FIELD JUDUL SESI */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">JUDUL SESI *</label>
               <input type="text" placeholder="Contoh: Push Day — Chest Focus" value={title} onChange={(e) => setTitle(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-none outline-none focus:border-[#7C5CFF] font-mono" required />
             </div>
 
-            {/* SELECTION GRID UNTUK RANK */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">RANK</label>
               <div className="grid grid-cols-6 gap-1.5">
@@ -371,7 +357,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               </div>
             </div>
 
-            {/* SELECTION OVERLAY UNTUK KATEGORI LENGKAP */}
             <div className="flex flex-col gap-1 relative">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">KATEGORI</label>
               <button type="button" onClick={() => setShowCategorySelector(true)} className="w-full bg-black border border-[#211D2C] p-2.5 text-white rounded-none font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF] outline-none">
@@ -402,25 +387,22 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               )}
             </div>
 
-            {/* INPUT DURASI */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">DURASI</label>
               <input type="text" placeholder="Contoh: 1h 30m" value={duration} onChange={(e) => setDuration(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-none outline-none focus:border-[#7C5CFF] font-mono" />
             </div>
 
-            {/* INPUT TEXTAREA CATATAN GRINDING */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">CATATAN</label>
               <textarea placeholder="PR baru, perasaan saat latihan, dll..." value={note} onChange={(e) => setNote(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-none outline-none focus:border-[#7C5CFF] font-mono" rows="3" />
             </div>
 
-            {/* ZONE UPLOAD GAMBAR DAN PREVIEW */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">FOTO / ILUSTRASI</label>
               <div className="flex items-center justify-center border border-dashed border-[#211D2C] p-4 bg-black/40 rounded-none relative min-h-[90px] transition-all hover:bg-black/60">
                 {imageUrl ? (
                   <div className="flex flex-col items-center gap-2 w-full">
-                    <img src={imageUrl} className="max-h-24 object-contain rounded-none border border-[#211D2C]" alt="preview" />
+                    <img src={imageUrl} className="max-h-32 object-contain rounded-none border border-[#211D2C]" alt="preview" />
                     <button type="button" onClick={() => setImageUrl('')} className="text-[10px] text-red-400 font-bold uppercase tracking-wider mt-1 font-mono">Hapus Foto</button>
                   </div>
                 ) : (
@@ -433,7 +415,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               </div>
             </div>
 
-            {/* ACTION TOMBOL BATAL & SIMPAN */}
             <div className="grid grid-cols-2 gap-3 mt-3 font-mono">
               <button type="button" onClick={onClose} className="py-3 bg-transparent border border-[#211D2C] text-[#EDEAF6] rounded-none hover:bg-[#211D2C] transition-colors uppercase tracking-wider font-bold">Batal</button>
               <button type="submit" disabled={loading || uploadingImage} className="py-3 bg-[#7C5CFF] text-white font-black rounded-none hover:bg-[#6b52e0] transition-colors uppercase tracking-wider shadow-lg flex items-center justify-center gap-2">
@@ -445,12 +426,11 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
         </div>
       </div>
 
-      {/* 🎯 MODAL POPUP OVERLAY BARU: MANUAL RPG IMAGE CROPPER INTERFACE */}
+      {/* MODAL OVERLAY: MANUAL RPG IMAGE CROPPER INTERFACE SINKRONISASI KOTAK 4:3 */}
       {showCropper && (
         <div className="fixed inset-0 z-55 bg-black/95 flex flex-col items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-none p-5 flex flex-col gap-4 relative shadow-2xl">
             
-            {/* SIKU UNGU TEBAL 3PX DI SEKELILING KOTAK CROPPER OVERLAY */}
             <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
@@ -458,16 +438,16 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
 
             <div className="border-b border-[#211D2C] pb-2 flex justify-between items-center">
               <span className="font-display font-black text-xs uppercase tracking-wider text-white">SISTEM KALIBRASI ILUSTRASI</span>
-              <span className="bg-[#7C5CFF]/20 text-[#7C5CFF] text-[8px] font-mono px-1.5 py-0.5 tracking-widest uppercase font-bold">MANUAL CROP</span>
+              <span className="bg-[#7C5CFF]/20 text-[#7C5CFF] text-[8px] font-mono px-1.5 py-0.5 tracking-widest uppercase font-bold">4:3 RATIO</span>
             </div>
 
             <p className="text-[10px] text-[#8B8696] font-mono leading-tight uppercase tracking-wide">
               👉 Geser foto secara langsung & atur slider zoom di bawah untuk kalibrasi visual terbaik:
             </p>
 
-            {/* 🎯 VIEWPORT BOX CROPPER (KOTAK TEMPAT CROP, TOUCH-NONE UNTUK LOCK MOBILE SCROLL) */}
+            {/* 🎯 VIEWPORT BOX CROPPER: DIUBAH MENJADI RASIO KOTAK 4:3 (w-[320px] h-[240px]) */}
             <div 
-              className="w-[320px] h-[180px] bg-black border border-[#211D2C] relative overflow-hidden mx-auto touch-none cursor-move flex items-center justify-center"
+              className="w-[320px] h-[240px] bg-black border border-[#211D2C] relative overflow-hidden mx-auto touch-none cursor-move flex items-center justify-center"
               onMouseDown={(e) => startPan(e.clientX, e.clientY)}
               onMouseMove={(e) => movePan(e.clientX, e.clientY)}
               onMouseUp={() => setIsDragging(false)}
@@ -486,7 +466,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
                 <div className="border-b border-dashed border-white/5 w-full"></div>
               </div>
 
-              {/* Siku indikator fokus di dalam viewport */}
               <div className="absolute top-2 left-2 w-2 h-2 border-t border-l border-[#7C5CFF]/60 pointer-events-none z-20" />
               <div className="absolute top-2 right-2 w-2 h-2 border-t border-r border-[#7C5CFF]/60 pointer-events-none z-20" />
               <div className="absolute bottom-2 left-2 w-2 h-2 border-b border-l border-[#7C5CFF]/60 pointer-events-none z-20" />
@@ -505,7 +484,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               />
             </div>
 
-            {/* SLIDER CONTROL UNTUK ZOOM FOTO */}
             <div className="flex flex-col gap-1.5 mt-1 font-mono">
               <div className="flex justify-between text-[9px] text-[#8B8696] font-bold uppercase tracking-wider">
                 <span>SKALA ZOOM:</span>
@@ -522,7 +500,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               />
             </div>
 
-            {/* ACTION TOMBOL DI OVERLAY CROPPER */}
             <div className="grid grid-cols-2 gap-3 mt-2 font-mono text-xs">
               <button 
                 type="button" 
