@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { X, Loader2, Upload, ChevronDown } from 'lucide-react'
+import { X, Loader2, Upload, ChevronDown, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 
 export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onSaved }) {
   const [loading, setLoading] = useState(false)
   const [dayNumber, setDayNumber] = useState(maxDayNumber + 1)
   
-  // 🎯 FIX PALING AKURAT: Pake 'en-CA' biar otomatis ngikutin timezone lokal HP lu (WIB/WITA/WIT aman)
+  // 🎯 Timezone aman dengan en-CA (Format: YYYY-MM-DD)
   const [entryDate, setEntryDate] = useState(() => new Date().toLocaleDateString('en-CA'))
 
   const [title, setTitle] = useState('')
@@ -19,6 +19,11 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   const [uploadingImage, setUploadingImage] = useState(false)
 
   const [showCategorySelector, setShowCategorySelector] = useState(false)
+  
+  // 🎯 STATE UNTUK CUSTOM RPG SYSTEM CALENDAR PICKER
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear())
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date().getMonth()) // 0-11
 
   const categories = [
     'Push', 'Pull', 'Legs', 'Upper Body', 'Lower Body', 'Full Body',
@@ -27,6 +32,11 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     'CrossFit', 'Functional', 'Mobility', 'Stretching', 'Yoga',
     'Boxing/Combat', 'Swimming', 'Running', 'Cycling', 'Sport-specific',
     'Recovery', 'Rest', '+ Lainnya'
+  ];
+
+  const indonesianMonths = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
 
   useEffect(() => {
@@ -46,8 +56,68 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
         setCategory('+ Lainnya')
         setCustomCategory(editEntry.category || '')
       }
+
+      // Sync data tanggal edit ke state kalender kustom
+      if (editEntry.entry_date) {
+        const parsedDate = new Date(editEntry.entry_date);
+        if (!isNaN(parsedDate.getTime())) {
+          setCalendarYear(parsedDate.getFullYear());
+          setCalendarMonth(parsedDate.getMonth());
+        }
+      }
     }
   }, [editEntry])
+
+  // Helper formatting display tanggal di form utama modal
+  const getDisplayDateLabel = (dateStr) => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Pilih Tanggal';
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  // Logika Generator Grid Hari Kalok RPG
+  const generateCalendarDays = () => {
+    const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay(); // Hari pertama jatuh di hari apa (0 = Minggu)
+    const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate(); // Total hari bulan ini
+    
+    const dayCells = [];
+    // Isi cell kosong untuk menyelaraskan indeks hari pertama awal bulan
+    for (let i = 0; i < firstDayIndex; i++) {
+      dayCells.push(null);
+    }
+    // Isi angka tanggal
+    for (let day = 1; day <= totalDays; day++) {
+      dayCells.push(day);
+    }
+    return dayCells;
+  };
+
+  const handleSelectDay = (day) => {
+    if (!day) return;
+    // Format pad string biar selalu YYYY-MM-DD aman di database Supabase
+    const mm = String(calendarMonth + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    setEntryDate(`${calendarYear}-${mm}-${dd}`);
+    setShowDatePicker(false);
+  };
+
+  const changeMonth = (direction) => {
+    if (direction === 'prev') {
+      if (calendarMonth === 0) {
+        setCalendarMonth(11);
+        setCalendarYear(prev => prev - 1);
+      } else {
+        setCalendarMonth(prev => prev - 1);
+      }
+    } else {
+      if (calendarMonth === 11) {
+        setCalendarMonth(0);
+        setCalendarYear(prev => prev + 1);
+      } else {
+        setCalendarMonth(prev => prev + 1);
+      }
+    }
+  };
 
   const getRankStyle = (r, isActive) => {
     if (!isActive) return { border: '1px solid #211D2C', color: '#8B8696', backgroundColor: 'rgba(0,0,0,0.4)' }
@@ -112,35 +182,95 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
   }
 
   return (
-    /* 🎯 FIX POSISI DI HP: Mengubah items-end menjadi items-center agar modal naik ke tengah & tidak terpotong bawah layar */
     <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
       
-      {/* CONTAINER MODAL UTAMA */}
+      {/* CONTAINER MODAL UTAMA DENGAN FRAME SIKU UNGU */}
       <div className="w-full max-w-md bg-[#100E16] border border-[#211D2C] p-6 rounded-2xl flex flex-col gap-5 max-h-[88vh] overflow-y-auto relative border-box [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         
-        {/* 🎯 SIKU SYSTEM UNGU PRESISI DI 4 SUDUT CONTAINER UTAMA MODAL */}
-        <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
-        <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
-        <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
-        <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+        {/* SIKU SYSTEM UNGU PRESISI DI 4 SUDUT CONTAINER UTAMA MODAL */}
+        <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-45" />
+        <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-45" />
+        <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-45" />
+        <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-45" />
 
         <div className="flex justify-between items-center border-b border-[#211D2C]/60 pb-2">
           <h2 className="text-white font-display font-black text-sm uppercase tracking-wider">{editEntry ? 'EDIT SESI' : 'LOG SESI BARU'}</h2>
           <button type="button" onClick={onClose} className="text-gray-500 hover:text-white transition-colors"><X size={18} /></button>
         </div>
 
-        {/* 🎯 INPUT ZONE: Diberi padding-bottom aman (pb-6) agar input paling bawah tidak menabrak batas frame */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 font-mono text-xs text-[#EDEAF6] pb-6">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">DAY #</label>
               <input type="number" value={dayNumber} onChange={(e) => setDayNumber(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-lg outline-none focus:border-[#7C5CFF] font-mono" required />
             </div>
+            
+            {/* 🎯 TANGGAL FIELD: Menggunakan Custom Button bergaya RPG Interface */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">TANGGAL</label>
-              <input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} className="bg-black border border-[#211D2C] p-2.5 text-white rounded-lg outline-none focus:border-[#7C5CFF] font-mono" required />
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(true)}
+                className="w-full bg-black border border-[#211D2C] p-2.5 text-white rounded-lg font-mono flex items-center justify-between text-left text-xs focus:border-[#7C5CFF] outline-none hover:bg-black/80"
+              >
+                <span className="truncate">{getDisplayDateLabel(entryDate)}</span>
+                <Calendar size={13} className="text-[#7C5CFF] flex-shrink-0 ml-1" />
+              </button>
             </div>
           </div>
+
+          {/* 🎯 MODAL POPUP: CUSTOM SYSTEM RPG CALENDAR SELECTOR OVERLAY */}
+          {showDatePicker && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 relative shadow-2xl">
+                {/* SIKU UNGU DI MODAL KALENDER UTAMA */}
+                <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
+                <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
+
+                {/* Header Navigasi Bulan / Tahun */}
+                <div className="flex justify-between items-center border-b border-[#211D2C] pb-2">
+                  <button type="button" onClick={() => changeMonth('prev')} className="p-1 hover:bg-[#211D2C] rounded text-[#7C5CFF] transition-colors"><ChevronLeft size={16} /></button>
+                  <span className="font-display font-black text-xs uppercase tracking-wider text-white">
+                    {indonesianMonths[calendarMonth]} {calendarYear}
+                  </span>
+                  <button type="button" onClick={() => changeMonth('next')} className="p-1 hover:bg-[#211D2C] rounded text-[#7C5CFF] transition-colors"><ChevronRight size={16} /></button>
+                </div>
+
+                {/* Nama Hari Singkat Grid Header */}
+                <div className="grid grid-cols-7 text-center font-mono text-[9px] font-bold text-[#8B8696] mb-1">
+                  {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map(dayName => (
+                    <span key={dayName}>{dayName}</span>
+                  ))}
+                </div>
+
+                {/* Grid Angka Hari Tanggal */}
+                <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
+                  {generateCalendarDays().map((day, idx) => {
+                    const isSelected = day && entryDate === `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        disabled={!day}
+                        onClick={() => handleSelectDay(day)}
+                        className={`py-1.5 rounded text-center transition-all ${
+                          !day ? 'bg-transparent cursor-default' :
+                          isSelected ? 'bg-[#7C5CFF] text-white font-bold shadow-[0_0_8px_rgba(124,92,255,0.4)]' :
+                          'text-[#EDEAF6] hover:bg-[#211D2C] hover:text-[#7C5CFF]'
+                        }`}
+                      >
+                        {day || ''}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button type="button" onClick={() => setShowDatePicker(false)} className="w-full py-2 bg-[#211D2C] border border-[#312C42] rounded-lg font-mono text-[10px] text-white mt-1 uppercase tracking-wider font-bold">Tutup</button>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase text-[#8B8696] tracking-wide font-mono">JUDUL SESI *</label>
@@ -165,7 +295,7 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
 
             {showCategorySelector && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-xl p-4 flex flex-col gap-3 max-h-[70vh] relative">
                   <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-40" />
                   <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-40" />
                   <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-40" />

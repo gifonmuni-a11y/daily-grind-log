@@ -87,11 +87,11 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
         size={14}
         style={{ border: '1px solid #211D2C' }}
       >
-        {/* 🎯 SIKU SYSTEM KUSTOM WARNA UNGU DI 4 SUDUT ENTRY CARD */}
-        <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
-        <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
-        <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
-        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
+        {/* 🎯 SIKU SYSTEM UNGU DI 4 SUDUT ENTRY CARD (DIPRESISISIKAN MENEMPEL PAS DI ATAS BORDER LINE) */}
+        <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-30" />
+        <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-30" />
+        <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-30" />
+        <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-30" />
         
         {/* LANDSCAPE IMAGE AT TOP */}
         {entry.image_url && (
@@ -154,10 +154,10 @@ export default function EntryCard({ entry, profile, level, streak, onEdit, onDel
               {entry.title || 'Untitled Session'}
             </h3>
 
-            {/* Notes Sesi */}
-            {entry.notes && (
+            {/* Notes Sesi (🎯 FIX: Ditambahkan fallback pembacaan dari entry.note agar data teks gak kosong) */}
+            {(entry.note || entry.notes) && (
               <p className="font-body text-xs text-text-muted leading-relaxed whitespace-pre-wrap mt-1">
-                {entry.notes}
+                {entry.note || entry.notes}
               </p>
             )}
           </div>
