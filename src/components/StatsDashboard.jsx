@@ -18,15 +18,17 @@ export default function StatsDashboard({ entries }) {
     return acc
   }, {})
 
-  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+  // 🎯 FIX: Singkatan nama hari diganti ke Bahasa Indonesia kustom sesuai request lu
+  const dayLabels = ['M', 'S', 'Ss', 'R', 'K', 'J', 'Sb']
   const rankOrder = ['S', 'A', 'B', 'C', 'D', 'E']
 
   return (
     <SystemFrame className="bg-panel mx-4 mb-4 p-4" size={14}>
       <div className="flex items-center gap-2 mb-4">
         <BarChart2 size={14} className="text-accent" />
+        {/* 🎯 FIX: Judul panel diubah menjadi Bahasa Indonesia */}
         <h3 className="font-display font-semibold text-sm text-gray-400 uppercase tracking-widest">
-          7-Day Activity
+          AKTIVITAS 7 HARI
         </h3>
       </div>
 
