@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { X, Loader2, Upload, ChevronDown, Calendar, ChevronLeft, ChevronRight, Move } from 'lucide-react'
+import { X, Loader2, Upload, ChevronDown, Calendar, ChevronLeft, ChevronRight, Move, Sparkles } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 
 export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onSaved }) {
@@ -148,7 +148,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     })
   }
 
-  // 🎯 SINKRONISASI 4:3 EKSPOR HD CANVAS KE SUPABASE BUCKET
   const handleApplyCrop = async () => {
     if (!cropImageSrc) return
     setUploadingImage(true)
@@ -158,12 +157,10 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
     img.src = cropImageSrc
     img.onload = async () => {
       const canvas = document.createElement('canvas')
-      // 🎯 DIUBAH MENJADI ASPEK RASIO KOTAK 4:3 HD RESOLUSI (720 x 540)
       canvas.width = 720 
       canvas.height = 540 
       const ctx = canvas.getContext('2d')
 
-      // Dimensi base monitor viewport 4:3 kustom (320 x 240)
       const frameW = 320
       const frameH = 240
       const scaleFit = Math.min(frameW / img.width, frameH / img.height) || 1
@@ -247,7 +244,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
       {/* OUTER FRAME UTAMA LOG MODAL */}
       <div className="w-full max-w-md bg-[#100E16] border border-[#211D2C] rounded-none flex flex-col max-h-[88vh] relative border-box shadow-2xl overflow-hidden">
         
-        {/* SIKU KUSTOM UNGU TEBAL [3px] TERKUNCI PERMANEN DI UJUNG TEPI BORDER LUAR */}
         <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
         <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
         <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
@@ -281,7 +277,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               </div>
             </div>
 
-            {/* CUSTOM POPUP KALENDER RPG SYSTEM OVERLAY */}
             {showDatePicker && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in zoom-in-95 duration-100">
                 <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-none p-4 flex flex-col gap-3 relative shadow-2xl">
@@ -431,21 +426,29 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
         <div className="fixed inset-0 z-55 bg-black/95 flex flex-col items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-none p-5 flex flex-col gap-4 relative shadow-2xl">
             
-            <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
-            <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
+            {/* 🎯 FIX VISUAL: Siku luar atas dihapus total agar tidak menumpuk ganda mengganggu teks judul */}
             <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
 
-            <div className="border-b border-[#211D2C] pb-2 flex justify-between items-center">
-              <span className="font-display font-black text-xs uppercase tracking-wider text-white">SISTEM KALIBRASI ILUSTRASI</span>
+            {/* 🎯 FIX BOX JUDUL: Kategori judul dibungkus kotak kustom dengan siku ungunya sendiri */}
+            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex justify-between items-center">
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">SISTEM KALIBRASI ILUSTRASI</span>
               <span className="bg-[#7C5CFF]/20 text-[#7C5CFF] text-[8px] font-mono px-1.5 py-0.5 tracking-widest uppercase font-bold">4:3 RATIO</span>
             </div>
 
-            <p className="text-[10px] text-[#8B8696] font-mono leading-tight uppercase tracking-wide">
-              👉 Geser foto secara langsung & atur slider zoom di bawah untuk kalibrasi visual terbaik:
-            </p>
+            {/* 🎯 UPGRADE UI INSTRUKSI: Emoticon tangan dihapus total, diganti dengan Icon Sparkles & Info Grid Box */}
+            <div className="flex items-start gap-2 bg-[#7C5CFF]/5 border border-[#211D2C] p-2.5">
+              <Sparkles size={12} className="text-[#7C5CFF] mt-0.5 flex-shrink-0" />
+              <p className="font-mono text-[9px] text-[#8B8696] leading-relaxed uppercase tracking-wider">
+                GESER FOTO SECARA LANGSUNG & ATUR SLIDER ZOOM DI BAWAH UNTUK KALIBRASI VISUAL TERBAIK:
+              </p>
+            </div>
 
-            {/* 🎯 VIEWPORT BOX CROPPER: DIUBAH MENJADI RASIO KOTAK 4:3 (w-[320px] h-[240px]) */}
+            {/* VIEWPORT BOX CROPPER: RASIO KOTAK 4:3 (w-[320px] h-[240px]) */}
             <div 
               className="w-[320px] h-[240px] bg-black border border-[#211D2C] relative overflow-hidden mx-auto touch-none cursor-move flex items-center justify-center"
               onMouseDown={(e) => startPan(e.clientX, e.clientY)}

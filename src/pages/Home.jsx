@@ -138,7 +138,6 @@ export default function Home({ session }) {
   const [showAchievementUnlock, setShowAchievementUnlock] = useState(false)
   const [activeUnlockAchievement, setActiveUnlockAchievement] = useState(null)
 
-  // STATE UNTUK GERBANG TOMBOL INITIALIZE AUDIO DI AWAL APPS
   const [showWelcomeCover, setShowWelcomeCover] = useState(true)
 
   const fetchProfile = useCallback(async () => {
@@ -226,7 +225,6 @@ export default function Home({ session }) {
     setShowWelcomeCover(false)
   }
 
-  // ENGINE DETEKTOR PECAH STREAK JATUH KE NOL (LOCALSTORAGE TRACKER)
   useEffect(() => {
     if (loading) return
     const storedStreak = parseInt(localStorage.getItem('dg_rpg_streak') || '-1', 10)
@@ -239,7 +237,6 @@ export default function Home({ session }) {
     localStorage.setItem('dg_rpg_streak', streak.toString())
   }, [loading, streak])
 
-  // ENGINE TIER UP & ACHIEVEMENT UNLOCK SYSTEM DENGAN SUARA KUSTOM 
   useEffect(() => {
     if (loading) return
 
@@ -288,7 +285,6 @@ export default function Home({ session }) {
     setDeleteTargetId(id)
   }
 
-  // SFX FEEDBACK: HAPUS SESI LOG HARIAN
   const confirmDeleteSesi = async () => {
     if (!deleteTargetId) return
     const deleteAudio = new Audio(AUDIO_URLS.others.hapusLog)
@@ -309,12 +305,10 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
-  // Fungsi keluar langsung menembak proses sign out tanpa delay suara bertumpuk lagi
   async function handleSignOut() {
     await supabase.auth.signOut()
   }
 
-  // Membunyikan suara pacar secara instan tepat saat ikon log out di pojok kanan atas ditekan pertama kali
   const triggerLogoutModalWithVoice = () => {
     const logoutAudio = new Audio(AUDIO_URLS.others.logOut)
     logoutAudio.play().catch(e => console.log(e))
@@ -379,7 +373,6 @@ export default function Home({ session }) {
 
         {activeTab === 'grind' && (
           <>
-            {/* 🎯 CLEAN FIX: Komponen ProfileHeader dan modul Stats Dashboard dibersihkan dari kode duplikat bawaan */}
             <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
 
             <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
@@ -496,7 +489,7 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* 🎯 FIX BUTTON UI: Dialog Destruksi Log sekarang menggunakan tombol kustom siku ungu terpisah */}
+      {/* 🎯 DESTRUKSI LOG MODAL FIXED CONTEXT BOX WITH UNIFIED PURPLE ACTIVE ACTIONS */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
@@ -519,7 +512,7 @@ export default function Home({ session }) {
             </p>
 
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* TOMBOL BATAL KUSTOM DENGAN SIKU UNGU */}
+              {/* TOMBOL BATAL UNGU KUSTOM */}
               <div className="relative">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -534,7 +527,7 @@ export default function Home({ session }) {
                 </button>
               </div>
               
-              {/* TOMBOL HAPUS KUSTOM DENGAN SIKU UNGU */}
+              {/* 🎯 FIX: MENGUBAH BACKGROUND HAPUS MENJADI UNGU DENGAN KOTAKAN & SIKU TEMA */}
               <div className="relative">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -543,7 +536,7 @@ export default function Home({ session }) {
                 <button
                   type="button"
                   onClick={confirmDeleteSesi}
-                  className="w-full py-2.5 bg-[#EF4444] text-white font-black rounded-none shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all text-center uppercase tracking-wider"
+                  className="w-full py-2.5 bg-[#7C5CFF] text-white font-black rounded-none shadow-[0_0_12px_rgba(124,92,255,0.25)] hover:bg-[#6b52e0] active:scale-95 transition-all text-center uppercase tracking-wider"
                 >
                   HAPUS
                 </button>
@@ -553,7 +546,7 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 FIX BUTTON UI: Dialog Konfirmasi Keluar sekarang menggunakan tombol kustom siku ungu terpisah */}
+      {/* 🎯 KONFIRMASI KELUAR MODAL FIXED CONTEXT BOX WITH UNIFIED PURPLE ACTIVE ACTIONS */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
@@ -576,7 +569,7 @@ export default function Home({ session }) {
             </p>
             
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* TOMBOL BATAL KUSTOM DENGAN SIKU UNGU */}
+              {/* TOMBOL BATAL UNGU KUSTOM */}
               <div className="relative">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -591,7 +584,7 @@ export default function Home({ session }) {
                 </button>
               </div>
               
-              {/* TOMBOL SETUJU KUSTOM DENGAN SIKU UNGU */}
+              {/* 🎯 FIX: MENGUBAH BACKGROUND SETUJU MENJADI UNGU DENGAN KOTAKAN & SIKU TEMA */}
               <div className="relative">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -600,7 +593,7 @@ export default function Home({ session }) {
                 <button 
                   type="button" 
                   onClick={handleSignOut} 
-                  className="w-full py-2.5 bg-[#EF4444] text-white font-black rounded-none text-center uppercase tracking-wider active:scale-95 transition-all"
+                  className="w-full py-2.5 bg-[#7C5CFF] text-white font-black rounded-none shadow-[0_0_12px_rgba(124,92,255,0.25)] hover:bg-[#6b52e0] active:scale-95 transition-all text-center uppercase tracking-wider"
                 >
                   SETUJU
                 </button>
