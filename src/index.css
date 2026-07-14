@@ -2,11 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 🎯 FIX ABSOLUT GLOBAL: Sembunyikan total semua jenis scrollbar di setiap elemen tanpa mematikan fitur geser/scroll */
 * {
   box-sizing: border-box;
-  /* 🎯 FIX GLOBAL: Sembunyikan scrollbar untuk engine Firefox dan IE/Edge */
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+html, body {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 body {
@@ -28,11 +45,6 @@ body {
 input, textarea, [contenteditable="true"] {
   -webkit-user-select: text !important;
   user-select: text !important;
-}
-
-/* 🎯 FIX GLOBAL: Sembunyikan total scrollbar untuk engine Webkit (Chrome, Safari, PWA Mobile) */
-::-webkit-scrollbar {
-  display: none !important;
 }
 
 .font-display {
