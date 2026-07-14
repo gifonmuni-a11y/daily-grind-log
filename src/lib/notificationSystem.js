@@ -12,12 +12,8 @@ export async function requestNotificationPermission() {
     return true;
   }
 
-  if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
-  }
-
-  return false;
+  const permission = await Notification.requestPermission();
+  return permission === 'granted';
 }
 
 /**
@@ -26,29 +22,46 @@ export async function requestNotificationPermission() {
  * @param {Object} options Konfigurasi payload notifikasi
  */
 export async function sendSystemNotification(title, options = {}) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') {
+  if (!('Notification' in window)) {
     return;
   }
 
+  // Jika izin belum sinkron di level browser situs, minta ulang secara paksa
+  if (Notification.permission !== 'granted') {
+    const status = await Notification.requestPermission();
+    if (status !== 'granted') {
+      console.warn("Izin notifikasi belum disetujui oleh mesin situs browser.");
+      return;
+    }
+  }
+
+  // 🎯 SETELAN PRIORITAS TINGGI: Mencegah Android silent-drop notifikasi
   const defaultOptions = {
-    icon: '/icons/icon-192x192.png', 
-    badge: '/icons/icon-96x96.png', 
-    vibrate: [200, 100, 200],       
-    data: {
-      url: window.location.origin   
-    },
+    body: options.body || "",
+    tag: options.tag || "grind-log-notification",
+    renotify: true,                 // Timpa notifikasi lama jika tag sama
+    requireInteraction: true,       // Notifikasi bakal menetap di laci atas sampai di-swipe user
+    vibrate: [200, 100, 200],       // Pola getar taktis
     ...options
   };
 
+  // 🚀 Eksekusi via Service Worker Terdaftar
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, defaultOptions);
+      if (registration) {
+        await registration.showNotification(title, defaultOptions);
+        return; // Berhasil keluar ke laci atas HP
+      }
     } catch (err) {
-      console.error("Gagal menembakkan notifikasi via Service Worker:", err);
-      new Notification(title, defaultOptions);
+      console.error("Gagal menembakkan lewat Service Worker, mencoba fallback...", err);
     }
-  } else {
+  }
+
+  // Fallback cadangan jika service worker sedang sibuk/delay
+  try {
     new Notification(title, defaultOptions);
+  } catch (e) {
+    console.error("Semua jalur notifikasi native diblokir browser:", e);
   }
 }
