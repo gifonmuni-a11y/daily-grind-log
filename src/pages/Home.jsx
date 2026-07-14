@@ -192,7 +192,6 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  // 🎯 FIX MANTAP: MENTRIGGER EFEK SUARA ELEKTRONIK ROBOTIK SISTEM BESERTA AUDIO AUDIO UTAMA
   const handleWelcomeInitialization = () => {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext
@@ -202,7 +201,6 @@ export default function Home({ session }) {
         const gainNode = audioCtx.createGain()
         
         oscillator.type = 'sine'
-        // Efek slide frekuensi naik instan khas aktivasi sistem game/manhwa
         oscillator.frequency.setValueAtTime(780, audioCtx.currentTime)
         oscillator.frequency.exponentialRampToValueAtTime(1650, audioCtx.currentTime + 0.12)
         
@@ -568,17 +566,16 @@ export default function Home({ session }) {
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
 
-      {/* 🎯 FIX TOTAL: MODAL WELCOME COVER HITAM PEKAT MURNI DENGAN KOTAKAN UTAMA SIKU UNGU TERPISAH */}
+      {/* 🎯 FIX ABSOLUT: Mengubah kelas z-55 ke z-[100] (Arbitrary Tailwind) untuk menimbun total level & tombol dock bawah */}
       {showWelcomeCover && (
-        <div className="fixed inset-0 z-55 bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-none p-5 flex flex-col gap-4 relative shadow-2xl text-center">
             
-            <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
-            <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
-            <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
-            <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
+            <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
+            <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
             
-            {/* 🎯 INNER SYSTEM BOX: Kotakan terpisah dengan siku ungu khusus untuk judul SYSTEM SIAP */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -588,7 +585,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
