@@ -30,6 +30,7 @@ import CompanionAI from '../components/CompanionAI'
 import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
+import AdminPanel from '../components/AdminPanel'
 
 // 🎯 DIRECT SUPABASE STORAGE AUDIO URL MAPPER
 const AUDIO_URLS = {
@@ -139,6 +140,22 @@ export default function Home({ session }) {
   const [activeUnlockAchievement, setActiveUnlockAchievement] = useState(null)
 
   const [showWelcomeCover, setShowWelcomeCover] = useState(true)
+
+  // 🎯 Easter Egg Admin Panel State & Ref
+  const [showAdminModal, setShowAdminModal] = useState(false)
+  const adminTimerRef = useRef(null)
+
+  const handleAdminPressStart = () => {
+    adminTimerRef.current = setTimeout(() => {
+      setShowAdminModal(true)
+    }, 10000)
+  }
+
+  const handleAdminPressEnd = () => {
+    if (adminTimerRef.current) {
+      clearTimeout(adminTimerRef.current)
+    }
+  }
 
   const fetchProfile = useCallback(async () => {
     const { data } = await supabase
@@ -360,7 +377,16 @@ export default function Home({ session }) {
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
-          <span className="font-display font-bold text-base text-accent tracking-widest">DAILY GRIND LOG</span>
+          <span 
+            onMouseDown={handleAdminPressStart}
+            onMouseUp={handleAdminPressEnd}
+            onMouseLeave={handleAdminPressEnd}
+            onTouchStart={handleAdminPressStart}
+            onTouchEnd={handleAdminPressEnd}
+            className="font-display font-bold text-base text-accent tracking-widest cursor-pointer select-none active:text-[#7C5CFF] transition-colors"
+          >
+            DAILY GRIND LOG
+          </span>
           <div className="flex items-center gap-1">
             <button onClick={() => setShowAboutModal(true)} className="p-2 hover:bg-border-hover transition-colors">
               <HelpCircle size={16} className="text-text-dim" />
@@ -625,6 +651,13 @@ export default function Home({ session }) {
 
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
+      
+      {showAdminModal && (
+        <AdminPanel 
+          userId={userId} 
+          onClose={() => setShowAdminModal(false)} 
+        />
+      )}
 
       {showWelcomeCover && (
         <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
@@ -644,7 +677,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
