@@ -4,6 +4,9 @@
 
 * {
   box-sizing: border-box;
+  /* 🎯 FIX GLOBAL: Sembunyikan scrollbar untuk engine Firefox dan IE/Edge */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 body {
@@ -27,21 +30,9 @@ input, textarea, [contenteditable="true"] {
   user-select: text !important;
 }
 
+/* 🎯 FIX GLOBAL: Sembunyikan total scrollbar untuk engine Webkit (Chrome, Safari, PWA Mobile) */
 ::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0A0A0E;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #211D2C;
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #3A3548;
+  display: none !important;
 }
 
 .font-display {
