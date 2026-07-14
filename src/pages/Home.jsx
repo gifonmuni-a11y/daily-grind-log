@@ -512,7 +512,7 @@ export default function Home({ session }) {
             </p>
 
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* 🎯 FIX: Tombol Batal dikasih bingkai kotak tersendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              {/* Tombol Batal Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#16141F]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -527,7 +527,7 @@ export default function Home({ session }) {
                 </button>
               </div>
               
-              {/* 🎯 FIX: Tombol Hapus dikasih bingkai kotak kustom sendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              {/* Tombol Hapus Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
@@ -569,7 +569,7 @@ export default function Home({ session }) {
             </p>
             
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* 🎯 FIX: Tombol Batal dikasih bingkai kotak tersendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              {/* Tombol Batal Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#16141F]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -584,7 +584,7 @@ export default function Home({ session }) {
                 </button>
               </div>
               
-              {/* 🎯 FIX: Tombol Setuju dikasih bingkai kotak kustom sendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              {/* Tombol Setuju Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
@@ -621,7 +621,7 @@ export default function Home({ session }) {
       )}
       
       {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
-      {showOriginalModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
+      {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
 
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
