@@ -644,7 +644,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
