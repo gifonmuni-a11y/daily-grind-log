@@ -330,12 +330,11 @@ export default function Home({ session }) {
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
             
-            {/* 🎯 TAB FILTER DIBERI JARAK TURUN DIKIT */}
-            <div className="mt-6 mb-3">
+            {/* 🎯 FIX SCROLLBAR & SPACING: Diberi jarak turun ideal, dibatasi rapi (mx-4) dan mematikan native scrollbar yang bocor ke kanan */}
+            <div className="mt-8 mb-5 mx-4 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               <FilterTabs active={activeFilter} onChange={setActiveFilter} />
             </div>
 
-            {/* 🎯 FIX TOTAL: Seluruh entries dirender utuh sebagai Card tanpa dibatasi/slice(0,3) lagi */}
             {filteredEntries.length === 0 ? (
               <div className="mx-4 py-16 text-center">
                 <p className="font-display text-2xl font-bold text-text-dim mb-2">NO ENTRIES</p>
@@ -440,7 +439,7 @@ export default function Home({ session }) {
           onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
           onSaved={() => {
             fetchEntries()
-            setActiveFilter('Semua') // Banting otomatis ke filter Semua biar data baru nampil
+            setActiveFilter('Semua')
           }} 
         />
       )}
