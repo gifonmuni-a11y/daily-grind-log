@@ -31,7 +31,7 @@ import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
 
-// 🎯 DIRECT SUPABASE STORAGE STORAGE AUDIO URL MAPPER 
+// 🎯 DIRECT SUPABASE STORAGE AUDIO URL MAPPER
 const AUDIO_URLS = {
   tiers: {
     'ELITE TRAINER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/elitetrainer.mp3',
@@ -138,6 +138,9 @@ export default function Home({ session }) {
   const [showAchievementUnlock, setShowAchievementUnlock] = useState(false)
   const [activeUnlockAchievement, setActiveUnlockAchievement] = useState(null)
 
+  // 🎯 STATE BARU UNTUK GERBANG TOMBOL INITIALIZE AUDIO DI AWAL APPS
+  const [showWelcomeCover, setShowWelcomeCover] = useState(true)
+
   const fetchProfile = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
@@ -189,34 +192,18 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  // 🎯 1. ENGINE FIRST-TOUCH SCENARIO UNTUK WELCOME VOICE (BYPASS AUTOPLAY BROWSER)
-  useEffect(() => {
-    if (!loading) {
-      const todayStr = new Date().toLocaleDateString('en-CA')
-      const hasLogToday = entries.some(e => e.entry_date === todayStr)
-      const selectedWelcomeAudio = hasLogToday ? AUDIO_URLS.welcome.normal : AUDIO_URLS.welcome.reminder
+  // 🎯 FIX: HANDLE CLICK PADA GATES INITIALIZER UNTUK MEMICU SUARA SAMBUTAN TANPA OVERLAP LAGI
+  const handleWelcomeInitialization = () => {
+    const todayStr = new Date().toLocaleDateString('en-CA')
+    const hasLogToday = entries.some(e => e.entry_date === todayStr)
+    const selectedWelcomeAudio = hasLogToday ? AUDIO_URLS.welcome.normal : AUDIO_URLS.welcome.reminder
 
-      const triggerWelcomeAudio = () => {
-        const audio = new Audio(selectedWelcomeAudio)
-        audio.play()
-          .then(() => {
-            window.removeEventListener('click', triggerWelcomeAudio)
-            window.removeEventListener('touchstart', triggerWelcomeAudio)
-          })
-          .catch(err => console.log("Menunggu interaksi user pertama kali...", err))
-      }
+    const welcomeAudio = new Audio(selectedWelcomeAudio)
+    welcomeAudio.play().catch(err => console.log("Gagal memuat file audio welcome:", err))
+    setShowWelcomeCover(false)
+  }
 
-      window.addEventListener('click', triggerWelcomeAudio)
-      window.addEventListener('touchstart', triggerWelcomeAudio, { passive: true })
-
-      return () => {
-        window.removeEventListener('click', triggerWelcomeAudio)
-        window.removeEventListener('touchstart', triggerWelcomeAudio)
-      }
-    }
-  }, [loading, entries])
-
-  // 🎯 2. ENGINE DETEKTOR PECAH STREAK JATUH KE NOL (LOCALSTORAGE TRACKER)
+  // 🎯 ENGINE DETEKTOR PECAH STREAK JATUH KE NOL (LOCALSTORAGE TRACKER)
   useEffect(() => {
     if (loading) return
     const storedStreak = parseInt(localStorage.getItem('dg_rpg_streak') || '-1', 10)
@@ -229,7 +216,7 @@ export default function Home({ session }) {
     localStorage.setItem('dg_rpg_streak', streak.toString())
   }, [loading, streak])
 
-  // 🎯 3. ENGINE TIER UP & ACHIEVEMENT UNLOCK SYSTEM DENGAN SUARA KUSTOM 
+  // 🎯 ENGINE TIER UP & ACHIEVEMENT UNLOCK SYSTEM DENGAN SUARA KUSTOM 
   useEffect(() => {
     if (loading) return
 
@@ -248,7 +235,6 @@ export default function Home({ session }) {
         setLevelUpData({ oldTier, newTier, newLevel: level })
         setShowLevelUp(true)
         
-        // Mainkan suara kustom sesuai nama tier yang baru saja dicapai
         const tierKey = newTier.toUpperCase()
         const tierAudioUrl = AUDIO_URLS.tiers[tierKey]
         if (tierAudioUrl) {
@@ -265,7 +251,6 @@ export default function Home({ session }) {
         setActiveUnlockAchievement(newlyUnlocked)
         setShowAchievementUnlock(true)
         
-        // Mainkan suara kustom sesuai nama achievement yang baru didapatkan
         const achKey = newlyUnlocked.title.toUpperCase()
         const achAudioUrl = AUDIO_URLS.achievements[achKey]
         if (achAudioUrl) {
@@ -280,7 +265,7 @@ export default function Home({ session }) {
     setDeleteTargetId(id)
   }
 
-  // 🎯 4. SFX FEEDBACK: HAPUS SESI LOG HARIAN
+  // SFX FEEDBACK: HAPUS SESI LOG HARIAN
   const confirmDeleteSesi = async () => {
     if (!deleteTargetId) return
     const deleteAudio = new Audio(AUDIO_URLS.others.hapusLog)
@@ -301,13 +286,14 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
-  // 🎯 5. SFX FEEDBACK: PROSES LOG OUT AKUN
+  // 🎯 FIX: LOGOUT SUARA BERHASIL DENGAN DELAY 1.5 DETIK BIAR TIAP AUDIO TERDENGAR FULL SEBELUM DISCONNECT
   async function handleSignOut() {
     const logoutAudio = new Audio(AUDIO_URLS.others.logOut)
     logoutAudio.play().catch(e => console.log(e))
+    
     setTimeout(async () => {
       await supabase.auth.signOut()
-    }, 1000)
+    }, 1500)
   }
 
   async function handleSeedDummyData() {
@@ -511,11 +497,27 @@ export default function Home({ session }) {
         </div>
       )}
 
+      {/* 🎯 FIX LOGOUT CONFIRM DIALOG: DENGAN BINGKAI KOTAK SIKU SYSTEM BERSERTA WARNA TEKS BARU PILIHAN LU */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-lg flex flex-col gap-4">
-            <div className="text-center"><h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Konfirmasi Keluar</h3><p className="font-body text-[10px] text-[#EDEAF6]/50">Lu yakin mau log out dari akun Daily Grind Log ini?</p></div>
-            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]"><button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 bg-[#211D2C] border border-[#312C42] text-white rounded-lg">BATAL</button><button type="button" onClick={handleSignOut} className="py-2.5 bg-[#EF4444] text-white font-black rounded-lg">SETUJU</button></div>
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
+            
+            <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
+
+            <div className="text-center">
+              <h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Konfirmasi Keluar</h3>
+              {/* 🎯 UPDATE TEKS LOGOUT BARU */}
+              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">
+                kamu mau meninggalku ya.. Lu yakin mau log out dari akun Daily Grind Log ini?
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
+              <button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 bg-[#211D2C] border border-[#312C42] text-white rounded-none">BATAL</button>
+              <button type="button" onClick={handleSignOut} className="py-2.5 bg-[#EF4444] text-white font-black rounded-none">SETUJU</button>
+            </div>
           </div>
         </div>
       )}
@@ -528,7 +530,6 @@ export default function Home({ session }) {
           maxDayNumber={maxDayNumber} 
           editEntry={editEntry} 
           onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
-          // 🎯 6. SFX FEEDBACK: UPDATE / SIMPAN SESI BARU BERHASIL
           onSaved={() => {
             const updateAudio = new Audio(AUDIO_URLS.others.updateLog)
             updateAudio.play().catch(e => console.log(e))
@@ -543,6 +544,36 @@ export default function Home({ session }) {
 
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
+
+      {/* 🎯 MODAL SPLASH INTERFACE INITIALIZER BARU: GATES UNTUK MEMICU SUARA WELCOME SECARA MANUAL DAN SEHAT */}
+      {showWelcomeCover && (
+        <div className="fixed inset-0 z-55 bg-black/95 flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-none p-5 flex flex-col gap-4 relative shadow-2xl text-center">
+            
+            <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
+            <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
+            
+            <div className="border-b border-[#211D2C] pb-2">
+              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">SISTEM SIAP</span>
+            </div>
+            
+            <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
+              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+            </p>
+            
+            <button 
+              type="button" 
+              onClick={handleWelcomeInitialization}
+              className="w-full py-3 bg-[#7C5CFF] text-white font-black rounded-none uppercase tracking-wider text-xs shadow-lg hover:bg-[#6b52e0] font-mono"
+            >
+              MASUK SYSTEM
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
