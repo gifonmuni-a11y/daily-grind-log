@@ -31,6 +31,7 @@ import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
 import AdminPanel from '../components/AdminPanel'
+import { requestNotificationPermission, sendSystemNotification } from '../lib/notificationSystem'
 
 // 🎯 DIRECT SUPABASE STORAGE AUDIO URL MAPPER
 const AUDIO_URLS = {
@@ -194,6 +195,40 @@ export default function Home({ session }) {
     Promise.all([fetchProfile(), fetchEntries(), fetchQuestClaimsData()]).finally(() => setLoading(false))
   }, [fetchProfile, fetchEntries, fetchQuestClaimsData])
 
+  // 🎯 REALTIME DATABASE SIGNAL: Mendengarkan tindakan Ban/Warn secara instan dari Admin
+  useEffect(() => {
+    if (!userId) return
+
+    const profileChannel = supabase
+      .channel(`public:profiles:id=eq.${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+        (payload) => {
+          const newProfile = payload.new
+          setProfile(newProfile)
+
+          // Picu jendela laci notifikasi sistem OS secara langsung
+          if (newProfile.status === 'warned') {
+            sendSystemNotification("PERINGATAN SISTEM", {
+              body: newProfile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
+              tag: "user-warning"
+            })
+          } else if (newProfile.status === 'banned') {
+            sendSystemNotification("AKUN DIBEKUKAN", {
+              body: "Sistem mendeteksi pelanggaran berat. Akses ditangguhkan.",
+              tag: "user-banned"
+            })
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(profileChannel)
+    }
+  }, [userId])
+
   const filteredEntries = filterEntries(entries, activeFilter)
   const streak = calcStreak(entries)
   const entriesExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
@@ -208,7 +243,7 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  const handleWelcomeInitialization = () => {
+  const handleWelcomeInitialization = async () => {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext
       if (AudioContext) {
@@ -239,6 +274,12 @@ export default function Home({ session }) {
 
     const welcomeAudio = new Audio(selectedWelcomeAudio)
     welcomeAudio.play().catch(err => console.log("Gagal memuat file audio welcome:", err))
+
+    // Pemicu pendaftaran izin notifikasi native di HP target saat gerbang cover dibuka
+    if ('Notification' in window) {
+      await requestNotificationPermission()
+    }
+
     setShowWelcomeCover(false)
   }
 
@@ -372,6 +413,24 @@ export default function Home({ session }) {
     )
   }
 
+  // 🎯 PROTEKSI TOTAL JALUR BANNED: Jika dibekukan admin, layar langsung terkunci mutlak
+  if (profile?.status === 'banned') {
+    return (
+      <div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center p-4 font-mono select-none">
+        <div className="bg-[#100E16] border border-red-500/30 p-5 w-full max-w-xs text-center relative text-red-400 text-xs">
+          <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-red-500" />
+          <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-red-500" />
+          <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-red-500" />
+          <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-red-500" />
+          <p className="font-bold uppercase tracking-widest mb-2">AKSES SYSTEM DIBEKUKAN</p>
+          <p className="text-[10px] text-gray-500 uppercase leading-relaxed">
+            {profile.warning_msg || "Akun Anda telah ditangguhkan secara permanen oleh administrator."}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
@@ -396,6 +455,18 @@ export default function Home({ session }) {
             </button>
           </div>
         </div>
+
+        {/* 🎯 TAMPILAN BANNER WARNING: Kotakan taktis jika akun berstatus warned */}
+        {profile?.status === 'warned' && (
+          <div className="mx-4 mt-4 border border-amber-500/40 bg-amber-500/5 p-3 relative font-mono text-[10px] text-amber-400">
+            <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-amber-500" />
+            <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-amber-500" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-amber-500" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-amber-500" />
+            <p className="font-bold uppercase tracking-wider mb-1">[ PERINGATAN MODERASI AKTIF ]</p>
+            <p className="uppercase leading-relaxed text-gray-400">{profile.warning_msg}</p>
+          </div>
+        )}
 
         {activeTab === 'grind' && (
           <>
@@ -515,7 +586,6 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* 🎯 DESTRUKSI LOG MODAL FIXED CONTEXT BOX WITH UNIFIED PURPLE ACTIVE ACTIONS */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
@@ -538,7 +608,6 @@ export default function Home({ session }) {
             </p>
 
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* Tombol Batal Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#16141F]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -553,7 +622,6 @@ export default function Home({ session }) {
                 </button>
               </div>
               
-              {/* Tombol Hapus Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
@@ -572,7 +640,6 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 KONFIRMASI KELUAR MODAL FIXED CONTEXT BOX WITH UNIFIED PURPLE ACTIVE ACTIONS */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
@@ -595,7 +662,6 @@ export default function Home({ session }) {
             </p>
             
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* Tombol Batal Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#16141F]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -610,7 +676,6 @@ export default function Home({ session }) {
                 </button>
               </div>
               
-              {/* Tombol Setuju Bingkai Kotak Siku Ungu */}
               <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
@@ -677,7 +742,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
