@@ -309,12 +309,12 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
-  // FIX INSTAN: Fungsi keluar langsung menembak proses sign out tanpa delay suara bertumpuk lagi
+  // Fungsi keluar langsung menembak proses sign out tanpa delay suara bertumpuk lagi
   async function handleSignOut() {
     await supabase.auth.signOut()
   }
 
-  // FIX TIMING AUDIO: Membunyikan suara pacar secara instan tepat saat ikon log out di pojok kanan atas ditekan pertama kali
+  // Membunyikan suara pacar secara instan tepat saat ikon log out di pojok kanan atas ditekan pertama kali
   const triggerLogoutModalWithVoice = () => {
     const logoutAudio = new Audio(AUDIO_URLS.others.logOut)
     logoutAudio.play().catch(e => console.log(e))
@@ -379,6 +379,7 @@ export default function Home({ session }) {
 
         {activeTab === 'grind' && (
           <>
+            {/* 🎯 CLEAN FIX: Komponen ProfileHeader dan modul Stats Dashboard dibersihkan dari kode duplikat bawaan */}
             <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
 
             <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
@@ -432,7 +433,6 @@ export default function Home({ session }) {
               </div>
             </div>
 
-            <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
             
@@ -496,7 +496,7 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* 🎯 DESTRUKSI LOG MODAL FIXED CONTEXT BOX WITH PURPLE CORNER BRACKETS */}
+      {/* 🎯 FIX BUTTON UI: Dialog Destruksi Log sekarang menggunakan tombol kustom siku ungu terpisah */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
@@ -506,7 +506,6 @@ export default function Home({ session }) {
             <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
 
-            {/* 🎯 DETACHED HEADER CONTAINER FOR DESTRUKSI LOG WITH INSIDEpurple BRACKETS */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -518,27 +517,43 @@ export default function Home({ session }) {
             <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
               Sesi ini akan dihapus secara permanen dari server database. Lanjutkan?
             </p>
-            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-              <button
-                type="button"
-                onClick={() => setDeleteTargetId(null)}
-                className="py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-none hover:text-white active:scale-95 transition-all"
-              >
-                BATAL
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteSesi}
-                className="py-2.5 bg-[#EF4444] text-white font-black rounded-none shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all"
-              >
-                HAPUS
-              </button>
+
+            <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
+              {/* TOMBOL BATAL KUSTOM DENGAN SIKU UNGU */}
+              <div className="relative">
+                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+                <button
+                  type="button"
+                  onClick={() => setDeleteTargetId(null)}
+                  className="w-full py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-none hover:text-white active:scale-95 transition-all text-center uppercase tracking-wider"
+                >
+                  BATAL
+                </button>
+              </div>
+              
+              {/* TOMBOL HAPUS KUSTOM DENGAN SIKU UNGU */}
+              <div className="relative">
+                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+                <button
+                  type="button"
+                  onClick={confirmDeleteSesi}
+                  className="w-full py-2.5 bg-[#EF4444] text-white font-black rounded-none shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all text-center uppercase tracking-wider"
+                >
+                  HAPUS
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🎯 KONFIRMASI KELUAR MODAL FIXED CONTEXT BOX WITH PURPLE CORNER BRACKETS */}
+      {/* 🎯 FIX BUTTON UI: Dialog Konfirmasi Keluar sekarang menggunakan tombol kustom siku ungu terpisah */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
@@ -548,7 +563,6 @@ export default function Home({ session }) {
             <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
 
-            {/* 🎯 DETACHED HEADER CONTAINER FOR KONFIRMASI KELUAR WITH INSIDE purple BRACKETS */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -560,9 +574,37 @@ export default function Home({ session }) {
             <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
               kamu mau meninggalku ya.. Lu yakin mau log out dari akun Daily Grind Log ini?
             </p>
-            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-              <button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 bg-[#211D2C] border border-[#312C42] text-white rounded-none">BATAL</button>
-              <button type="button" onClick={handleSignOut} className="py-2.5 bg-[#EF4444] text-white font-black rounded-none">SETUJU</button>
+            
+            <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
+              {/* TOMBOL BATAL KUSTOM DENGAN SIKU UNGU */}
+              <div className="relative">
+                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+                <button 
+                  type="button" 
+                  onClick={() => setShowLogoutConfirm(false)} 
+                  className="w-full py-2.5 bg-[#211D2C] border border-[#312C42] text-white rounded-none font-bold text-center uppercase tracking-wider active:scale-95 transition-all"
+                >
+                  BATAL
+                </button>
+              </div>
+              
+              {/* TOMBOL SETUJU KUSTOM DENGAN SIKU UNGU */}
+              <div className="relative">
+                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+                <button 
+                  type="button" 
+                  onClick={handleSignOut} 
+                  className="w-full py-2.5 bg-[#EF4444] text-white font-black rounded-none text-center uppercase tracking-wider active:scale-95 transition-all"
+                >
+                  SETUJU
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -609,7 +651,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
