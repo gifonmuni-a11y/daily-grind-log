@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map, AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel, getRankTier } from '../lib/expSystem'
@@ -142,6 +142,9 @@ export default function Home({ session }) {
 
   const [showWelcomeCover, setShowWelcomeCover] = useState(true)
 
+  // State Kontrol untuk menghilangkan pop-up peringatan secara lokal setelah dibaca user
+  const [dismissWarnPopup, setDismissWarnPopup] = useState(false)
+
   // 🎯 Easter Egg Admin Panel State & Ref
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
@@ -195,7 +198,7 @@ export default function Home({ session }) {
     Promise.all([fetchProfile(), fetchEntries(), fetchQuestClaimsData()]).finally(() => setLoading(false))
   }, [fetchProfile, fetchEntries, fetchQuestClaimsData])
 
-  // 🎯 REALTIME DATABASE SIGNAL: Mendengarkan tindakan Ban/Warn secara instan dari Admin
+  // 🎯 REALTIME DATABASE SIGNAL: Pemantau ketat mitigasi admin live
   useEffect(() => {
     if (!userId) return
 
@@ -206,9 +209,15 @@ export default function Home({ session }) {
         { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
         (payload) => {
           const newProfile = payload.new
-          setProfile(newProfile)
+          
+          // 🎯 INTEGRASI CERDAS: Hanya memunculkan pop-up jika isi teks warning benar-benar diperbarui atau baru masuk status warned
+          setProfile((prevProfile) => {
+            if (newProfile.status === 'warned' && (prevProfile?.status !== 'warned' || newProfile.warning_msg !== prevProfile?.warning_msg)) {
+              setDismissWarnPopup(false)
+            }
+            return newProfile
+          })
 
-          // Picu jendela laci notifikasi sistem OS secara langsung
           if (newProfile.status === 'warned') {
             sendSystemNotification("PERINGATAN SISTEM", {
               body: newProfile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
@@ -275,7 +284,6 @@ export default function Home({ session }) {
     const welcomeAudio = new Audio(selectedWelcomeAudio)
     welcomeAudio.play().catch(err => console.log("Gagal memuat file audio welcome:", err))
 
-    // Pemicu pendaftaran izin notifikasi native di HP target saat gerbang cover dibuka
     if ('Notification' in window) {
       await requestNotificationPermission()
     }
@@ -413,7 +421,6 @@ export default function Home({ session }) {
     )
   }
 
-  // 🎯 PROTEKSI TOTAL JALUR BANNED: Jika dibekukan admin, layar langsung terkunci mutlak
   if (profile?.status === 'banned') {
     return (
       <div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center p-4 font-mono select-none">
@@ -455,18 +462,6 @@ export default function Home({ session }) {
             </button>
           </div>
         </div>
-
-        {/* 🎯 TAMPILAN BANNER WARNING: Kotakan taktis jika akun berstatus warned */}
-        {profile?.status === 'warned' && (
-          <div className="mx-4 mt-4 border border-amber-500/40 bg-amber-500/5 p-3 relative font-mono text-[10px] text-amber-400">
-            <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-amber-500" />
-            <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-amber-500" />
-            <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-amber-500" />
-            <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-amber-500" />
-            <p className="font-bold uppercase tracking-wider mb-1">[ PERINGATAN MODERASI AKTIF ]</p>
-            <p className="uppercase leading-relaxed text-gray-400">{profile.warning_msg}</p>
-          </div>
-        )}
 
         {activeTab === 'grind' && (
           <>
@@ -589,52 +584,20 @@ export default function Home({ session }) {
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
-            
             <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
 
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
-              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
-              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
-              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
-              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
               <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">DESTRUKSI LOG</span>
             </div>
-
             <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
               Sesi ini akan dihapus secara permanen dari server database. Lanjutkan?
             </p>
-
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              <div className="relative border border-[#211D2C] bg-[#16141F]">
-                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
-                <button
-                  type="button"
-                  onClick={() => setDeleteTargetId(null)}
-                  className="w-full py-2.5 bg-transparent text-[#EDEAF6]/60 font-bold rounded-none hover:text-white active:scale-95 transition-all text-center uppercase tracking-wider outline-none"
-                >
-                  BATAL
-                </button>
-              </div>
-              
-              <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
-                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
-                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
-                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#9A80FF]" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
-                <button
-                  type="button"
-                  onClick={confirmDeleteSesi}
-                  className="w-full py-2.5 bg-transparent text-white font-black rounded-none shadow-[0_0_12px_rgba(124,92,255,0.25)] hover:bg-[#6b52e0] active:scale-95 transition-all text-center uppercase tracking-wider outline-none"
-                >
-                  HAPUS
-                </button>
-              </div>
+              <button type="button" onClick={() => setDeleteTargetId(null)} className="py-2.5 border border-[#211D2C] text-[#EDEAF6]/60 font-bold uppercase">BATAL</button>
+              <button type="button" onClick={confirmDeleteSesi} className="py-2.5 bg-[#7C5CFF] text-white font-black uppercase">HAPUS</button>
             </div>
           </div>
         </div>
@@ -643,52 +606,63 @@ export default function Home({ session }) {
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
-            
             <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
-
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
+              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">KONFIRMASI KELUAR</span>
+            </div>
+            <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
+              kamu mau meninggalku ya.. Lu yakin mau log out dari akun Daily Grind Log ini?
+            </p>
+            <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
+              <button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 border border-[#211D2C] text-white uppercase">BATAL</button>
+              <button type="button" onClick={handleSignOut} className="py-2.5 bg-[#7C5CFF] text-white font-black uppercase">SETUJU</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🎯 MODAL POP-UP PERINGATAN WARN DITENGAH LAYAR (FIXED OVERLAY DENGAN SIKU UNGU SUDAH DI-UPGRADE TOTAL) */}
+      {profile?.status === 'warned' && !dismissWarnPopup && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
+            
+            {/* Siku Ungu Bingkai Luar Modul */}
+            <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
+            <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
+
+            {/* Kotak Header Internal Sistem */}
+            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
               <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
-              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">KONFIRMASI KELUAR</span>
+              <AlertTriangle size={14} className="text-[#7C5CFF]" />
+              <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">PERINGATAN MODERASI</span>
             </div>
 
-            <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
-              kamu mau meninggalku ya.. Lu yakin mau log out dari akun Daily Grind Log ini?
+            {/* Isi Pesan Peringatan Dari Admin */}
+            <p className="text-[10px] text-[#EDEAF6]/80 leading-relaxed uppercase tracking-wide px-1">
+              {profile.warning_msg || "Akun Anda menerima peringatan dari administrator."}
             </p>
-            
-            <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              <div className="relative border border-[#211D2C] bg-[#16141F]">
-                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
-                <button 
-                  type="button" 
-                  onClick={() => setShowLogoutConfirm(false)} 
-                  className="w-full py-2.5 bg-transparent text-white rounded-none font-bold text-center uppercase tracking-wider active:scale-95 transition-all outline-none"
-                >
-                  BATAL
-                </button>
-              </div>
-              
-              <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
-                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
-                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
-                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#9A80FF]" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
-                <button 
-                  type="button" 
-                  onClick={handleSignOut} 
-                  className="w-full py-2.5 bg-transparent text-white font-black rounded-none text-center uppercase tracking-wider active:scale-95 transition-all outline-none"
-                >
-                  SETUJU
-                </button>
-              </div>
+
+            {/* Tombol IYA dengan Kotak Sendiri Serta Siku Ungu Sesuai Tema */}
+            <div className="relative border border-[#211D2C] bg-[#7C5CFF] mt-1">
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
+              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
+              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#9A80FF]" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
+              <button 
+                type="button" 
+                onClick={() => setDismissWarnPopup(true)}
+                className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block shadow-[0_0_12px_rgba(124,92,255,0.3)]"
+              >
+                IYA
+              </button>
             </div>
           </div>
         </div>
@@ -727,22 +701,17 @@ export default function Home({ session }) {
       {showWelcomeCover && (
         <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-none p-5 flex flex-col gap-4 relative shadow-2xl text-center">
-            
             <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
             <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
             <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
             <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
             
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
-              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
-              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
-              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
-              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
               <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">SYSTEM SIAP</span>
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
