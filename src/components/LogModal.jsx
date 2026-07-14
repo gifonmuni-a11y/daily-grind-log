@@ -421,16 +421,11 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
         </div>
       </div>
 
-      {/* MODAL OVERLAY: MANUAL RPG IMAGE CROPPER INTERFACE SINKRONISASI KOTAK 4:3 */}
+      {/* 🎯 FIX VISUAL: Mengubah z-index ke z-[100] & bg-[#0A0A0E] solid agar siku ungu bocor di background hilang total */}
       {showCropper && (
-        <div className="fixed inset-0 z-55 bg-black/95 flex flex-col items-center justify-center p-4 select-none animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex flex-col items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-sm rounded-none p-5 flex flex-col gap-4 relative shadow-2xl">
             
-            {/* 🎯 FIX VISUAL: Siku luar atas dihapus total agar tidak menumpuk ganda mengganggu teks judul */}
-            <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
-            <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
-
-            {/* 🎯 FIX BOX JUDUL: Kategori judul dibungkus kotak kustom dengan siku ungunya sendiri */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex justify-between items-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -440,7 +435,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               <span className="bg-[#7C5CFF]/20 text-[#7C5CFF] text-[8px] font-mono px-1.5 py-0.5 tracking-widest uppercase font-bold">4:3 RATIO</span>
             </div>
 
-            {/* 🎯 UPGRADE UI INSTRUKSI: Emoticon tangan dihapus total, diganti dengan Icon Sparkles & Info Grid Box */}
             <div className="flex items-start gap-2 bg-[#7C5CFF]/5 border border-[#211D2C] p-2.5">
               <Sparkles size={12} className="text-[#7C5CFF] mt-0.5 flex-shrink-0" />
               <p className="font-mono text-[9px] text-[#8B8696] leading-relaxed uppercase tracking-wider">
@@ -448,7 +442,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               </p>
             </div>
 
-            {/* VIEWPORT BOX CROPPER: RASIO KOTAK 4:3 (w-[320px] h-[240px]) */}
             <div 
               className="w-[320px] h-[240px] bg-black border border-[#211D2C] relative overflow-hidden mx-auto touch-none cursor-move flex items-center justify-center"
               onMouseDown={(e) => startPan(e.clientX, e.clientY)}
@@ -459,7 +452,6 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
               onTouchMove={(e) => { const t = e.touches[0]; movePan(t.clientX, t.clientY); }}
               onTouchEnd={() => setIsDragging(false)}
             >
-              {/* Garis Grid Bantu Taktis Tipis */}
               <div className="absolute inset-0 border-x border-dashed border-white/5 pointer-events-none z-20 grid grid-cols-3">
                 <div className="border-r border-dashed border-white/5 h-full"></div>
                 <div className="border-r border-dashed border-white/5 h-full"></div>

@@ -512,8 +512,8 @@ export default function Home({ session }) {
             </p>
 
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* TOMBOL BATAL UNGU KUSTOM */}
-              <div className="relative">
+              {/* 🎯 FIX: Tombol Batal dikasih bingkai kotak tersendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              <div className="relative border border-[#211D2C] bg-[#16141F]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
                 <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
@@ -521,22 +521,22 @@ export default function Home({ session }) {
                 <button
                   type="button"
                   onClick={() => setDeleteTargetId(null)}
-                  className="w-full py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-none hover:text-white active:scale-95 transition-all text-center uppercase tracking-wider"
+                  className="w-full py-2.5 bg-transparent text-[#EDEAF6]/60 font-bold rounded-none hover:text-white active:scale-95 transition-all text-center uppercase tracking-wider outline-none"
                 >
                   BATAL
                 </button>
               </div>
               
-              {/* 🎯 FIX: MENGUBAH BACKGROUND HAPUS MENJADI UNGU DENGAN KOTAKAN & SIKU TEMA */}
-              <div className="relative">
-                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+              {/* 🎯 FIX: Tombol Hapus dikasih bingkai kotak kustom sendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
+                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
+                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#9A80FF]" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
                 <button
                   type="button"
                   onClick={confirmDeleteSesi}
-                  className="w-full py-2.5 bg-[#7C5CFF] text-white font-black rounded-none shadow-[0_0_12px_rgba(124,92,255,0.25)] hover:bg-[#6b52e0] active:scale-95 transition-all text-center uppercase tracking-wider"
+                  className="w-full py-2.5 bg-transparent text-white font-black rounded-none shadow-[0_0_12px_rgba(124,92,255,0.25)] hover:bg-[#6b52e0] active:scale-95 transition-all text-center uppercase tracking-wider outline-none"
                 >
                   HAPUS
                 </button>
@@ -569,8 +569,8 @@ export default function Home({ session }) {
             </p>
             
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
-              {/* TOMBOL BATAL UNGU KUSTOM */}
-              <div className="relative">
+              {/* 🎯 FIX: Tombol Batal dikasih bingkai kotak tersendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              <div className="relative border border-[#211D2C] bg-[#16141F]">
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
                 <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
@@ -578,22 +578,22 @@ export default function Home({ session }) {
                 <button 
                   type="button" 
                   onClick={() => setShowLogoutConfirm(false)} 
-                  className="w-full py-2.5 bg-[#211D2C] border border-[#312C42] text-white rounded-none font-bold text-center uppercase tracking-wider active:scale-95 transition-all"
+                  className="w-full py-2.5 bg-transparent text-white rounded-none font-bold text-center uppercase tracking-wider active:scale-95 transition-all outline-none"
                 >
                   BATAL
                 </button>
               </div>
               
-              {/* 🎯 FIX: MENGUBAH BACKGROUND SETUJU MENJADI UNGU DENGAN KOTAKAN & SIKU TEMA */}
-              <div className="relative">
-                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+              {/* 🎯 FIX: Tombol Setuju dikasih bingkai kotak kustom sendiri border-[#211D2C] baru dipasang siku ungu di dalam */}
+              <div className="relative border border-[#211D2C] bg-[#7C5CFF]">
+                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
+                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#9A80FF]" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
                 <button 
                   type="button" 
                   onClick={handleSignOut} 
-                  className="w-full py-2.5 bg-[#7C5CFF] text-white font-black rounded-none shadow-[0_0_12px_rgba(124,92,255,0.25)] hover:bg-[#6b52e0] active:scale-95 transition-all text-center uppercase tracking-wider"
+                  className="w-full py-2.5 bg-transparent text-white font-black rounded-none text-center uppercase tracking-wider active:scale-95 transition-all outline-none"
                 >
                   SETUJU
                 </button>
@@ -621,7 +621,7 @@ export default function Home({ session }) {
       )}
       
       {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
-      {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
+      {showOriginalModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
 
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
