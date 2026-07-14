@@ -142,7 +142,7 @@ export default function Home({ session }) {
 
   const [showWelcomeCover, setShowWelcomeCover] = useState(true)
 
-  // State Kontrol untuk menghilangkan pop-up peringatan secara lokal setelah dibaca user
+  // State Kontrol untuk menghilangkan pop-up peringatan secara lokal
   const [dismissWarnPopup, setDismissWarnPopup] = useState(false)
 
   // 🎯 Easter Egg Admin Panel State & Ref
@@ -210,15 +210,16 @@ export default function Home({ session }) {
         (payload) => {
           const newProfile = payload.new
           
-          // Hanya memunculkan pop-up jika isi teks warning benar-benar diperbarui atau baru masuk status warned
           setProfile((prevProfile) => {
+            // Jika masuk status warned baru atau pesan teks berubah, buka kunci penutupan modal lokal
             if (newProfile.status === 'warned' && (prevProfile?.status !== 'warned' || newProfile.warning_msg !== prevProfile?.warning_msg)) {
               setDismissWarnPopup(false)
+              // Bersihkan record local storage penutupan sekali pakai untuk notif baru ini
+              localStorage.removeItem(`dg_read_warn_${newProfile.warning_msg}`)
             }
             return newProfile
           })
 
-          // Tembak Notifikasi ke laci atas HP jika admin mengirimkan mitigasi saat user sedang aktif di app
           if (newProfile.status === 'warned') {
             sendSystemNotification("PERINGATAN SISTEM", {
               body: newProfile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
@@ -289,15 +290,19 @@ export default function Home({ session }) {
       await requestNotificationPermission()
     }
 
-    // Hapus Welcome Cover pembuka
     setShowWelcomeCover(false)
 
-    // 🎯 VALIDASI AMAN: Notifikasi laci sistem atas HP baru dilepas setelah tombol diklik!
+    // Validasi pelepasan notif native laci atas hanya setelah tombol ditekan
     if (profile?.status === 'warned') {
-      sendSystemNotification("PERINGATAN SISTEM", {
-        body: profile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
-        tag: "user-warning"
-      })
+      const isExpired = profile.warning_expires_at && new Date() > new Date(profile.warning_expires_at)
+      const isAlreadyReadOnce = profile.warning_type === 'once' && localStorage.getItem(`dg_read_warn_${profile.warning_msg}`) === 'true'
+
+      if (!isExpired && !isAlreadyReadOnce) {
+        sendSystemNotification("PERINGATAN SISTEM", {
+          body: profile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
+          tag: "user-warning"
+        })
+      }
     }
   }
 
@@ -423,6 +428,19 @@ export default function Home({ session }) {
     }
   }
 
+  // 🎯 KONTROL VALIDASI TIMING: Deteksi apakah notif berdurasi sudah melewati batas waktu kadaluarsa server
+  const isWarningExpired = profile?.warning_expires_at && new Date() > new Date(profile.warning_expires_at)
+  
+  // 🎯 KONTROL VALIDASI ONCE-DISMISS: Cek apakah tipe 'once' sudah pernah ditutup lokal oleh user
+  const isWarningDismissedOnce = profile?.warning_type === 'once' && localStorage.getItem(`dg_read_warn_${profile?.warning_msg}`) === 'true'
+
+  const handleDismissWarning = () => {
+    if (profile?.warning_type === 'once') {
+      localStorage.setItem(`dg_read_warn_${profile.warning_msg}`, 'true')
+    }
+    setDismissWarnPopup(true)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -475,7 +493,7 @@ export default function Home({ session }) {
 
         {activeTab === 'grind' && (
           <>
-            <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEdit click={() => setShowProfileModal(true)} />
+            <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
 
             <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
               <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
@@ -598,7 +616,6 @@ export default function Home({ session }) {
             <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
-
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">DESTRUKSI LOG</span>
             </div>
@@ -634,8 +651,8 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 MODAL POP-UP PERINGATAN WARN DI TENGAH LAYAR (BARU MUNCUL SETELAH DISALURKAN PASCA WELCOME COVER DISMISS) */}
-      {profile?.status === 'warned' && !dismissWarnPopup && !showWelcomeCover && (
+      {/* 🎯 MODAL POP-UP PERINGATAN / NOTIFIKASI KHUSUS DITENGAH LAYAR SESUAI ASSET UNGU SISTEM */}
+      {profile?.status === 'warned' && !dismissWarnPopup && !showWelcomeCover && !isWarningExpired && !isWarningDismissedOnce && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
             
@@ -645,19 +662,19 @@ export default function Home({ session }) {
             <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
 
-            {/* Kotak Header Internal Sistem */}
+            {/* Kotak Header Internal Sistem Custom Text Request */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
               <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
               <AlertTriangle size={14} className="text-[#7C5CFF]" />
-              <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">PERINGATAN MODERASI</span>
+              <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">Notifikasi by founder HW</span>
             </div>
 
-            {/* Isi Pesan Peringatan Dari Admin */}
+            {/* Isi Pesan Dinamis Kustom */}
             <p className="text-[10px] text-[#EDEAF6]/80 leading-relaxed uppercase tracking-wide px-1">
-              {profile.warning_msg || "Akun Anda menerima peringatan dari administrator."}
+              {profile.warning_msg}
             </p>
 
             {/* Tombol IYA dengan Kotak Sendiri Serta Siku Ungu Sesuai Tema */}
@@ -668,7 +685,7 @@ export default function Home({ session }) {
               <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
               <button 
                 type="button" 
-                onClick={() => setDismissWarnPopup(true)}
+                onClick={handleDismissWarning}
                 className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block shadow-[0_0_12px_rgba(124,92,255,0.3)]"
               >
                 IYA
@@ -721,7 +738,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
