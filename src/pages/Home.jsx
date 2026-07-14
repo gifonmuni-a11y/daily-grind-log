@@ -210,7 +210,7 @@ export default function Home({ session }) {
         (payload) => {
           const newProfile = payload.new
           
-          // 🎯 INTEGRASI CERDAS: Hanya memunculkan pop-up jika isi teks warning benar-benar diperbarui atau baru masuk status warned
+          // Hanya memunculkan pop-up jika isi teks warning benar-benar diperbarui atau baru masuk status warned
           setProfile((prevProfile) => {
             if (newProfile.status === 'warned' && (prevProfile?.status !== 'warned' || newProfile.warning_msg !== prevProfile?.warning_msg)) {
               setDismissWarnPopup(false)
@@ -218,6 +218,7 @@ export default function Home({ session }) {
             return newProfile
           })
 
+          // Tembak Notifikasi ke laci atas HP jika admin mengirimkan mitigasi saat user sedang aktif di app
           if (newProfile.status === 'warned') {
             sendSystemNotification("PERINGATAN SISTEM", {
               body: newProfile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
@@ -288,7 +289,16 @@ export default function Home({ session }) {
       await requestNotificationPermission()
     }
 
+    // Hapus Welcome Cover pembuka
     setShowWelcomeCover(false)
+
+    // 🎯 VALIDASI AMAN: Notifikasi laci sistem atas HP baru dilepas setelah tombol diklik!
+    if (profile?.status === 'warned') {
+      sendSystemNotification("PERINGATAN SISTEM", {
+        body: profile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
+        tag: "user-warning"
+      })
+    }
   }
 
   useEffect(() => {
@@ -465,7 +475,7 @@ export default function Home({ session }) {
 
         {activeTab === 'grind' && (
           <>
-            <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
+            <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEdit click={() => setShowProfileModal(true)} />
 
             <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
               <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
@@ -624,8 +634,8 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 MODAL POP-UP PERINGATAN WARN DITENGAH LAYAR (FIXED OVERLAY DENGAN SIKU UNGU SUDAH DI-UPGRADE TOTAL) */}
-      {profile?.status === 'warned' && !dismissWarnPopup && (
+      {/* 🎯 MODAL POP-UP PERINGATAN WARN DI TENGAH LAYAR (BARU MUNCUL SETELAH DISALURKAN PASCA WELCOME COVER DISMISS) */}
+      {profile?.status === 'warned' && !dismissWarnPopup && !showWelcomeCover && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
             
@@ -711,7 +721,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
