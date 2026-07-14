@@ -198,7 +198,6 @@ export default function Home({ session }) {
     Promise.all([fetchProfile(), fetchEntries(), fetchQuestClaimsData()]).finally(() => setLoading(false))
   }, [fetchProfile, fetchEntries, fetchQuestClaimsData])
 
-  // 🎯 REALTIME DATABASE SIGNAL: Pemantau ketat mitigasi admin live
   useEffect(() => {
     if (!userId) return
 
@@ -211,10 +210,8 @@ export default function Home({ session }) {
           const newProfile = payload.new
           
           setProfile((prevProfile) => {
-            // Jika masuk status warned baru atau pesan teks berubah, buka kunci penutupan modal lokal
             if (newProfile.status === 'warned' && (prevProfile?.status !== 'warned' || newProfile.warning_msg !== prevProfile?.warning_msg)) {
               setDismissWarnPopup(false)
-              // Bersihkan record local storage penutupan sekali pakai untuk notif baru ini
               localStorage.removeItem(`dg_read_warn_${newProfile.warning_msg}`)
             }
             return newProfile
@@ -292,7 +289,6 @@ export default function Home({ session }) {
 
     setShowWelcomeCover(false)
 
-    // Validasi pelepasan notif native laci atas hanya setelah tombol ditekan
     if (profile?.status === 'warned') {
       const isExpired = profile.warning_expires_at && new Date() > new Date(profile.warning_expires_at)
       const isAlreadyReadOnce = profile.warning_type === 'once' && localStorage.getItem(`dg_read_warn_${profile.warning_msg}`) === 'true'
@@ -428,10 +424,7 @@ export default function Home({ session }) {
     }
   }
 
-  // 🎯 KONTROL VALIDASI TIMING: Deteksi apakah notif berdurasi sudah melewati batas waktu kadaluarsa server
   const isWarningExpired = profile?.warning_expires_at && new Date() > new Date(profile.warning_expires_at)
-  
-  // 🎯 KONTROL VALIDASI ONCE-DISMISS: Cek apakah tipe 'once' sudah pernah ditutup lokal oleh user
   const isWarningDismissedOnce = profile?.warning_type === 'once' && localStorage.getItem(`dg_read_warn_${profile?.warning_msg}`) === 'true'
 
   const handleDismissWarning = () => {
@@ -656,13 +649,11 @@ export default function Home({ session }) {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
             
-            {/* Siku Ungu Bingkai Luar Modul */}
             <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
 
-            {/* Kotak Header Internal Sistem Custom Text Request */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -672,12 +663,10 @@ export default function Home({ session }) {
               <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">Notifikasi by founder HW</span>
             </div>
 
-            {/* Isi Pesan Dinamis Kustom */}
             <p className="text-[10px] text-[#EDEAF6]/80 leading-relaxed uppercase tracking-wide px-1">
               {profile.warning_msg}
             </p>
 
-            {/* Tombol IYA dengan Kotak Sendiri Serta Siku Ungu Sesuai Tema */}
             <div className="relative border border-[#211D2C] bg-[#7C5CFF] mt-1">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
@@ -738,7 +727,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
