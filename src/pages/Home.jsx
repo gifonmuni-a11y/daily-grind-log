@@ -309,14 +309,16 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
-  // SFX FEEDBACK: PROSES LOG OUT AKUN
+  // FIX INSTAN: Fungsi keluar langsung menembak proses sign out tanpa delay suara bertumpuk lagi
   async function handleSignOut() {
+    await supabase.auth.signOut()
+  }
+
+  // FIX TIMING AUDIO: Membunyikan suara pacar secara instan tepat saat ikon log out di pojok kanan atas ditekan pertama kali
+  const triggerLogoutModalWithVoice = () => {
     const logoutAudio = new Audio(AUDIO_URLS.others.logOut)
     logoutAudio.play().catch(e => console.log(e))
-    
-    setTimeout(async () => {
-      await supabase.auth.signOut()
-    }, 1500)
+    setShowLogoutConfirm(true)
   }
 
   async function handleSeedDummyData() {
@@ -369,7 +371,7 @@ export default function Home({ session }) {
             <button onClick={() => setShowAboutModal(true)} className="p-2 hover:bg-border-hover transition-colors">
               <HelpCircle size={16} className="text-text-dim" />
             </button>
-            <button onClick={() => setShowLogoutConfirm(true)} className="p-2 hover:bg-border-hover transition-colors">
+            <button onClick={triggerLogoutModalWithVoice} className="p-2 hover:bg-border-hover transition-colors">
               <LogOut size={16} className="text-text-dim" />
             </button>
           </div>
@@ -430,6 +432,7 @@ export default function Home({ session }) {
               </div>
             </div>
 
+            <ProfileHeader profile={profile} entries={entries} streak={streak} userId={userId} onEditClick={() => setShowProfileModal(true)} />
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
             
@@ -493,25 +496,40 @@ export default function Home({ session }) {
         </button>
       </div>
 
+      {/* 🎯 DESTRUKSI LOG MODAL FIXED CONTEXT BOX WITH PURPLE CORNER BRACKETS */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-center">
-              <h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Destruksi Log</h3>
-              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">Sesi ini akan dihapus secara permanen dari server database. Lanjutkan?</p>
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
+            
+            <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
+
+            {/* 🎯 DETACHED HEADER CONTAINER FOR DESTRUKSI LOG WITH INSIDEpurple BRACKETS */}
+            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">DESTRUKSI LOG</span>
             </div>
+
+            <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
+              Sesi ini akan dihapus secara permanen dari server database. Lanjutkan?
+            </p>
             <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
               <button
                 type="button"
                 onClick={() => setDeleteTargetId(null)}
-                className="py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-lg hover:text-white active:scale-95 transition-all"
+                className="py-2.5 bg-[#211D2C] border border-[#312C42] text-[#EDEAF6]/60 font-bold rounded-none hover:text-white active:scale-95 transition-all"
               >
                 BATAL
               </button>
               <button
                 type="button"
                 onClick={confirmDeleteSesi}
-                className="py-2.5 bg-[#EF4444] text-white font-black rounded-lg shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all"
+                className="py-2.5 bg-[#EF4444] text-white font-black rounded-none shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-[#DC2626] active:scale-95 transition-all"
               >
                 HAPUS
               </button>
@@ -520,6 +538,7 @@ export default function Home({ session }) {
         </div>
       )}
 
+      {/* 🎯 KONFIRMASI KELUAR MODAL FIXED CONTEXT BOX WITH PURPLE CORNER BRACKETS */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
@@ -529,12 +548,18 @@ export default function Home({ session }) {
             <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
 
-            <div className="text-center">
-              <h3 className="font-mono text-xs uppercase font-black text-white tracking-widest mb-1">Konfirmasi Keluar</h3>
-              <p className="font-body text-[10px] text-[#EDEAF6]/50 leading-relaxed">
-                kamu mau meninggalku ya.. Lu yakin mau log out dari akun Daily Grind Log ini?
-              </p>
+            {/* 🎯 DETACHED HEADER CONTAINER FOR KONFIRMASI KELUAR WITH INSIDE purple BRACKETS */}
+            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">KONFIRMASI KELUAR</span>
             </div>
+
+            <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
+              kamu mau meninggalku ya.. Lu yakin mau log out dari akun Daily Grind Log ini?
+            </p>
             <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
               <button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 bg-[#211D2C] border border-[#312C42] text-white rounded-none">BATAL</button>
               <button type="button" onClick={handleSignOut} className="py-2.5 bg-[#EF4444] text-white font-black rounded-none">SETUJU</button>
@@ -566,7 +591,6 @@ export default function Home({ session }) {
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
 
-      {/* 🎯 FIX ABSOLUT: Mengubah kelas z-55 ke z-[100] (Arbitrary Tailwind) untuk menimbun total level & tombol dock bawah */}
       {showWelcomeCover && (
         <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-none p-5 flex flex-col gap-4 relative shadow-2xl text-center">
@@ -585,7 +609,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
