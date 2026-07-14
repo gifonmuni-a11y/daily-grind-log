@@ -31,15 +31,47 @@ import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
 
-// 🎯 LOGIKA FILTER FIXED: Benerin timezone dan hitungan awal minggu (Senin-Minggu)
+// 🎯 DIRECT SUPABASE STORAGE STORAGE AUDIO URL MAPPER 
+const AUDIO_URLS = {
+  tiers: {
+    'ELITE TRAINER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/elitetrainer.mp3',
+    'EXPERT TRAINER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/experttrainer.mp3',
+    'CHALLENGER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/challenger.mp3',
+    'MASTER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/master.mp3',
+    'GRAND MASTER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/grandmaster.mp3',
+    'MYTHICAL': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/mythical.mp3',
+    'OVERLORD': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/overlord.mp3'
+  },
+  achievements: {
+    'AWAKENED': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/awakened.mp3',
+    'STRIKER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/striker.mp3',
+    'IMMORTAL': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/immortal.mp3',
+    'UNSTOPPABLE': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/unstoppable.mp3',
+    'IRON GRIND': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/irongrind.mp3',
+    'CENTURION': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/centurion.mp3',
+    'LEGENDARY PERFORMER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/legendaryperformer.mp3',
+    'ALL-ROUNDER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/allrounder.mp3',
+    'LIFTER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/lifter.mp3',
+    'CARDIO KING': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/cardioking.mp3'
+  },
+  welcome: {
+    normal: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/welcome/welcome.mp3',
+    reminder: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/welcome/welcomeback&updatelog.mp3'
+  },
+  others: {
+    pecahStreak: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/lainnya/pecahstreak.mp3',
+    logOut: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/lainnya/logout.mp3',
+    hapusLog: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/lainnya/hapuslogharian.mp3',
+    updateLog: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/lainnya/updatelogharian.mp3'
+  }
+}
+
 function filterEntries(entries, filter) {
   if (!filter || filter === 'Semua') return entries
-
   const now = new Date()
   const startOf = (unit) => {
     const d = new Date(now)
     if (unit === 'week') {
-      // Bikin awal minggu dimulai dari hari Senin secara internasional biar tanggal 10 July (Jumat) aman masuk hitungan
       const day = d.getDay()
       const diff = d.getDate() - day + (day === 0 ? -6 : 1)
       d.setDate(diff)
@@ -96,8 +128,6 @@ export default function Home({ session }) {
 
   const [activeTab, setActiveTab] = useState('grind') 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  
-  // State kustom dialog modal hapus premium
   const [deleteTargetId, setDeleteTargetId] = useState(null)
 
   const prevLevelRef = useRef(null)
@@ -159,6 +189,47 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
+  // 🎯 1. ENGINE FIRST-TOUCH SCENARIO UNTUK WELCOME VOICE (BYPASS AUTOPLAY BROWSER)
+  useEffect(() => {
+    if (!loading) {
+      const todayStr = new Date().toLocaleDateString('en-CA')
+      const hasLogToday = entries.some(e => e.entry_date === todayStr)
+      const selectedWelcomeAudio = hasLogToday ? AUDIO_URLS.welcome.normal : AUDIO_URLS.welcome.reminder
+
+      const triggerWelcomeAudio = () => {
+        const audio = new Audio(selectedWelcomeAudio)
+        audio.play()
+          .then(() => {
+            window.removeEventListener('click', triggerWelcomeAudio)
+            window.removeEventListener('touchstart', triggerWelcomeAudio)
+          })
+          .catch(err => console.log("Menunggu interaksi user pertama kali...", err))
+      }
+
+      window.addEventListener('click', triggerWelcomeAudio)
+      window.addEventListener('touchstart', triggerWelcomeAudio, { passive: true })
+
+      return () => {
+        window.removeEventListener('click', triggerWelcomeAudio)
+        window.removeEventListener('touchstart', triggerWelcomeAudio)
+      }
+    }
+  }, [loading, entries])
+
+  // 🎯 2. ENGINE DETEKTOR PECAH STREAK JATUH KE NOL (LOCALSTORAGE TRACKER)
+  useEffect(() => {
+    if (loading) return
+    const storedStreak = parseInt(localStorage.getItem('dg_rpg_streak') || '-1', 10)
+    
+    if (storedStreak > 0 && streak === 0) {
+      const breakAudio = new Audio(AUDIO_URLS.others.pecahStreak)
+      breakAudio.play().catch(e => console.log(e))
+      alert("sayang sekali pecah streak kamu")
+    }
+    localStorage.setItem('dg_rpg_streak', streak.toString())
+  }, [loading, streak])
+
+  // 🎯 3. ENGINE TIER UP & ACHIEVEMENT UNLOCK SYSTEM DENGAN SUARA KUSTOM 
   useEffect(() => {
     if (loading) return
 
@@ -176,6 +247,13 @@ export default function Home({ session }) {
       if (newTier !== oldTier) {
         setLevelUpData({ oldTier, newTier, newLevel: level })
         setShowLevelUp(true)
+        
+        // Mainkan suara kustom sesuai nama tier yang baru saja dicapai
+        const tierKey = newTier.toUpperCase()
+        const tierAudioUrl = AUDIO_URLS.tiers[tierKey]
+        if (tierAudioUrl) {
+          new Audio(tierAudioUrl).play().catch(e => console.log(e))
+        }
       }
     }
 
@@ -186,6 +264,13 @@ export default function Home({ session }) {
       if (newlyUnlocked) {
         setActiveUnlockAchievement(newlyUnlocked)
         setShowAchievementUnlock(true)
+        
+        // Mainkan suara kustom sesuai nama achievement yang baru didapatkan
+        const achKey = newlyUnlocked.title.toUpperCase()
+        const achAudioUrl = AUDIO_URLS.achievements[achKey]
+        if (achAudioUrl) {
+          new Audio(achAudioUrl).play().catch(e => console.log(e))
+        }
       }
       prevUnlockedIdsRef.current = currentIds
     }
@@ -195,8 +280,12 @@ export default function Home({ session }) {
     setDeleteTargetId(id)
   }
 
+  // 🎯 4. SFX FEEDBACK: HAPUS SESI LOG HARIAN
   const confirmDeleteSesi = async () => {
     if (!deleteTargetId) return
+    const deleteAudio = new Audio(AUDIO_URLS.others.hapusLog)
+    deleteAudio.play().catch(e => console.log(e))
+    
     await supabase.from('entries').delete().eq('id', deleteTargetId)
     setDeleteTargetId(null)
     await fetchEntries()
@@ -212,8 +301,13 @@ export default function Home({ session }) {
     setShowLogModal(true)
   }
 
+  // 🎯 5. SFX FEEDBACK: PROSES LOG OUT AKUN
   async function handleSignOut() {
-    await supabase.auth.signOut()
+    const logoutAudio = new Audio(AUDIO_URLS.others.logOut)
+    logoutAudio.play().catch(e => console.log(e))
+    setTimeout(async () => {
+      await supabase.auth.signOut()
+    }, 1000)
   }
 
   async function handleSeedDummyData() {
@@ -330,7 +424,6 @@ export default function Home({ session }) {
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
             
-            {/* 🎯 FIX SCROLLBAR & SPACING: Diberi jarak turun ideal, dibatasi rapi (mx-4) dan mematikan native scrollbar yang bocor ke kanan */}
             <div className="mt-8 mb-5 mx-4 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               <FilterTabs active={activeFilter} onChange={setActiveFilter} />
             </div>
@@ -361,7 +454,6 @@ export default function Home({ session }) {
         {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
       </div>
 
-      {/* 🧭 NAVIGATION DOCK MELAYANG */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[90%] w-max">
         <button 
           type="button" 
@@ -392,7 +484,6 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* MODAL DIALOG HAPUS CUSTOM */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
@@ -437,9 +528,12 @@ export default function Home({ session }) {
           maxDayNumber={maxDayNumber} 
           editEntry={editEntry} 
           onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
+          // 🎯 6. SFX FEEDBACK: UPDATE / SIMPAN SESI BARU BERHASIL
           onSaved={() => {
+            const updateAudio = new Audio(AUDIO_URLS.others.updateLog)
+            updateAudio.play().catch(e => console.log(e))
             fetchEntries()
-            setActiveFilter('Semua')
+            setActiveFilter('Semua') 
           }} 
         />
       )}
