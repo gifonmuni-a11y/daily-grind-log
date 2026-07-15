@@ -460,27 +460,27 @@ export default function Home({ session }) {
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
-        {/* 🎯 HEADER INTERFACE TACTICAL - KALIBRASI MUTLAK 24PX (PAS DENGAN LINE HEIGHT TEKS) */}
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
+        {/* 🎯 HEADER INTERFACE TACTICAL - RESET PADDING & KUNCI TINGGI 56PX SUPAYA ICON MENTOK GARIS */}
+        <div className="flex items-center justify-between px-4" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
           <div 
             onMouseDown={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
             onMouseLeave={handleAdminPressEnd}
             onTouchStart={handleAdminPressStart}
             onTouchEnd={handleAdminPressEnd}
-            className="flex items-center gap-2.5 cursor-pointer select-none"
+            className="flex items-center gap-3 cursor-pointer select-none h-full"
           >
-            {/* 🎯 PAS & SEJAJAR: Ukuran diset ke 24px agar batas atas-bawah kristalnya terlihat tegas dan simetris */}
+            {/* 🎯 ULTRA MENTOK: Tinggi 100% mengisi penuh kontainer header, menyentuh garis atas & bawah */}
             <img 
               src="/notification-icon.gif" 
               alt="Grind System Icon" 
-              style={{ width: '24px', height: '24px' }}
-              className="object-contain flex-shrink-0 animate-pulse"
+              style={{ height: '100%', width: '56px' }}
+              className="object-cover flex-shrink-0"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
-            <span className="font-display font-bold text-base text-accent tracking-widest active:text-[#7C5CFF] transition-colors">
+            <span className="font-display font-bold text-base text-accent tracking-widest active:text-[#7C5CFF] transition-colors flex items-center h-full">
               DAILY GRIND LOG
             </span>
           </div>
@@ -645,7 +645,7 @@ export default function Home({ session }) {
               <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">KONFIRMASI KELUAR</span>
             </div>
             <p className="font-mono text-[10px] text-[#EDEAF6]/50 leading-relaxed uppercase tracking-wider text-center">
-              kamu mau meninggalku ya.. Lu yakin mau log out dari akun Daily Grind Log ini?
+              Lu yakin mau log out dari akun Daily Grind Log ini?
             </p>
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
               <button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 border border-[#211D2C] text-white uppercase">BATAL</button>
@@ -740,7 +740,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
