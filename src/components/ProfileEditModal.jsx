@@ -9,7 +9,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     bio: profile?.bio || '',
     spotify_link: profile?.spotify_link || '',
   })
-  
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url || null)
   const [bannerFile, setBannerFile] = useState(null)
@@ -75,11 +74,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           spotify_link: form.spotify_link.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
-          // Reset kolom koordinat agar kembali bersih ke default
-          avatar_zoom: 100,
-          avatar_offset: 0,
-          banner_zoom: 100,
-          banner_offset: 0
         })
 
       if (dbErr) throw dbErr
@@ -104,7 +98,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           style={{ borderBottom: '1px solid #211D2C' }}
         >
           <h2 className="font-display font-bold text-xl text-text-high">EDIT PROFIL</h2>
-          <button type="button" onClick={onClose} className="p-1 hover:bg-border-hover transition-colors">
+          <button onClick={onClose} className="p-1 hover:bg-border-hover transition-colors">
             <X size={18} className="text-text-muted" />
           </button>
         </div>
@@ -213,7 +207,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
               style={{
                 background: loading ? '#3A3548' : '#7C5CFF',
                 color: '#EDEAF6',
-                clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 10px, 10px 100%, 0 calc(100% - 10px))',
+                clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
               }}
             >
               {loading && <Loader2 size={16} className="animate-spin" />}

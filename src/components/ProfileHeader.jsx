@@ -71,11 +71,11 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
 
       <div className="px-4 pb-4">
         <div className="flex items-start gap-3 mb-3">
-          {/* AVATAR BINGKAI DENGAN SIKU UNGU FIXED */}
+          {/* AVATAR DENGAN SIKU UNGU ORIGINAL */}
           <div className="relative shrink-0 -mt-10">
             <SystemFrame
               size={12}
-              className="w-20 h-20 bg-panel shrink-0 overflow-hidden"
+              className="w-20 h-20 bg-panel shrink-0"
               style={{ boxShadow: currentTierGlow !== 'none' ? currentTierGlow : `0 0 12px ${currentTierColor}55` }}
             >
               {profile?.avatar_url ? (
@@ -157,7 +157,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* EXP LEVEL PROGRESS BAR */}
+        {/* EXP BAR */}
         <div>
           <div className="flex justify-between mb-1">
             <span className="font-mono text-xs text-gray-400">
@@ -179,7 +179,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* SPOTIFY STATUS NOW PLAYING */}
+        {/* SPOTIFY STATUS */}
         {profile?.spotify_link && (
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
