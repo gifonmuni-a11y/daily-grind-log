@@ -201,7 +201,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
               <Music size={12} />
-              <span>Music Playlist</span>
+              <span>Now Playing</span>
             </div>
             {spotifyEmbedUrl ? (
               <iframe
@@ -211,7 +211,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
                 style={{ borderRadius: 8, border: 'none' }}
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                title="Music Playlist"
+                title="Now Playing"
               />
             ) : (
               <a
