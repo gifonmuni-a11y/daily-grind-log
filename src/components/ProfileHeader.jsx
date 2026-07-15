@@ -1,6 +1,6 @@
 import { Edit2, Music, Flame, Zap } from 'lucide-react'
 import SystemFrame from './SystemFrame'
-import { calcLevel, getEffectiveTotalExp, getRankTier } from '../lib/expSystem'
+import { calcLevel, getRankTier } from '../lib/expSystem'
 import { getRankDetails, getTitleTierColor, getTitleTierGlow } from '../lib/rankColors'
 import { ACHIEVEMENTS, getEquippedTitle } from '../lib/achievements'
 
@@ -23,7 +23,8 @@ function getSpotifyEmbedUrl(link) {
 }
 
 export default function ProfileHeader({ profile, entries, streak, userId, onEditClick }) {
-  const totalExp = getEffectiveTotalExp(entries, userId)
+  // 🎯 FIX SINKRONISASI MUTLAK: Ambil total EXP langsung dari database profile yang sudah ter-update klaim quest!
+  const totalExp = profile?.exp || 0
   const { level, expIntoLevel, expForNext } = calcLevel(totalExp)
   const expPct = Math.min(100, Math.round((expIntoLevel / expForNext) * 100))
   
@@ -194,7 +195,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
                 style={{ borderRadius: 8, border: 'none' }}
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                title="Now Playing"
+                title="Music Playlist"
               />
             ) : (
               <a
