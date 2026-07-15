@@ -130,7 +130,7 @@ export default function Home({ session }) {
 
   const [activeTab, setActiveTab] = useState('grind') 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showBackConfirm, setShowBackConfirm] = useState(false) 
+  const [showBackConfirm, setShowBackConfirm] = useState(false) // 🎯 State intercept tombol back HP
   const [deleteTargetId, setDeleteTargetId] = useState(null)
 
   const prevLevelRef = useRef(null)
@@ -147,12 +147,15 @@ export default function Home({ session }) {
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
 
+  // 🎯 INTERCEPT TOMBOL BACK PADA PWA / HP ANDROID
   useEffect(() => {
     window.history.pushState(null, null, window.location.pathname);
     
     const handlePopState = (e) => {
       e.preventDefault();
+      // Buka modal konfirmasi kustom taktis
       setShowBackConfirm(true);
+      // Dorong kembali state agar browser tidak langsung mundur keluar aplikasi
       window.history.pushState(null, null, window.location.pathname);
     };
 
@@ -286,7 +289,7 @@ export default function Home({ session }) {
         oscillator.stop(audioCtx.currentTime + 0.18)
       }
     } catch (e) {
-      console.log("Web Audio Engine tidak didukung:", e)
+      console.log("Web Audio Engine tidak didukung pada browser ini:", e)
     }
 
     const todayStr = new Date().toLocaleDateString('en-CA')
@@ -294,7 +297,7 @@ export default function Home({ session }) {
     const selectedWelcomeAudio = hasLogToday ? AUDIO_URLS.welcome.normal : AUDIO_URLS.welcome.reminder
 
     const welcomeAudio = new Audio(selectedWelcomeAudio)
-    welcomeAudio.play().catch(err => console.log("Gagal memuat audio:", err))
+    welcomeAudio.play().catch(err => console.log("Gagal memuat file audio welcome:", err))
 
     if ('Notification' in window) {
       await requestNotificationPermission()
@@ -405,6 +408,17 @@ export default function Home({ session }) {
     setShowLogoutConfirm(true)
   }
 
+  async function handleSeedDummyData() {
+    if (seeding) return
+    if (!window.confirm('Isi data contoh (5 sesi dummy)?')) return
+    setSeeding(true)
+    const maxDay = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
+    const dummyEntries = buildDummyEntries(userId, maxDay)
+    const { error } = await supabase.from('entries').insert(dummyEntries)
+    if (!error) await fetchEntries()
+    setSeeding(false)
+  }
+
   async function handleClaimQuest(quest) {
     if (claimingId) return
     setClaimingId(quest.id)
@@ -465,8 +479,7 @@ export default function Home({ session }) {
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
-        {/* 🎯 HEADER CONTEXT: BACKGROUND DIHITAMKAN TOTAL (#0A0A0E) AGAR TRANSPARANSI GIF TIDAK RUSAK */}
-        <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
+        <div className="flex items-center justify-between px-4" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
           <div 
             onMouseDown={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
@@ -484,13 +497,9 @@ export default function Home({ session }) {
                 e.target.style.display = 'none';
               }}
             />
-            {/* 🎯 GANTI TULISAN JUDUL MENJADI COMPONENT PNG SETEMA DENGAN GIF */}
-            <img 
-              src="/icons/judulpwa.png" 
-              alt="Daily Grind Log Title" 
-              style={{ height: '100%' }} 
-              className="object-contain py-1 flex-shrink-0"
-            />
+            <span className="font-display font-bold text-base text-accent tracking-widest active:text-[#7C5CFF] transition-colors flex items-center h-full">
+              DAILY GRIND LOG
+            </span>
           </div>
           
           <div className="flex items-center gap-1">
@@ -621,14 +630,17 @@ export default function Home({ session }) {
         </button>
       </div>
 
+      {/* 🎯 MODAL DESTRUKSI LOG - DITAMBAHKAN SIKU UNGU LUAR & DALAM */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
+            {/* 💥 SIKU UNGU BESAR DI POJOK LUAR KOTAK MODAL */}
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
             
+            {/* 💥 SIKU PADA JUDUL TULISAN */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -647,14 +659,17 @@ export default function Home({ session }) {
         </div>
       )}
 
+      {/* 🎯 MODAL KONFIRMASI KELUAR - DITAMBAHKAN SIKU UNGU LUAR & DALAM */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
+            {/* 💥 SIKU UNGU BESAR DI POJOK LUAR KOTAK MODAL */}
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
             
+            {/* 💥 SIKU PADA JUDUL TULISAN */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -673,14 +688,17 @@ export default function Home({ session }) {
         </div>
       )}
 
+      {/* 🎯 NEW FEATURE: MODAL SIKU UNGU CEGAH TOMBOL BACK HP / KELUAR PWA */}
       {showBackConfirm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-4 animate-in fade-in duration-150 select-none">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_15px_50px_rgba(0,0,0,0.8)] flex flex-col gap-4 font-mono text-center">
+            {/* 💥 SIKU UNGU MAKSIMAL PADA KOTAK LUAR */}
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
 
+            {/* 💥 JUDUL MENGGUNAKAN FITUR SIKU UNGU INTERNAL */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -695,6 +713,7 @@ export default function Home({ session }) {
               yakin mau keluar dari Daily Grind Log
             </p>
 
+            {/* 💥 TOMBOL PILIHAN: BATAL & KELUAR WARNA UNFU TEMA SYSTEM */}
             <div className="grid grid-cols-2 gap-3 text-[11px] mt-1 font-bold">
               <button 
                 type="button" 
@@ -707,7 +726,9 @@ export default function Home({ session }) {
                 type="button" 
                 onClick={() => {
                   setShowBackConfirm(false);
+                  // Menutup PWA / tab window saat disetujui keluar
                   window.close();
+                  // Fallback jika window.close dihambat aturan browser sandbox
                   window.history.go(-2);
                 }} 
                 className="py-2.5 bg-[#7C5CFF] text-white uppercase tracking-wider transition-all active:scale-95 font-black shadow-[0_0_12px_rgba(124,92,255,0.4)]"
@@ -719,6 +740,7 @@ export default function Home({ session }) {
         </div>
       )}
 
+      {/* 🎯 MODAL SYSTEM SIAP - MEMPERTAHANKAN DEKORASI ASLI LU */}
       {profile?.status === 'warned' && !dismissWarnPopup && !showWelcomeCover && !isWarningExpired && !isWarningDismissedOnce && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
@@ -777,7 +799,7 @@ export default function Home({ session }) {
         />
       )}
       
-      {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(true)} onSaved={fetchProfile} />}
+      {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
       {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
 
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
@@ -803,7 +825,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
