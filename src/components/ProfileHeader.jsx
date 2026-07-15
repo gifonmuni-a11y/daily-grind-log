@@ -71,7 +71,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
 
       <div className="px-4 pb-4">
         <div className="flex items-start gap-3 mb-3">
-          {/* AVATAR DENGAN SIKU UNGU ORIGINAL */}
+          {/* AVATAR DENGAN SIKU UNGU ORIGINAL KEMBALI */}
           <div className="relative shrink-0 -mt-10">
             <SystemFrame
               size={12}
@@ -179,7 +179,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* SPOTIFY STATUS */}
+        {/* SPOTIFY NOW PLAYING */}
         {profile?.spotify_link && (
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
