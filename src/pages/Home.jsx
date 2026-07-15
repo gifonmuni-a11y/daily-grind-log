@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map, AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
-import { calcLevel, getRankTier } from '../lib/expSystem'
+import { calcLevel, getRankTier, getEffectiveTotalExp } from '../lib/expSystem'
 import { buildDummyEntries } from '../lib/dummyData'
 import {
   getTodaysQuests,
@@ -252,8 +252,8 @@ export default function Home({ session }) {
   const filteredEntries = filterEntries(entries, activeFilter)
   const streak = calcStreak(entries)
   
-  // 🎯 FIX SINKRONISASI: totalExp sekarang mutlak membaca kolom exp terupdate langsung dari tabel profiles database!
-  const totalExp = profile?.exp || 0
+  // 🎯 FIX: Memanggil total EXP gabungan log + quest agar level aslimu langsung dipulihkan normal!
+  const totalExp = getEffectiveTotalExp(entries, userId, profile?.exp || 0)
   
   const entriesToday = getEntriesToday(entries)
   const todaysQuests = getTodaysQuests(userId)
@@ -465,7 +465,7 @@ export default function Home({ session }) {
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
-        <div className="flex items-center justify-between px-4" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
+        <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
           <div 
             onMouseDown={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
@@ -767,7 +767,7 @@ export default function Home({ session }) {
             const updateAudio = new Audio(AUDIO_URLS.others.updateLog)
             updateAudio.play().catch(e => console.log(e))
             fetchEntries()
-            fetchProfile() // Refetch data EXP terbaru
+            fetchProfile() 
             setActiveFilter('Semua') 
           }} 
         />
@@ -799,7 +799,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 

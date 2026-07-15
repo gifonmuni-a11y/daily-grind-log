@@ -1,6 +1,6 @@
 import { Edit2, Music, Flame, Zap } from 'lucide-react'
 import SystemFrame from './SystemFrame'
-import { calcLevel, getRankTier } from '../lib/expSystem'
+import { calcLevel, getEffectiveTotalExp, getRankTier } from '../lib/expSystem'
 import { getRankDetails, getTitleTierColor, getTitleTierGlow } from '../lib/rankColors'
 import { ACHIEVEMENTS, getEquippedTitle } from '../lib/achievements'
 
@@ -23,17 +23,15 @@ function getSpotifyEmbedUrl(link) {
 }
 
 export default function ProfileHeader({ profile, entries, streak, userId, onEditClick }) {
-  // 🎯 FIX SINKRONISASI MUTLAK: Ambil total EXP langsung dari database profile yang sudah ter-update klaim quest!
-  const totalExp = profile?.exp || 0
+  // 🎯 FIX: Parameter ditambahkan agar level lu tidak drop kembali ke Level 1
+  const totalExp = getEffectiveTotalExp(entries, userId, profile?.exp || 0)
   const { level, expIntoLevel, expForNext } = calcLevel(totalExp)
   const expPct = Math.min(100, Math.round((expIntoLevel / expForNext) * 100))
   
-  // Menggunakan sistem penentuan rank baru secara dinamis
   const rank = getRankDetails(level)
   const rankLabel = rank.name
   const rankClasses = rank.color
 
-  // FIX: Mengambil nama format normal & warna dinamis kasta untuk efek visual premium profil
   const tierName = getRankTier(level) 
   const currentTierColor = getTitleTierColor(tierName)
   const currentTierGlow = getTitleTierGlow(tierName)
@@ -74,7 +72,6 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
       <div className="px-4 pb-4">
         <div className="flex items-start gap-3 mb-3">
           <div className="relative shrink-0 -mt-10">
-            {/* FIX: Efek glow bingkai foto sekarang berubah otomatis mengikuti warna kastamu */}
             <SystemFrame
               size={12}
               className="w-20 h-20 bg-panel shrink-0"
@@ -95,7 +92,6 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
                 </div>
               )}
             </SystemFrame>
-            {/* FIX: Background angka level sekarang mengikuti warna kasta */}
             <div
               className="absolute -bottom-1 -right-1 font-mono text-xs font-bold px-1.5 py-0.5 z-10 transition-colors duration-300"
               style={{ background: currentTierColor, color: '#0A0A0E', fontSize: '10px' }}
@@ -119,7 +115,6 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               </span>
             </div>
             {equippedAchievement && (
-              /* FIX: Warna teks Title yang terpasang otomatis sinkron 100% dengan warna aura kasta lu */
               <p
                 className="font-mono text-xs mt-0.5 tracking-wider uppercase opacity-90 transition-colors duration-300"
                 style={{ color: currentTierColor }}

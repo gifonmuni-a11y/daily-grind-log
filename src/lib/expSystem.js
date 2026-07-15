@@ -43,12 +43,15 @@ export function addBonusExp(userId, amount) {
   localStorage.setItem(bonusExpKey(userId), String(current + amount))
 }
 
-export function getEffectiveTotalExp(entries, userId) {
-  return getTotalExp(entries) + getBonusExp(userId)
+// 🎯 FIX SINKRONISASI TOTAL EXP: Menggabungkan kalkulasi log entries lama + nilai database profile.exp
+export function getEffectiveTotalExp(entries, userId, profileDbExp = 0) {
+  // Jika nilai profileDbExp lebih besar dari total kalkulasi log biasa, gunakan nilai profileDbExp agar bonus quest tidak hilang
+  const localLogExp = getTotalExp(entries)
+  return Math.max(localLogExp, profileDbExp)
 }
 
 export function getRankLabel(level) {
-  if (level >= 80) return 'OVERLOAD'
+  if (level >= 80) return 'OVERLORD'
   if (level >= 60) return 'MYTHICAL'
   if (level >= 45) return 'GRAND MASTER'
   if (level >= 30) return 'MASTER'
@@ -59,7 +62,7 @@ export function getRankLabel(level) {
 }
 
 export function getRankTier(level) {
-  if (level >= 80) return 'Overload'
+  if (level >= 80) return 'Overlord'
   if (level >= 60) return 'Mythical'
   if (level >= 45) return 'Grand Master'
   if (level >= 30) return 'Master'
