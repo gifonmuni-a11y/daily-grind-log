@@ -15,11 +15,11 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
   const [bannerFile, setBannerFile] = useState(null)
   const [bannerPreview, setBannerPreview] = useState(profile?.banner_url || null)
   
-  // Menggunakan fallback nilai jika kolom dari DB masih kosong
-  const [avatarZoom, setAvatarZoom] = useState(profile?.avatar_zoom ?? 100)
-  const [avatarOffset, setAvatarOffset] = useState(profile?.avatar_offset ?? 0)
-  const [bannerZoom, setBannerZoom] = useState(profile?.banner_zoom ?? 100)
-  const [bannerOffset, setBannerOffset] = useState(profile?.banner_offset ?? 0)
+  // State angka penampung kalibrasi slider
+  const [avatarZoom, setAvatarZoom] = useState(profile?.avatar_zoom || 100)
+  const [avatarOffset, setAvatarOffset] = useState(profile?.avatar_offset || 0)
+  const [bannerZoom, setBannerZoom] = useState(profile?.banner_zoom || 100)
+  const [bannerOffset, setBannerOffset] = useState(profile?.banner_offset || 0)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -121,7 +121,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
 
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
           
-          {/* 🎯 KANVAS BANNER LATAR */}
+          {/* PREVIEW BANNER EDIT */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
               Banner Latar
@@ -138,7 +138,8 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                   className="w-full h-full pointer-events-none select-none" 
                   style={{
                     objectFit: 'cover',
-                    transform: `scale(${(bannerZoom || 100) / 100}) translateY(${bannerOffset || 0}px)`,
+                    transform: `scale(${Number(bannerZoom) / 100}) translateY(${Number(bannerOffset)}px)`,
+                    transformOrigin: 'center center'
                   }}
                 />
               ) : (
@@ -176,7 +177,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
             <input ref={bannerRef} type="file" accept="image/*" onChange={handleBannerChange} className="hidden" />
           </div>
 
-          {/* 🎯 KANVAS AVATAR (MUTLAK RASIO KOTAK 1:1) */}
+          {/* PREVIEW AVATAR EDIT */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
               Avatar (Rasio 1:1)
@@ -194,7 +195,8 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                     className="w-full h-full pointer-events-none select-none" 
                     style={{
                       objectFit: 'cover',
-                      transform: `scale(${(avatarZoom || 100) / 100}) translate(${avatarOffset || 0}px, ${avatarOffset || 0}px)`,
+                      transform: `scale(${Number(avatarZoom) / 100}) translate(${Number(avatarOffset)}px, ${Number(avatarOffset)}px)`,
+                      transformOrigin: 'center center'
                     }}
                   />
                 ) : (
