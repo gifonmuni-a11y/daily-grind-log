@@ -141,11 +141,8 @@ export default function Home({ session }) {
   const [activeUnlockAchievement, setActiveUnlockAchievement] = useState(null)
 
   const [showWelcomeCover, setShowWelcomeCover] = useState(true)
-
-  // State Kontrol untuk menghilangkan pop-up peringatan secara lokal
   const [dismissWarnPopup, setDismissWarnPopup] = useState(false)
 
-  // 🎯 Easter Egg Admin Panel State & Ref
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
 
@@ -210,7 +207,7 @@ export default function Home({ session }) {
           const newProfile = payload.new
           
           setProfile((prevProfile) => {
-            if (newProfile.status === 'warned' && (prevProfile?.status !== 'warned' || newProfile.warning_msg !== prevProfile?.warning_msg)) {
+            if (newProfile.status === 'warned' && (prevProfile?.status !== 'warned' || newProfile.warning_msg !== prevProfile?.warning_msg || newProfile.warning_title !== prevProfile?.warning_title)) {
               setDismissWarnPopup(false)
               localStorage.removeItem(`dg_read_warn_${newProfile.warning_msg}`)
             }
@@ -218,8 +215,8 @@ export default function Home({ session }) {
           })
 
           if (newProfile.status === 'warned') {
-            sendSystemNotification("PERINGATAN SISTEM", {
-              body: newProfile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
+            sendSystemNotification(newProfile.warning_title || "Notifikasi by founder HW", {
+              body: newProfile.warning_msg || "Menerima pesan baru.",
               tag: "user-warning"
             })
           } else if (newProfile.status === 'banned') {
@@ -294,8 +291,8 @@ export default function Home({ session }) {
       const isAlreadyReadOnce = profile.warning_type === 'once' && localStorage.getItem(`dg_read_warn_${profile.warning_msg}`) === 'true'
 
       if (!isExpired && !isAlreadyReadOnce) {
-        sendSystemNotification("PERINGATAN SISTEM", {
-          body: profile.warning_msg || "Akun Anda menerima peringatan dari administrator.",
+        sendSystemNotification(profile.warning_title || "Notifikasi by founder HW", {
+          body: profile.warning_msg || "Menerima pesan baru.",
           tag: "user-warning"
         })
       }
@@ -463,17 +460,31 @@ export default function Home({ session }) {
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
+        {/* 🎯 HEADER INTERFACE TACTICAL DENGAN FITUR GIF KUSTOM DI KIRI */}
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
-          <span 
+          <div 
             onMouseDown={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
             onMouseLeave={handleAdminPressEnd}
             onTouchStart={handleAdminPressStart}
             onTouchEnd={handleAdminPressEnd}
-            className="font-display font-bold text-base text-accent tracking-widest cursor-pointer select-none active:text-[#7C5CFF] transition-colors"
+            className="flex items-center gap-2.5 cursor-pointer select-none"
           >
-            DAILY GRIND LOG
-          </span>
+            {/* 🔔 AMAN: Pemasangan Icon GIF Bergerak Sesuai Request */}
+            <img 
+              src="/notification-icon.gif" 
+              alt="Grind System Icon" 
+              className="w-5.5 h-5.5 object-contain flex-shrink-0"
+              onError={(e) => {
+                // Fallback otomatis jika file .gif belum di-push ke folder public
+                e.target.style.display = 'none';
+              }}
+            />
+            <span className="font-display font-bold text-base text-accent tracking-widest active:text-[#7C5CFF] transition-colors">
+              DAILY GRIND LOG
+            </span>
+          </div>
+          
           <div className="flex items-center gap-1">
             <button onClick={() => setShowAboutModal(true)} className="p-2 hover:bg-border-hover transition-colors">
               <HelpCircle size={16} className="text-text-dim" />
@@ -644,7 +655,7 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 MODAL POP-UP PERINGATAN / NOTIFIKASI KHUSUS DITENGAH LAYAR SESUAI ASSET UNGU SISTEM */}
+      {/* 🎯 MODAL POP-UP PERINGATAN / NOTIFIKASI DENGAN JUDUL KUSTOM DARI ADMIN PANEL */}
       {profile?.status === 'warned' && !dismissWarnPopup && !showWelcomeCover && !isWarningExpired && !isWarningDismissedOnce && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
@@ -660,7 +671,9 @@ export default function Home({ session }) {
               <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
               <AlertTriangle size={14} className="text-[#7C5CFF]" />
-              <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">Notifikasi by founder HW</span>
+              <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">
+                {profile.warning_title || "Notifikasi by founder HW"}
+              </span>
             </div>
 
             <p className="text-[10px] text-[#EDEAF6]/80 leading-relaxed uppercase tracking-wide px-1">
@@ -727,7 +740,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
