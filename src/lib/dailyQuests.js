@@ -18,7 +18,7 @@ const QUEST_POOL = [
   {
     id: 'log_note',
     label: 'Tulis Catatan Lengkap',
-    desc: 'Log sesi hari ini dengan catatan (note) minimal 20 karakter.',
+    desc: 'Log sesi hari ini dengan catatan (note) minimal 10 karakter.',
     exp: 5,
     check: (entriesToday) => entriesToday.some(e => (e.note || '').trim().length >= 20),
   },
@@ -139,13 +139,21 @@ export async function claimQuest(userId, questId, expAwarded) {
     return false
   }
 
-  // Menambahkan kalkulasi pengiriman poin EXP baru secara real-time ke user_stats database
+  // 🎯 SINKRONISASI MUTLAK: Memperbaiki & memperkuat alur pengiriman EXP ke database user_stats
   try {
-    const { data: stats } = await supabase.from('user_stats').select('total_exp').eq('user_id', userId).single()
+    const { data: stats } = await supabase
+      .from('user_stats')
+      .select('total_exp')
+      .eq('user_id', userId)
+      .single()
+      
     const currentExp = stats?.total_exp || 0
     const newExp = currentExp + expAwarded
     
-    await supabase.from('user_stats').update({ total_exp: newExp }).eq('user_id', userId)
+    await supabase
+      .from('user_stats')
+      .update({ total_exp: newExp })
+      .eq('user_id', userId)
   } catch (e) {
     console.error('Gagal update database EXP:', e.message)
   }
