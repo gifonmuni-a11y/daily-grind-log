@@ -40,25 +40,31 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
   const equippedId = getEquippedTitle(userId)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedId)
 
-  // 🎯 Ambil data koordinat kalibrasi gambar dari database profile
-  const bZoom = profile?.banner_zoom || 100;
-  const bOffset = profile?.banner_offset || 0;
-  const aZoom = profile?.avatar_zoom || 100;
-  const aOffset = profile?.avatar_offset || 0;
+  // 🎯 Ambil nilai angka kalibrasi dari database
+  const bZoom = Number(profile?.banner_zoom) || 100;
+  const bOffset = Number(profile?.banner_offset) || 0;
+  const aZoom = Number(profile?.avatar_zoom) || 100;
+  const aOffset = Number(profile?.avatar_offset) || 0;
 
   return (
     <div className="relative">
-      <div className="relative w-full overflow-hidden" style={{ height: 180 }}>
+      {/* KONTEN BANNER LATAR */}
+      <div className="relative w-full overflow-hidden bg-[#0A0A0E]" style={{ height: 180 }}>
         {profile?.banner_url ? (
-          <div
-            className="w-full h-full bg-cover"
+          <img
+            src={profile.banner_url}
+            alt="banner"
+            className="w-full h-full max-w-none select-none"
             style={{ 
-              backgroundImage: `url(${profile.banner_url})`,
-              backgroundPosition: 'center',
-              // 🎯 Terapkan kalibrasi zoom & posisi banner harian lu
-              transform: `scale(${bZoom / 100}) translateY(${bOffset}px)`,
-              transformOrigin: 'center center',
-              transition: 'transform 0.2s ease-out'
+              // 🎯 Menghilangkan pemotongan paksa otomatis
+              objectFit: 'none',
+              objectPosition: 'center center',
+              // 🎯 Menerapkan kalibrasi manual dari slider kamu
+              transform: `translate(-50%, -50%) scale(${bZoom / 100}) translateY(${bOffset}px)`,
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transition: 'transform 0.1s ease-out'
             }}
           />
         ) : (
@@ -76,13 +82,14 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         )}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{ background: 'linear-gradient(to bottom, transparent 55%, #0A0A0E)' }}
         />
       </div>
 
       <div className="px-4 pb-4">
         <div className="flex items-start gap-3 mb-3">
+          {/* KONTEN AVATAR BINGKAI */}
           <div className="relative shrink-0 -mt-10">
             <SystemFrame
               size={12}
@@ -90,17 +97,21 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               style={{ boxShadow: currentTierGlow !== 'none' ? currentTierGlow : `0 0 12px ${currentTierColor}55` }}
             >
               {profile?.avatar_url ? (
-                <div className="w-full h-full overflow-hidden relative">
+                <div className="w-full h-full overflow-hidden relative bg-black/50">
                   <img
                     src={profile.avatar_url}
                     alt="avatar"
-                    className="w-full h-full select-none"
-                    // 🎯 Terapkan kalibrasi zoom & posisi geser avatar 1:1 lu
+                    className="w-full h-full max-w-none select-none"
                     style={{
-                      objectFit: 'cover',
-                      transform: `scale(${aZoom / 100}) translate(${aOffset}px, ${aOffset}px)`,
-                      transformOrigin: 'center center',
-                      transition: 'transform 0.2s ease-out'
+                      // 🎯 Menghilangkan pemotongan paksa otomatis agar crop manual aktif
+                      objectFit: 'none',
+                      objectPosition: 'center center',
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      // 🎯 Terapkan pergeseran 1:1 sesuai yang kamu pilih di modal edit
+                      transform: `translate(-50%, -50%) scale(${aZoom / 100}) translate(${aOffset}px, ${aOffset}px)`,
+                      transition: 'transform 0.1s ease-out'
                     }}
                   />
                 </div>
@@ -157,6 +168,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </button>
         </div>
 
+        {/* STATS BAR */}
         <div className="flex items-center gap-4 mb-3">
           <div className="flex items-center gap-1.5">
             <Flame size={14} className="text-danger" />
@@ -176,6 +188,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
+        {/* PROGRESS BAR */}
         <div>
           <div className="flex justify-between mb-1">
             <span className="font-mono text-xs text-gray-400">
@@ -197,6 +210,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
+        {/* SPOTIFY EMBED */}
         {profile?.spotify_link && (
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
