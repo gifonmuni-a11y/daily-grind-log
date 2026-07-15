@@ -18,7 +18,7 @@ export async function requestNotificationPermission() {
 
 /**
  * Mengirimkan notifikasi taktis native ke system drawer perangkat
- * @param {string} title Judul notifikasi utama
+ * @param {string} title Judul notifikasi utama (Bisa dicustom dari Admin Panel)
  * @param {Object} options Konfigurasi payload notifikasi
  */
 export async function sendSystemNotification(title, options = {}) {
@@ -26,7 +26,6 @@ export async function sendSystemNotification(title, options = {}) {
     return;
   }
 
-  // Jika izin belum sinkron di level browser situs, minta ulang secara paksa
   if (Notification.permission !== 'granted') {
     const status = await Notification.requestPermission();
     if (status !== 'granted') {
@@ -35,13 +34,15 @@ export async function sendSystemNotification(title, options = {}) {
     }
   }
 
-  // 🎯 SETELAN PRIORITAS TINGGI: Mencegah Android silent-drop notifikasi
+  // 🎯 PRIORITAS & ASET VISUAL: Memasang icon lonceng kristal baru lu
   const defaultOptions = {
     body: options.body || "",
     tag: options.tag || "grind-log-notification",
-    renotify: true,                 // Timpa notifikasi lama jika tag sama
-    requireInteraction: true,       // Notifikasi bakal menetap di laci atas sampai di-swipe user
-    vibrate: [200, 100, 200],       // Pola getar taktis
+    icon: '/notification-icon.png',       // 🔔 Jalur utama icon lonceng kristal baru lu di folder public
+    badge: '/notification-icon.png',      // Icon status bar mini (Android)
+    renotify: true,                      // Timpa notifikasi lama jika tag sama
+    requireInteraction: true,            // Notifikasi menetap di laci atas sampai di-swipe user
+    vibrate: [200, 100, 200],            // Pola getar sistem taktis
     ...options
   };
 
@@ -51,14 +52,14 @@ export async function sendSystemNotification(title, options = {}) {
       const registration = await navigator.serviceWorker.ready;
       if (registration) {
         await registration.showNotification(title, defaultOptions);
-        return; // Berhasil keluar ke laci atas HP
+        return;
       }
     } catch (err) {
       console.error("Gagal menembakkan lewat Service Worker, mencoba fallback...", err);
     }
   }
 
-  // Fallback cadangan jika service worker sedang sibuk/delay
+  // Fallback cadangan jika service worker sedang delay
   try {
     new Notification(title, defaultOptions);
   } catch (e) {
