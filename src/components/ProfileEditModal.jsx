@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { X, Upload, Loader2 } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { X, Upload, Loader2, Move, ZoomIn } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { supabase } from '../lib/supabaseClient'
 
@@ -9,10 +9,19 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     bio: profile?.bio || '',
     spotify_link: profile?.spotify_link || '',
   })
+  
+  // 📸 State File & Preview Asli
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url || null)
   const [bannerFile, setBannerFile] = useState(null)
   const [bannerPreview, setBannerPreview] = useState(profile?.banner_url || null)
+  
+  // 🎯 REALTIME IMAGE ADJUSTMENT CALIBRATION STATE (Zoom & Position Offset)
+  const [avatarZoom, setAvatarZoom] = useState(profile?.avatar_zoom || 100)
+  const [avatarOffset, setAvatarOffset] = useState(profile?.avatar_offset || 0)
+  const [bannerZoom, setBannerZoom] = useState(profile?.banner_zoom || 100)
+  const [bannerOffset, setBannerOffset] = useState(profile?.banner_offset || 0)
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const avatarRef = useRef()
@@ -27,6 +36,8 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     if (!file) return
     setAvatarFile(file)
     setAvatarPreview(URL.createObjectURL(file))
+    setAvatarZoom(100) // Reset kalibrasi jika ganti gambar baru
+    setAvatarOffset(0)
   }
 
   function handleBannerChange(e) {
@@ -34,6 +45,8 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     if (!file) return
     setBannerFile(file)
     setBannerPreview(URL.createObjectURL(file))
+    setBannerZoom(100) // Reset kalibrasi jika ganti gambar baru
+    setBannerOffset(0)
   }
 
   async function uploadImage(file, path) {
@@ -65,6 +78,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
         bannerUrl = await uploadImage(bannerFile, `${userId}/banner.${ext}`)
       }
 
+      // 🎯 Simpan koordinat kalibrasi gambar ke database agar permanen
       const { error: dbErr } = await supabase
         .from('profiles')
         .upsert({
@@ -74,6 +88,10 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           spotify_link: form.spotify_link.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
+          avatar_zoom: Number(avatarZoom),
+          avatar_offset: Number(avatarOffset),
+          banner_zoom: Number(bannerZoom),
+          banner_offset: Number(bannerOffset),
         })
 
       if (dbErr) throw dbErr
@@ -104,17 +122,28 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
+          
+          {/* 🎯 KANVAS KALIBRASI BANNER PROFILE */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
-              Banner
+              Banner Latar
             </label>
             <div
-              className="w-full h-24 relative overflow-hidden cursor-pointer"
+              className="w-full h-28 relative overflow-hidden cursor-pointer bg-black/40"
               style={{ border: '1px dashed #211D2C' }}
               onClick={() => bannerRef.current?.click()}
             >
               {bannerPreview ? (
-                <img src={bannerPreview} alt="banner" className="w-full h-full object-cover" />
+                <img 
+                  src={bannerPreview} 
+                  alt="banner" 
+                  className="w-full h-full pointer-events-none select-none" 
+                  style={{
+                    objectFit: 'cover',
+                    transform: `scale(${bannerZoom / 100}) translateY(${bannerOffset}px)`,
+                    transition: 'transform 0.1s ease-out'
+                  }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center gap-2 text-text-dim">
                   <Upload size={16} />
@@ -122,21 +151,57 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                 </div>
               )}
             </div>
+            
+            {/* PANEL TUAS KONTROL BANNER (Hanya muncul jika gambar ada) */}
+            {bannerPreview && (
+              <div className="mt-2 p-2 bg-[#0A0A0E] border border-[#211D2C] flex flex-col gap-2 rounded-sm">
+                <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
+                  <ZoomIn size={12} className="text-accent" />
+                  <span>ZOOM: {bannerZoom}%</span>
+                  <input 
+                    type="range" min="100" max="250" 
+                    value={bannerZoom} 
+                    onChange={e => setBannerZoom(e.target.value)} 
+                    className="flex-1 accent-[#7C5CFF] h-1 bg-border"
+                  />
+                </div>
+                <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
+                  <Move size={12} className="text-accent" />
+                  <span>VERTIKAL: {bannerOffset}px</span>
+                  <input 
+                    type="range" min="-100" max="100" 
+                    value={bannerOffset} 
+                    onChange={e => setBannerOffset(e.target.value)} 
+                    className="flex-1 accent-[#7C5CFF] h-1 bg-border"
+                  />
+                </div>
+              </div>
+            )}
             <input ref={bannerRef} type="file" accept="image/*" onChange={handleBannerChange} className="hidden" />
           </div>
 
+          {/* 🎯 KANVAS KALIBRASI AVATAR (MUTLAK RASIO KOTAK 1:1) */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
-              Avatar
+              Avatar (Rasio 1:1)
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-4">
               <div
-                className="w-16 h-16 relative overflow-hidden cursor-pointer shrink-0"
+                className="w-20 h-20 relative overflow-hidden cursor-pointer shrink-0 bg-black/40"
                 style={{ border: '2px solid #7C5CFF' }}
                 onClick={() => avatarRef.current?.click()}
               >
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                  <img 
+                    src={avatarPreview} 
+                    alt="avatar" 
+                    className="w-full h-full pointer-events-none select-none" 
+                    style={{
+                      objectFit: 'cover',
+                      transform: `scale(${avatarZoom / 100}) translate(${avatarOffset}px, ${avatarOffset}px)`,
+                      transition: 'transform 0.1s ease-out'
+                    }}
+                  />
                 ) : (
                   <div
                     className="w-full h-full flex items-center justify-center font-display font-bold text-2xl text-accent"
@@ -146,14 +211,43 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => avatarRef.current?.click()}
-                className="font-mono text-xs text-text-dim hover:text-text-muted transition-colors flex items-center gap-1"
-              >
-                <Upload size={12} />
-                Ganti avatar
-              </button>
+              
+              <div className="flex-1 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => avatarRef.current?.click()}
+                  className="font-mono text-xs text-text-dim hover:text-text-muted transition-colors flex items-center gap-1 self-start"
+                >
+                  <Upload size={12} />
+                  Ganti Gambar Avatar
+                </button>
+
+                {/* PANEL TUAS KONTROL AVATAR */}
+                {avatarPreview && (
+                  <div className="p-2 bg-[#0A0A0E] border border-[#211D2C] flex flex-col gap-2 rounded-sm w-full">
+                    <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
+                      <ZoomIn size={12} className="text-accent" />
+                      <span>ZOOM:</span>
+                      <input 
+                        type="range" min="100" max="300" 
+                        value={avatarZoom} 
+                        onChange={e => setAvatarZoom(e.target.value)} 
+                        className="flex-1 accent-[#7C5CFF] h-1 bg-border"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
+                      <Move size={12} className="text-accent" />
+                      <span>GESER:</span>
+                      <input 
+                        type="range" min="-50" max="50" 
+                        value={avatarOffset} 
+                        onChange={e => setAvatarOffset(e.target.value)} 
+                        className="flex-1 accent-[#7C5CFF] h-1 bg-border"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <input ref={avatarRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
           </div>
