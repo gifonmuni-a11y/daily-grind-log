@@ -42,7 +42,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
 
   return (
     <div className="relative">
-      {/* BANNER LATAR ORIGINAL */}
+      {/* BANNER PROFILE */}
       <div className="relative w-full overflow-hidden" style={{ height: 180 }}>
         {profile?.banner_url ? (
           <div
@@ -71,11 +71,11 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
 
       <div className="px-4 pb-4">
         <div className="flex items-start gap-3 mb-3">
-          {/* SIKU PROFILE FRAME KEMBALI MUNCUL */}
+          {/* AVATAR BINGKAI DENGAN SIKU UNGU FIXED */}
           <div className="relative shrink-0 -mt-10">
             <SystemFrame
               size={12}
-              className="w-20 h-20 bg-panel shrink-0"
+              className="w-20 h-20 bg-panel shrink-0 overflow-hidden"
               style={{ boxShadow: currentTierGlow !== 'none' ? currentTierGlow : `0 0 12px ${currentTierColor}55` }}
             >
               {profile?.avatar_url ? (
@@ -137,7 +137,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </button>
         </div>
 
-        {/* STATS */}
+        {/* LOG PANEL STATS */}
         <div className="flex items-center gap-4 mb-3">
           <div className="flex items-center gap-1.5">
             <Flame size={14} className="text-danger" />
@@ -157,7 +157,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* PROGRESS EXP BAR */}
+        {/* EXP LEVEL PROGRESS BAR */}
         <div>
           <div className="flex justify-between mb-1">
             <span className="font-mono text-xs text-gray-400">
@@ -179,7 +179,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* NOW PLAYING SPOTIFY */}
+        {/* SPOTIFY STATUS NOW PLAYING */}
         {profile?.spotify_link && (
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
