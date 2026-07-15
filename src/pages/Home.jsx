@@ -9,7 +9,6 @@ import {
   getEntriesToday,
   fetchQuestClaims,
   getClaimedTodayIds,
-  getTotalQuestExp,
   claimQuest,
 } from '../lib/dailyQuests'
 import {
@@ -130,7 +129,7 @@ export default function Home({ session }) {
 
   const [activeTab, setActiveTab] = useState('grind') 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showBackConfirm, setShowBackConfirm] = useState(false) // 🎯 State intercept tombol back HP
+  const [showBackConfirm, setShowBackConfirm] = useState(false) 
   const [deleteTargetId, setDeleteTargetId] = useState(null)
 
   const prevLevelRef = useRef(null)
@@ -147,15 +146,12 @@ export default function Home({ session }) {
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
 
-  // 🎯 INTERCEPT TOMBOL BACK PADA PWA / HP ANDROID
   useEffect(() => {
     window.history.pushState(null, null, window.location.pathname);
     
     const handlePopState = (e) => {
       e.preventDefault();
-      // Buka modal konfirmasi kustom taktis
       setShowBackConfirm(true);
-      // Dorong kembali state agar browser tidak langsung mundur keluar aplikasi
       window.history.pushState(null, null, window.location.pathname);
     };
 
@@ -184,7 +180,7 @@ export default function Home({ session }) {
       .eq('id', userId)
       .single()
     if (!data) {
-      await supabase.from('profiles').upsert({ id: userId, name: 'Trainer' })
+      await supabase.from('profiles').upsert({ id: userId, name: 'Trainer', exp: 0 })
       const { data: created } = await supabase
         .from('profiles')
         .select('*')
@@ -255,12 +251,13 @@ export default function Home({ session }) {
 
   const filteredEntries = filterEntries(entries, activeFilter)
   const streak = calcStreak(entries)
-  const entriesExp = entries.reduce((sum, e) => sum + ({ S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }[e.rank] || 0), 0)
+  
+  // 🎯 FIX SINKRONISASI: totalExp sekarang mutlak membaca kolom exp terupdate langsung dari tabel profiles database!
+  const totalExp = profile?.exp || 0
+  
   const entriesToday = getEntriesToday(entries)
   const todaysQuests = getTodaysQuests(userId)
   const claimedTodayIds = getClaimedTodayIds(questClaims)
-  const questBonusExp = getTotalQuestExp(questClaims)
-  const totalExp = entriesExp + questBonusExp
   const { level } = calcLevel(totalExp)
   const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
   const userStats = { totalDays: entries.length, streak, totalExp, level }
@@ -406,17 +403,6 @@ export default function Home({ session }) {
     const logoutAudio = new Audio(AUDIO_URLS.others.logOut)
     logoutAudio.play().catch(e => console.log(e))
     setShowLogoutConfirm(true)
-  }
-
-  async function handleSeedDummyData() {
-    if (seeding) return
-    if (!window.confirm('Isi data contoh (5 sesi dummy)?')) return
-    setSeeding(true)
-    const maxDay = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
-    const dummyEntries = buildDummyEntries(userId, maxDay)
-    const { error } = await supabase.from('entries').insert(dummyEntries)
-    if (!error) await fetchEntries()
-    setSeeding(false)
   }
 
   async function handleClaimQuest(quest) {
@@ -630,17 +616,14 @@ export default function Home({ session }) {
         </button>
       </div>
 
-      {/* 🎯 MODAL DESTRUKSI LOG - DITAMBAHKAN SIKU UNGU LUAR & DALAM */}
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
-            {/* 💥 SIKU UNGU BESAR DI POJOK LUAR KOTAK MODAL */}
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
             
-            {/* 💥 SIKU PADA JUDUL TULISAN */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -659,17 +642,14 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 MODAL KONFIRMASI KELUAR - DITAMBAHKAN SIKU UNGU LUAR & DALAM */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
-            {/* 💥 SIKU UNGU BESAR DI POJOK LUAR KOTAK MODAL */}
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
             
-            {/* 💥 SIKU PADA JUDUL TULISAN */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -688,17 +668,14 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 NEW FEATURE: MODAL SIKU UNGU CEGAH TOMBOL BACK HP / KELUAR PWA */}
       {showBackConfirm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-4 animate-in fade-in duration-150 select-none">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_15px_50px_rgba(0,0,0,0.8)] flex flex-col gap-4 font-mono text-center">
-            {/* 💥 SIKU UNGU MAKSIMAL PADA KOTAK LUAR */}
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
 
-            {/* 💥 JUDUL MENGGUNAKAN FITUR SIKU UNGU INTERNAL */}
             <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
               <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
               <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -713,7 +690,6 @@ export default function Home({ session }) {
               yakin mau keluar dari Daily Grind Log
             </p>
 
-            {/* 💥 TOMBOL PILIHAN: BATAL & KELUAR WARNA UNFU TEMA SYSTEM */}
             <div className="grid grid-cols-2 gap-3 text-[11px] mt-1 font-bold">
               <button 
                 type="button" 
@@ -726,9 +702,7 @@ export default function Home({ session }) {
                 type="button" 
                 onClick={() => {
                   setShowBackConfirm(false);
-                  // Menutup PWA / tab window saat disetujui keluar
                   window.close();
-                  // Fallback jika window.close dihambat aturan browser sandbox
                   window.history.go(-2);
                 }} 
                 className="py-2.5 bg-[#7C5CFF] text-white uppercase tracking-wider transition-all active:scale-95 font-black shadow-[0_0_12px_rgba(124,92,255,0.4)]"
@@ -740,7 +714,6 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 MODAL SYSTEM SIAP - MEMPERTAHANKAN DEKORASI ASLI LU */}
       {profile?.status === 'warned' && !dismissWarnPopup && !showWelcomeCover && !isWarningExpired && !isWarningDismissedOnce && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
@@ -794,6 +767,7 @@ export default function Home({ session }) {
             const updateAudio = new Audio(AUDIO_URLS.others.updateLog)
             updateAudio.play().catch(e => console.log(e))
             fetchEntries()
+            fetchProfile() // Refetch data EXP terbaru
             setActiveFilter('Semua') 
           }} 
         />
@@ -825,7 +799,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi Seolha AI Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
