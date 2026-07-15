@@ -34,12 +34,13 @@ export async function sendSystemNotification(title, options = {}) {
     }
   }
 
-  // 🎯 PRIORITAS & ASET VISUAL: Memasang icon lonceng kristal baru lu
+  // 🎯 PRIORITAS, WARNA TEMA & ASET SILUET STATUS BAR
   const defaultOptions = {
     body: options.body || "",
     tag: options.tag || "grind-log-notification",
-    icon: '/notification-icon.png',       // 🔔 Jalur utama icon lonceng kristal baru lu di folder public
-    badge: '/notification-icon.png',      // Icon status bar mini (Android)
+    icon: '/notification-icon.png',       // 🔔 Icon utama full color (muncul di dalam kotak pesan)
+    badge: '/notification-badge.png',      // 🔍 Icon bar status kecil (menggunakan file siluet transparan agar tidak hitam ngeblok)
+    color: '#7C5CFF',                      // 🎯 WARNA UNGU TEMA LU: Mengubah total lingkaran aksen hijau Android jadi UNGU!
     renotify: true,                      // Timpa notifikasi lama jika tag sama
     requireInteraction: true,            // Notifikasi menetap di laci atas sampai di-swipe user
     vibrate: [200, 100, 200],            // Pola getar sistem taktis
