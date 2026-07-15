@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { X, Upload, Loader2, Move, ZoomIn } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { supabase } from '../lib/supabaseClient'
@@ -10,17 +10,16 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     spotify_link: profile?.spotify_link || '',
   })
   
-  // 📸 State File & Preview Asli
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url || null)
   const [bannerFile, setBannerFile] = useState(null)
   const [bannerPreview, setBannerPreview] = useState(profile?.banner_url || null)
   
-  // 🎯 REALTIME IMAGE ADJUSTMENT CALIBRATION STATE (Zoom & Position Offset)
-  const [avatarZoom, setAvatarZoom] = useState(profile?.avatar_zoom || 100)
-  const [avatarOffset, setAvatarOffset] = useState(profile?.avatar_offset || 0)
-  const [bannerZoom, setBannerZoom] = useState(profile?.banner_zoom || 100)
-  const [bannerOffset, setBannerOffset] = useState(profile?.banner_offset || 0)
+  // Menggunakan fallback nilai jika kolom dari DB masih kosong
+  const [avatarZoom, setAvatarZoom] = useState(profile?.avatar_zoom ?? 100)
+  const [avatarOffset, setAvatarOffset] = useState(profile?.avatar_offset ?? 0)
+  const [bannerZoom, setBannerZoom] = useState(profile?.banner_zoom ?? 100)
+  const [bannerOffset, setBannerOffset] = useState(profile?.banner_offset ?? 0)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,7 +35,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     if (!file) return
     setAvatarFile(file)
     setAvatarPreview(URL.createObjectURL(file))
-    setAvatarZoom(100) // Reset kalibrasi jika ganti gambar baru
+    setAvatarZoom(100)
     setAvatarOffset(0)
   }
 
@@ -45,7 +44,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     if (!file) return
     setBannerFile(file)
     setBannerPreview(URL.createObjectURL(file))
-    setBannerZoom(100) // Reset kalibrasi jika ganti gambar baru
+    setBannerZoom(100)
     setBannerOffset(0)
   }
 
@@ -78,7 +77,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
         bannerUrl = await uploadImage(bannerFile, `${userId}/banner.${ext}`)
       }
 
-      // 🎯 Simpan koordinat kalibrasi gambar ke database agar permanen
       const { error: dbErr } = await supabase
         .from('profiles')
         .upsert({
@@ -88,10 +86,10 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           spotify_link: form.spotify_link.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
-          avatar_zoom: Number(avatarZoom),
-          avatar_offset: Number(avatarOffset),
-          banner_zoom: Number(bannerZoom),
-          banner_offset: Number(bannerOffset),
+          avatar_zoom: Number(avatarZoom) || 100,
+          avatar_offset: Number(avatarOffset) || 0,
+          banner_zoom: Number(bannerZoom) || 100,
+          banner_offset: Number(bannerOffset) || 0,
         })
 
       if (dbErr) throw dbErr
@@ -122,8 +120,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
-          
-          {/* 🎯 KANVAS KALIBRASI BANNER PROFILE */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
               Banner Latar
@@ -140,8 +136,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                   className="w-full h-full pointer-events-none select-none" 
                   style={{
                     objectFit: 'cover',
-                    transform: `scale(${bannerZoom / 100}) translateY(${bannerOffset}px)`,
-                    transition: 'transform 0.1s ease-out'
+                    transform: `scale(${(bannerZoom || 100) / 100}) translateY(${bannerOffset || 0}px)`,
                   }}
                 />
               ) : (
@@ -152,7 +147,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
               )}
             </div>
             
-            {/* PANEL TUAS KONTROL BANNER (Hanya muncul jika gambar ada) */}
             {bannerPreview && (
               <div className="mt-2 p-2 bg-[#0A0A0E] border border-[#211D2C] flex flex-col gap-2 rounded-sm">
                 <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
@@ -180,7 +174,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
             <input ref={bannerRef} type="file" accept="image/*" onChange={handleBannerChange} className="hidden" />
           </div>
 
-          {/* 🎯 KANVAS KALIBRASI AVATAR (MUTLAK RASIO KOTAK 1:1) */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
               Avatar (Rasio 1:1)
@@ -198,8 +191,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                     className="w-full h-full pointer-events-none select-none" 
                     style={{
                       objectFit: 'cover',
-                      transform: `scale(${avatarZoom / 100}) translate(${avatarOffset}px, ${avatarOffset}px)`,
-                      transition: 'transform 0.1s ease-out'
+                      transform: `scale(${(avatarZoom || 100) / 100}) translate(${avatarOffset || 0}px, ${avatarOffset || 0}px)`,
                     }}
                   />
                 ) : (
@@ -222,7 +214,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                   Ganti Gambar Avatar
                 </button>
 
-                {/* PANEL TUAS KONTROL AVATAR */}
                 {avatarPreview && (
                   <div className="p-2 bg-[#0A0A0E] border border-[#211D2C] flex flex-col gap-2 rounded-sm w-full">
                     <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
@@ -278,7 +269,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
               type="url"
               value={form.spotify_link}
               onChange={e => set('spotify_link', e.target.value)}
-              placeholder="https://open.spotify.com/playlist/..."
+              placeholder="http://spotify.com/..."
               className="pe-input"
             />
           </Field>
