@@ -86,10 +86,10 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           spotify_link: form.spotify_link.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
-          avatar_zoom: Number(avatarZoom) || 100,
-          avatar_offset: Number(avatarOffset) || 0,
-          banner_zoom: Number(bannerZoom) || 100,
-          banner_offset: Number(bannerOffset) || 0,
+          avatar_zoom: parseInt(avatarZoom, 10) || 100,
+          avatar_offset: parseInt(avatarOffset, 10) || 0,
+          banner_zoom: parseInt(bannerZoom, 10) || 100,
+          banner_offset: parseInt(bannerOffset, 10) || 0,
         })
 
       if (dbErr) throw dbErr
@@ -114,12 +114,14 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           style={{ borderBottom: '1px solid #211D2C' }}
         >
           <h2 className="font-display font-bold text-xl text-text-high">EDIT PROFIL</h2>
-          <button onClick={onClose} className="p-1 hover:bg-border-hover transition-colors">
+          <button type="button" onClick={onClose} className="p-1 hover:bg-border-hover transition-colors">
             <X size={18} className="text-text-muted" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
+          
+          {/* 🎯 KANVAS BANNER LATAR */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
               Banner Latar
@@ -174,6 +176,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
             <input ref={bannerRef} type="file" accept="image/*" onChange={handleBannerChange} className="hidden" />
           </div>
 
+          {/* 🎯 KANVAS AVATAR (MUTLAK RASIO KOTAK 1:1) */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
               Avatar (Rasio 1:1)
