@@ -460,7 +460,7 @@ export default function Home({ session }) {
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
-        {/* 🎯 HEADER INTERFACE TACTICAL DENGAN LOCK UKURAN GIF KECIL PROPOSIONAL */}
+        {/* 🎯 HEADER INTERFACE TACTICAL - KALIBRASI MUTLAK 24PX (PAS DENGAN LINE HEIGHT TEKS) */}
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #211D2C' }}>
           <div 
             onMouseDown={handleAdminPressStart}
@@ -468,14 +468,14 @@ export default function Home({ session }) {
             onMouseLeave={handleAdminPressEnd}
             onTouchStart={handleAdminPressStart}
             onTouchEnd={handleAdminPressEnd}
-            className="flex items-center gap-2 cursor-pointer select-none"
+            className="flex items-center gap-2.5 cursor-pointer select-none"
           >
-            {/* 🎯 KUNCI MATI UKURAN: Dipaksa kecil 20px agar proporsional sejajar teks */}
+            {/* 🎯 PAS & SEJAJAR: Ukuran diset ke 24px agar batas atas-bawah kristalnya terlihat tegas dan simetris */}
             <img 
               src="/notification-icon.gif" 
               alt="Grind System Icon" 
-              style={{ width: '20px', height: '20px' }}
-              className="object-contain flex-shrink-0"
+              style={{ width: '24px', height: '24px' }}
+              className="object-contain flex-shrink-0 animate-pulse"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -740,7 +740,7 @@ export default function Home({ session }) {
             </div>
             
             <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI SEOLHA Companion Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+              Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
             </p>
             
             <button 
