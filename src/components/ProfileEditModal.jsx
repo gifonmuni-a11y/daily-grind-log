@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Upload, Loader2, Move, ZoomIn } from 'lucide-react'
+import { X, Upload, Loader2 } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { supabase } from '../lib/supabaseClient'
 
@@ -14,13 +14,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url || null)
   const [bannerFile, setBannerFile] = useState(null)
   const [bannerPreview, setBannerPreview] = useState(profile?.banner_url || null)
-  
-  // State angka penampung kalibrasi slider
-  const [avatarZoom, setAvatarZoom] = useState(profile?.avatar_zoom || 100)
-  const [avatarOffset, setAvatarOffset] = useState(profile?.avatar_offset || 0)
-  const [bannerZoom, setBannerZoom] = useState(profile?.banner_zoom || 100)
-  const [bannerOffset, setBannerOffset] = useState(profile?.banner_offset || 0)
-
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const avatarRef = useRef()
@@ -35,8 +28,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     if (!file) return
     setAvatarFile(file)
     setAvatarPreview(URL.createObjectURL(file))
-    setAvatarZoom(100)
-    setAvatarOffset(0)
   }
 
   function handleBannerChange(e) {
@@ -44,8 +35,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     if (!file) return
     setBannerFile(file)
     setBannerPreview(URL.createObjectURL(file))
-    setBannerZoom(100)
-    setBannerOffset(0)
   }
 
   async function uploadImage(file, path) {
@@ -86,10 +75,11 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           spotify_link: form.spotify_link.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
-          avatar_zoom: parseInt(avatarZoom, 10) || 100,
-          avatar_offset: parseInt(avatarOffset, 10) || 0,
-          banner_zoom: parseInt(bannerZoom, 10) || 100,
-          banner_offset: parseInt(bannerOffset, 10) || 0,
+          // Reset kolom koordinat agar kembali bersih ke default
+          avatar_zoom: 100,
+          avatar_offset: 0,
+          banner_zoom: 100,
+          banner_offset: 0
         })
 
       if (dbErr) throw dbErr
@@ -120,28 +110,17 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
-          
-          {/* PREVIEW BANNER EDIT */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
-              Banner Latar
+              Banner
             </label>
             <div
-              className="w-full h-28 relative overflow-hidden cursor-pointer bg-black/40"
+              className="w-full h-24 relative overflow-hidden cursor-pointer"
               style={{ border: '1px dashed #211D2C' }}
               onClick={() => bannerRef.current?.click()}
             >
               {bannerPreview ? (
-                <img 
-                  src={bannerPreview} 
-                  alt="banner" 
-                  className="w-full h-full pointer-events-none select-none" 
-                  style={{
-                    objectFit: 'cover',
-                    transform: `scale(${Number(bannerZoom) / 100}) translateY(${Number(bannerOffset)}px)`,
-                    transformOrigin: 'center center'
-                  }}
-                />
+                <img src={bannerPreview} alt="banner" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center gap-2 text-text-dim">
                   <Upload size={16} />
@@ -149,56 +128,21 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                 </div>
               )}
             </div>
-            
-            {bannerPreview && (
-              <div className="mt-2 p-2 bg-[#0A0A0E] border border-[#211D2C] flex flex-col gap-2 rounded-sm">
-                <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
-                  <ZoomIn size={12} className="text-accent" />
-                  <span>ZOOM: {bannerZoom}%</span>
-                  <input 
-                    type="range" min="100" max="250" 
-                    value={bannerZoom} 
-                    onChange={e => setBannerZoom(e.target.value)} 
-                    className="flex-1 accent-[#7C5CFF] h-1 bg-border"
-                  />
-                </div>
-                <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
-                  <Move size={12} className="text-accent" />
-                  <span>VERTIKAL: {bannerOffset}px</span>
-                  <input 
-                    type="range" min="-100" max="100" 
-                    value={bannerOffset} 
-                    onChange={e => setBannerOffset(e.target.value)} 
-                    className="flex-1 accent-[#7C5CFF] h-1 bg-border"
-                  />
-                </div>
-              </div>
-            )}
             <input ref={bannerRef} type="file" accept="image/*" onChange={handleBannerChange} className="hidden" />
           </div>
 
-          {/* PREVIEW AVATAR EDIT */}
           <div>
             <label className="font-mono text-xs text-text-dim uppercase tracking-widest block mb-2">
-              Avatar (Rasio 1:1)
+              Avatar
             </label>
-            <div className="flex items-start gap-4">
+            <div className="flex items-center gap-3">
               <div
-                className="w-20 h-20 relative overflow-hidden cursor-pointer shrink-0 bg-black/40"
+                className="w-16 h-16 relative overflow-hidden cursor-pointer shrink-0"
                 style={{ border: '2px solid #7C5CFF' }}
                 onClick={() => avatarRef.current?.click()}
               >
                 {avatarPreview ? (
-                  <img 
-                    src={avatarPreview} 
-                    alt="avatar" 
-                    className="w-full h-full pointer-events-none select-none" 
-                    style={{
-                      objectFit: 'cover',
-                      transform: `scale(${Number(avatarZoom) / 100}) translate(${Number(avatarOffset)}px, ${Number(avatarOffset)}px)`,
-                      transformOrigin: 'center center'
-                    }}
-                  />
+                  <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
                 ) : (
                   <div
                     className="w-full h-full flex items-center justify-center font-display font-bold text-2xl text-accent"
@@ -208,42 +152,14 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
                   </div>
                 )}
               </div>
-              
-              <div className="flex-1 flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => avatarRef.current?.click()}
-                  className="font-mono text-xs text-text-dim hover:text-text-muted transition-colors flex items-center gap-1 self-start"
-                >
-                  <Upload size={12} />
-                  Ganti Gambar Avatar
-                </button>
-
-                {avatarPreview && (
-                  <div className="p-2 bg-[#0A0A0E] border border-[#211D2C] flex flex-col gap-2 rounded-sm w-full">
-                    <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
-                      <ZoomIn size={12} className="text-accent" />
-                      <span>ZOOM:</span>
-                      <input 
-                        type="range" min="100" max="300" 
-                        value={avatarZoom} 
-                        onChange={e => setAvatarZoom(e.target.value)} 
-                        className="flex-1 accent-[#7C5CFF] h-1 bg-border"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 font-mono text-[10px] text-text-dim">
-                      <Move size={12} className="text-accent" />
-                      <span>GESER:</span>
-                      <input 
-                        type="range" min="-50" max="50" 
-                        value={avatarOffset} 
-                        onChange={e => setAvatarOffset(e.target.value)} 
-                        className="flex-1 accent-[#7C5CFF] h-1 bg-border"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => avatarRef.current?.click()}
+                className="font-mono text-xs text-text-dim hover:text-text-muted transition-colors flex items-center gap-1"
+              >
+                <Upload size={12} />
+                Ganti avatar
+              </button>
             </div>
             <input ref={avatarRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
           </div>
@@ -274,7 +190,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
               type="url"
               value={form.spotify_link}
               onChange={e => set('spotify_link', e.target.value)}
-              placeholder="http://spotify.com/..."
+              placeholder="https://open.spotify.com/playlist/..."
               className="pe-input"
             />
           </Field>
@@ -297,7 +213,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
               style={{
                 background: loading ? '#3A3548' : '#7C5CFF',
                 color: '#EDEAF6',
-                clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+                clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 10px, 10px 100%, 0 calc(100% - 10px))',
               }}
             >
               {loading && <Loader2 size={16} className="animate-spin" />}

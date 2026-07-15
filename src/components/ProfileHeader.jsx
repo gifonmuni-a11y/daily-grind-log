@@ -26,7 +26,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
   const totalExp = getEffectiveTotalExp(entries, userId, profile?.exp || 0)
   const { level, expIntoLevel, expForNext } = calcLevel(totalExp)
   const expPct = Math.min(100, Math.round((expIntoLevel / expForNext) * 100))
-
+  
   const rank = getRankDetails(level)
   const rankLabel = rank.name
   const rankClasses = rank.color
@@ -40,28 +40,14 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
   const equippedId = getEquippedTitle(userId)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedId)
 
-  // Ambil data angka kalibrasi dari Supabase DB
-  const bZoom = Number(profile?.banner_zoom) || 100
-  const bOffset = Number(profile?.banner_offset) || 0
-  const aZoom = Number(profile?.avatar_zoom) || 100
-  const aOffset = Number(profile?.avatar_offset) || 0
-
   return (
     <div className="relative">
-      {/* BANNER CONTAINER */}
-      <div className="relative w-full overflow-hidden bg-[#0A0A0E]" style={{ height: 180 }}>
+      {/* BANNER LATAR ORIGINAL */}
+      <div className="relative w-full overflow-hidden" style={{ height: 180 }}>
         {profile?.banner_url ? (
-          <img
-            src={profile.banner_url}
-            alt="banner"
-            className="w-full h-full select-none"
-            style={{ 
-              objectFit: 'cover',
-              // Menerapkan skala zoom dan pergeseran vertikal manual y-axis
-              transform: `scale(${bZoom / 100}) translateY(${bOffset}px)`,
-              transformOrigin: 'center center',
-              transition: 'transform 0.1s ease-out'
-            }}
+          <div
+            className="w-full h-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${profile.banner_url})` }}
           />
         ) : (
           <div
@@ -78,14 +64,14 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         )}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0"
           style={{ background: 'linear-gradient(to bottom, transparent 55%, #0A0A0E)' }}
         />
       </div>
 
       <div className="px-4 pb-4">
         <div className="flex items-start gap-3 mb-3">
-          {/* AVATAR CONTAINER */}
+          {/* SIKU PROFILE FRAME KEMBALI MUNCUL */}
           <div className="relative shrink-0 -mt-10">
             <SystemFrame
               size={12}
@@ -93,20 +79,11 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               style={{ boxShadow: currentTierGlow !== 'none' ? currentTierGlow : `0 0 12px ${currentTierColor}55` }}
             >
               {profile?.avatar_url ? (
-                <div className="w-full h-full overflow-hidden relative bg-[#0A0A0E]">
-                  <img
-                    src={profile.avatar_url}
-                    alt="avatar"
-                    className="w-full h-full select-none"
-                    style={{
-                      objectFit: 'cover',
-                      // Menerapkan skala zoom dan translasi manual x & y axis
-                      transform: `scale(${aZoom / 100}) translate(${aOffset}px, ${aOffset}px)`,
-                      transformOrigin: 'center center',
-                      transition: 'transform 0.1s ease-out'
-                    }}
-                  />
-                </div>
+                <img
+                  src={profile.avatar_url}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div
                   className="w-full h-full flex items-center justify-center font-display font-bold text-3xl"
@@ -117,7 +94,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               )}
             </SystemFrame>
             <div
-              className="absolute -bottom-1 -right-1 font-mono text-xs font-bold px-1.5 py-0.5 z-10"
+              className="absolute -bottom-1 -right-1 font-mono text-xs font-bold px-1.5 py-0.5 z-10 transition-colors duration-300"
               style={{ background: currentTierColor, color: '#0A0A0E', fontSize: '10px' }}
             >
               {level}
@@ -133,14 +110,14 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
                 {profile?.name || 'Trainer'}
               </h2>
               <span
-                className={`font-mono text-xs px-2 py-0.5 border shrink-0 whitespace-nowrap ${rankClasses}`}
+                className={`font-mono text-xs px-2 py-0.5 border shrink-0 whitespace-nowrap transition-all duration-300 ${rankClasses}`}
               >
                 {rankLabel}
               </span>
             </div>
             {equippedAchievement && (
               <p
-                className="font-mono text-xs mt-0.5 tracking-wider uppercase opacity-90"
+                className="font-mono text-xs mt-0.5 tracking-wider uppercase opacity-90 transition-colors duration-300"
                 style={{ color: currentTierColor }}
               >
                 「{equippedAchievement.title}」
@@ -180,7 +157,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* EXP BAR */}
+        {/* PROGRESS EXP BAR */}
         <div>
           <div className="flex justify-between mb-1">
             <span className="font-mono text-xs text-gray-400">
@@ -202,6 +179,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
+        {/* NOW PLAYING SPOTIFY */}
         {profile?.spotify_link && (
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
