@@ -23,7 +23,6 @@ function getSpotifyEmbedUrl(link) {
 }
 
 export default function ProfileHeader({ profile, entries, streak, userId, onEditClick }) {
-  // 🎯 FIX: Parameter ditambahkan agar level lu tidak drop kembali ke Level 1
   const totalExp = getEffectiveTotalExp(entries, userId, profile?.exp || 0)
   const { level, expIntoLevel, expForNext } = calcLevel(totalExp)
   const expPct = Math.min(100, Math.round((expIntoLevel / expForNext) * 100))
@@ -41,13 +40,26 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
   const equippedId = getEquippedTitle(userId)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedId)
 
+  // 🎯 Ambil data koordinat kalibrasi gambar dari database profile
+  const bZoom = profile?.banner_zoom || 100;
+  const bOffset = profile?.banner_offset || 0;
+  const aZoom = profile?.avatar_zoom || 100;
+  const aOffset = profile?.avatar_offset || 0;
+
   return (
     <div className="relative">
       <div className="relative w-full overflow-hidden" style={{ height: 180 }}>
         {profile?.banner_url ? (
           <div
-            className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${profile.banner_url})` }}
+            className="w-full h-full bg-cover"
+            style={{ 
+              backgroundImage: `url(${profile.banner_url})`,
+              backgroundPosition: 'center',
+              // 🎯 Terapkan kalibrasi zoom & posisi banner harian lu
+              transform: `scale(${bZoom / 100}) translateY(${bOffset}px)`,
+              transformOrigin: 'center center',
+              transition: 'transform 0.2s ease-out'
+            }}
           />
         ) : (
           <div
@@ -78,11 +90,20 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               style={{ boxShadow: currentTierGlow !== 'none' ? currentTierGlow : `0 0 12px ${currentTierColor}55` }}
             >
               {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt="avatar"
-                  className="w-full h-full object-cover"
-                />
+                <div className="w-full h-full overflow-hidden relative">
+                  <img
+                    src={profile.avatar_url}
+                    alt="avatar"
+                    className="w-full h-full select-none"
+                    // 🎯 Terapkan kalibrasi zoom & posisi geser avatar 1:1 lu
+                    style={{
+                      objectFit: 'cover',
+                      transform: `scale(${aZoom / 100}) translate(${aOffset}px, ${aOffset}px)`,
+                      transformOrigin: 'center center',
+                      transition: 'transform 0.2s ease-out'
+                    }}
+                  />
+                </div>
               ) : (
                 <div
                   className="w-full h-full flex items-center justify-center font-display font-bold text-3xl"
@@ -180,7 +201,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
               <Music size={12} />
-              <span>Now Playing</span>
+              <span>Music Playlist</span>
             </div>
             {spotifyEmbedUrl ? (
               <iframe
