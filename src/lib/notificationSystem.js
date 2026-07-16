@@ -43,17 +43,18 @@ export async function requestNotificationPermission() {
     };
     
     const subscription = await registration.pushManager.subscribe(subscribeOptions);
-    console.log("Token Push Perangkat Sukses Dibuat:", JSON.stringify(subscription));
+    console.log("Token Push Perangkat Sukses Dibuat.");
 
-    // Ambil data user yang sedang login saat ini
-    const { data: { user } } = await supabase.auth.getUser();
+    // 🔥 AMBIL SESI SECARA INSTAN TANPA DELAY LOGOUT/INTERNET
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
     
-    if (user) {
+    if (userId) {
       // Tembak langsung masuk ke kolom push_subscription di tabel profiles!
       const { error } = await supabase
         .from('profiles')
         .update({ push_subscription: JSON.stringify(subscription) })
-        .eq('id', user.id); // Mencocokkan dengan ID user yang sedang login
+        .eq('id', userId); // Mencocokkan dengan ID user yang sedang login
 
       if (error) {
         console.error("Gagal menyimpan token ke database Supabase:", error.message);
