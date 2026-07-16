@@ -22,10 +22,10 @@ function getComputedLevel(exp) {
 
 export default function AdminPanel({ userId, onClose }) {
 
-  // 🎯 FIXED: Masukkan UID Supabase lu di sini agar gerbang kekunci aman
+  // 🎯 PENTING: Ganti dengan UUID Akun Supabase lu sendiri agar aman terkunci
   const ADMIN_UUID = "d4ccb677-a547-4a7a-9b9b-ce2be6723ecd"
 
-  // 🎯 BIANG KEROK FIXED: Tanda `=` sudah ditambahkan agar tidak syntax error lagi
+  // PIN Konsol Admin Utama
   const ADMIN_PASSWORD_KEY = "FounderGRIND1" 
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -75,7 +75,7 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }, [isAuthenticated])
 
-  // FIX QUERY: Menarik data 'exp', 'avatar_url', dan 'banner_url' untuk fitur baru
+  // Fetch data user dari tabel profiles Supabase
   const fetchAllUsers = async () => {
     setLoadingUsers(true)
     try {
@@ -111,7 +111,7 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }
 
-  // 🎯 FITUR BARU: Broadcast chat/notif ke semua orang sekaligus (@everyone)
+  // FITUR: Broadcast chat/notif ke semua orang sekaligus (@everyone)
   const handleBroadcastAll = async (e) => {
     e.preventDefault()
     if (!broadcastText.trim()) return
@@ -139,7 +139,7 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }
 
-  // 🎯 FITUR BARU: Tambah, Kurang, dan Reset EXP user lain
+  // FITUR: Tambah, Kurang, dan Reset EXP user lain
   const handleAdjustExp = async (targetUser, operation) => {
     setActionLoadingId(targetUser.id)
     let currentExp = Number(targetUser.exp) || 0
@@ -156,7 +156,6 @@ export default function AdminPanel({ userId, onClose }) {
         .eq('id', targetUser.id)
       
       await fetchAllUsers()
-      // Realtime update objek modal aktif
       setSelectedUser(prev => prev ? { ...prev, exp: currentExp } : null)
     } catch (err) {
       console.error(err)
@@ -165,7 +164,7 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }
 
-  // 🎯 FITUR BARU: Hapus paksa Avatar atau Banner background kustom milik user lain
+  // FITUR: Hapus paksa Avatar atau Banner background kustom milik user lain
   const handleDeleteAsset = async (targetUser, assetType) => {
     if (!window.confirm(`Hapus paksa ${assetType} milik ${targetUser.name}?`)) return
     setActionLoadingId(targetUser.id)
@@ -184,7 +183,8 @@ export default function AdminPanel({ userId, onClose }) {
       setSelectedUser(prev => prev ? { ...prev, ...updateField } : null)
     } catch (err) {
       console.error(err)
-    } Jack {
+    } finally {
+      // 🎯 FIXED: Kata 'Jack' typo kemarin sudah diganti mutlak ke 'finally' agar build Vercel lolos
       setActionLoadingId(null)
     }
   }
@@ -302,7 +302,6 @@ export default function AdminPanel({ userId, onClose }) {
   }
 
   return (
-    // 🎯 BACKROUND DASAR FIX: Menyesuaikan permintaan hitam pekat mutlak (#000000)
     <div className="fixed inset-0 bg-[#000000] z-[200] flex flex-col font-mono text-xs text-[#EDEAF6] select-none p-4 overflow-y-auto">
       <div className="max-w-md mx-auto w-full flex flex-col gap-4 pb-12">
         
@@ -318,7 +317,7 @@ export default function AdminPanel({ userId, onClose }) {
           <button onClick={onClose} className="text-gray-500 hover:text-white text-[10px] border border-[#211D2C] px-2 py-0.5 bg-black/40">CLOSE</button>
         </div>
 
-        {/* 🎯 FITUR BARU: WIDGET CHAT ALL PENGUMUMAN MASSAL */}
+        {/* WIDGET CHAT ALL PENGUMUMAN MASSAL */}
         <div className="bg-[#100E16] border border-[#211D2C] p-3 relative flex flex-col gap-2">
           <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
           <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -353,12 +352,10 @@ export default function AdminPanel({ userId, onClose }) {
           {loadingUsers ? (
             <div className="py-8 text-center text-gray-500 animate-pulse uppercase tracking-wider">Sinkronisasi Data User...</div>
           ) : users.map(u => {
-            // 🎯 FITUR BARU: Lihat Level User Lain
             const userLevel = getComputedLevel(u.exp)
 
             return (
               <div key={u.id} className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-3 relative">
-                {/* 🎯 SIKU UNGU TETAP DI 4 SUDUT KOTAK ABU ASRI */}
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
                 <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
@@ -368,7 +365,6 @@ export default function AdminPanel({ userId, onClose }) {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-white text-sm tracking-wide uppercase">{u.name || 'Anonymous Trainer'}</p>
-                      {/* Badge Level Indikator */}
                       <span className="text-[9px] font-bold bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]/30 px-1.5 py-0.2">
                         LVL {userLevel}
                       </span>
@@ -392,7 +388,7 @@ export default function AdminPanel({ userId, onClose }) {
                   </div>
                 )}
 
-                {/* GRID 2X2 ORIGINAL - TIDAK DIUBAH SAMA SEKALI */}
+                {/* GRID 2X2 CONTROLS */}
                 <div className="grid grid-cols-2 gap-2 mt-1">
                   <div className="relative border border-[#211D2C] bg-[#16141F]">
                     <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-[#7C5CFF]" />
@@ -443,11 +439,10 @@ export default function AdminPanel({ userId, onClose }) {
                   </div>
                 </div>
 
-                {/* DRAWER DROPDOWN: UNTUK PENGATURAN DATA NOTIF, EXP, DAN ELEMEN GAMBAR */}
+                {/* DRAWER DROPDOWN MODERASI */}
                 {selectedUser?.id === u.id && (
                   <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-4">
                     
-                    {/* INPUT FORM NOTIF (BAWAAN ASLI LU) */}
                     <div className="flex flex-col gap-3">
                       <div className="flex flex-col gap-1">
                         <label className="text-[8px] text-gray-500 uppercase tracking-wider">ISI NOTIFIKASI KHUSUS</label>
@@ -481,7 +476,7 @@ export default function AdminPanel({ userId, onClose }) {
                       </div>
                     </div>
 
-                    {/* 🎯 FITUR BARU: PANEL MODERASI VALUE EXP */}
+                    {/* MANIPULASI EXP */}
                     <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
                       <label className="text-[8px] text-[#7C5CFF] uppercase tracking-wider font-bold">⚡ MANIPULASI DATA EXP</label>
                       <div className="flex gap-2 items-center">
@@ -506,7 +501,7 @@ export default function AdminPanel({ userId, onClose }) {
                       </div>
                     </div>
 
-                    {/* 🎯 FITUR BARU: PANEL HAPUS AVATAR & BACKGROUND PAKSA */}
+                    {/* DELETE ASET */}
                     <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
                       <label className="text-[8px] text-red-400 uppercase tracking-wider font-bold">🚨 DELETE PAKSA ASET KONTEN USER</label>
                       <div className="grid grid-cols-2 gap-2">
