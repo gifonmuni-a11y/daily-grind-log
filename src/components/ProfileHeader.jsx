@@ -53,19 +53,22 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           <div
             className="w-full h-full"
             style={{
-              background: 'linear-gradient(135deg, #100E16 0%, #1a1625 50%, #211D2C 100%)',
+              background: 'linear-gradient(135deg, #000000 0%, #0A0A0E 100%)',
             }}
           >
-            <div className="w-full h-full opacity-30"
+            <div className="w-full h-full opacity-20"
               style={{
                 backgroundImage: 'repeating-linear-gradient(45deg, #7C5CFF11 0px, #7C5CFF11 1px, transparent 1px, transparent 20px)',
               }}
             />
           </div>
         )}
+        {/* 🎯 FIX BLUR SEAMLESS: Menggunakan multi-stop gradient agar ujung gambar terendam hitam pekat duluan sebelum garis batas bawah */}
         <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, transparent 55%, #0A0A0E)' }}
+          className="absolute inset-0 pointer-events-none"
+          style={{ 
+            background: 'linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.85) 85%, #000000 94%, #000000 100%)' 
+          }}
         />
       </div>
 
@@ -94,8 +97,8 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               )}
             </SystemFrame>
             <div
-              className="absolute -bottom-1 -right-1 font-mono text-xs font-bold px-1.5 py-0.5 z-10 transition-colors duration-300"
-              style={{ background: currentTierColor, color: '#0A0A0E', fontSize: '10px' }}
+              className="absolute -bottom-1 -right-1 font-mono text-xs font-bold px-1.5 py-0.5 z-10"
+              style={{ background: currentTierColor, color: '#000000', fontSize: '10px' }}
             >
               {level}
             </div>
@@ -118,7 +121,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
             </div>
             {equippedAchievement && (
               <p
-                className="font-mono text-xs mt-0.5 tracking-wider uppercase opacity-90 transition-colors duration-300"
+                className="font-mono text-xs mt-0.5 tracking-wider uppercase opacity-90"
                 style={{ color: currentTierColor }}
               >
                 「{equippedAchievement.title}」
@@ -129,11 +132,11 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
             )}
           </div>
 
-          {/* BUTTON EDIT PROFIL (LIFTED UPWARDS) */}
+          {/* BUTTON EDIT PROFIL */}
           <button
             onClick={onEditClick}
             className="absolute top-1 right-0 p-2 shrink-0 hover:bg-border-hover transition-colors z-20"
-            style={{ border: '1px solid #211D2C' }}
+            style={{ border: '1px solid #211D2C', background: '#000000' }}
           >
             <Edit2 size={14} className="text-gray-400" />
           </button>
@@ -169,7 +172,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               {expIntoLevel} / {expForNext} EXP
             </span>
           </div>
-          <div className="w-full h-1.5 bg-border overflow-hidden">
+          <div className="w-full h-1.5 bg-border overflow-hidden" style={{ backgroundColor: '#100E16' }}>
             <div
               className="h-full transition-all duration-700 ease-out"
               style={{
@@ -181,33 +184,36 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* SPOTIFY STATUS SECTION */}
+        {/* SPOTIFY MUSIC PLAYLIST */}
         {profile?.spotify_link && (
-          <div className="mt-3">
-            {/* 🎯 FIXED: Label teks "Now Playing" sudah diganti mutlak ke "Music Playlist" */}
-            <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
-              <Music size={12} />
+          <div className="mt-4 pt-3 border-t border-[#211D2C]/40">
+            <div className="flex items-center gap-2 mb-2 font-mono text-xs font-bold text-accent uppercase tracking-wider">
+              <Music size={13} />
               <span>Music Playlist</span>
             </div>
+            
             {spotifyEmbedUrl ? (
               <iframe
                 src={spotifyEmbedUrl}
                 width="100%"
                 height="80"
-                style={{ borderRadius: 8, border: 'none' }}
+                style={{ borderRadius: 8, border: 'none', background: '#000000' }}
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
                 title="Music Playlist"
               />
             ) : (
-              <a
-                href={profile.spotify_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-xs text-gray-400 hover:text-text-high transition-colors underline break-all"
-              >
-                {profile.spotify_link}
-              </a>
+              <div className="bg-[#0A0A0E] border border-[#211D2C] p-2.5 flex flex-col gap-1">
+                <span className="font-mono text-[10px] text-text-dim">LINK TERDETEKSI:</span>
+                <a
+                  href={profile.spotify_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-gray-400 hover:text-accent transition-colors underline break-all"
+                >
+                  {profile.spotify_link}
+                </a>
+              </div>
             )}
           </div>
         )}
