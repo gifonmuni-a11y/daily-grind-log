@@ -134,6 +134,8 @@ export default function Home({ session }) {
 
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
+  // 🎯 SECURITY BY NAVIGATION: Mengunci sistem trap back ketika player memilih keluar mutlak
+  const isExitingRef = useRef(false)
 
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [levelUpData, setLevelUpData] = useState({ oldTier: '', newTier: '', newLevel: 1 })
@@ -142,6 +144,8 @@ export default function Home({ session }) {
 
   const [showWelcomeCover, setShowWelcomeCover] = useState(true)
   const [dismissWarnPopup, setDismissWarnPopup] = useState(false)
+  // 🎯 STATE MANHWA CUSTOM POPUP: Mengaktifkan modal box kustom pelacak streak hancur
+  const [showStreakBreakModal, setShowStreakBreakModal] = useState(false)
 
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
@@ -150,6 +154,8 @@ export default function Home({ session }) {
     window.history.pushState(null, null, window.location.pathname);
     
     const handlePopState = (e) => {
+      // 🛠️ FIX EMERGENCY EXIT: Jika status keluar aktif, biarkan sistem melompat keluar secara natural
+      if (isExitingRef.current) return;
       e.preventDefault();
       setShowBackConfirm(true);
       window.history.pushState(null, null, window.location.pathname);
@@ -297,7 +303,6 @@ export default function Home({ session }) {
     welcomeAudio.play().catch(err => console.log("Gagal memuat file audio welcome:", err))
 
     if ('Notification' in window) {
-      // 🔥 FIX SAKTI: Menghapus kata 'await' agar proses token berjalan di background dan langsung masuk Home tanpa lag!
       requestNotificationPermission()
     }
 
@@ -317,17 +322,19 @@ export default function Home({ session }) {
     }
   }
 
+  // 🎯 DEFERED STREAK CHECK: Deteksi pecah streak dialihkan ke pasca splash screen ("MASUK SYSTEM")
   useEffect(() => {
-    if (loading) return
+    if (loading || showWelcomeCover) return
     const storedStreak = parseInt(localStorage.getItem('dg_rpg_streak') || '-1', 10)
     
     if (storedStreak > 0 && streak === 0) {
       const breakAudio = new Audio(AUDIO_URLS.others.pecahStreak)
       breakAudio.play().catch(e => console.log(e))
-      alert("sayang sekali pecah streak kamu")
+      // Memicu modal bertema kustom Manhwa
+      setShowStreakBreakModal(true)
     }
     localStorage.setItem('dg_rpg_streak', streak.toString())
-  }, [loading, streak])
+  }, [loading, streak, showWelcomeCover])
 
   useEffect(() => {
     if (loading) return
@@ -703,9 +710,11 @@ export default function Home({ session }) {
               <button 
                 type="button" 
                 onClick={() => {
+                  // 🛠️ FIX TERMINAL EXIT: Lepaskan interupsi navigasi, matikan modal, lalu buang history keluar
+                  isExitingRef.current = true;
                   setShowBackConfirm(false);
                   window.close();
-                  window.history.go(-2);
+                  window.history.go(-window.history.length || -10);
                 }} 
                 className="py-2.5 bg-[#7C5CFF] text-white uppercase tracking-wider transition-all active:scale-95 font-black shadow-[0_0_12px_rgba(124,92,255,0.4)]"
               >
@@ -757,6 +766,44 @@ export default function Home({ session }) {
         </div>
       )}
 
+      {/* 🎯 MODAL OVERLAY STREAK HANCUR: Box informasi kustom pengganti native alert browser */}
+      {showStreakBreakModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[300] flex items-center justify-center p-4 select-none animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 font-mono text-center">
+            <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
+            <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF] z-50" />
+            
+            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">NOTIFIKASI STREAK</span>
+            </div>
+            
+            <p className="text-[10px] text-[#EDEAF6]/70 leading-relaxed uppercase tracking-wide px-1">
+              sayang sekali pecah streak kamu
+            </p>
+            
+            <div className="relative border border-[#211D2C] bg-[#7C5CFF] mt-1">
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#9A80FF]" />
+              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#9A80FF]" />
+              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#9A80FF]" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
+              <button 
+                type="button" 
+                onClick={() => setShowStreakBreakModal(false)}
+                className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block shadow-[0_0_12px_rgba(124,92,255,0.3)]"
+              >
+                OKE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
       
       {showLogModal && (
@@ -796,7 +843,12 @@ export default function Home({ session }) {
             <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
             <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
             
-            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center">
+            {/* 🛠️ FIX FRAME ACCENT: Ditambahkan 4 buah siku ungu absolute di dalam border header agar serasi */}
+            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
               <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">SYSTEM SIAP</span>
             </div>
             
