@@ -88,7 +88,8 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      // 🎯 FIXED POSITION: items-center dipaksa mutlak di HP biar posisi kotak pop-up edit profil naik pas ke tengah layar, tidak mepet ke bawah lagi.
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(10,10,14,0.85)', backdropFilter: 'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -98,7 +99,7 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
           style={{ borderBottom: '1px solid #211D2C' }}
         >
           <h2 className="font-display font-bold text-xl text-text-high">EDIT PROFIL</h2>
-          <button onClick={onClose} className="p-1 hover:bg-border-hover transition-colors">
+          <button type="button" onClick={onClose} className="p-1 hover:bg-border-hover transition-colors">
             <X size={18} className="text-text-muted" />
           </button>
         </div>
