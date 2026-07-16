@@ -5,6 +5,8 @@ import LoginScreen from './components/LoginScreen'
 import Home from './pages/Home'
 // 🎯 IMPORT SECURITY: Menghubungkan pelindung data kustom lu
 import SecurityGuard from './components/SecurityGuard'
+// 🔔 IMPORT AUTOMATION: Mengaktifkan pemicu pendaftaran push token PWA lu
+import { requestNotificationPermission } from './lib/notificationSystem'
 
 function parseAuthErrorFromUrl() {
   const hash = window.location.hash
@@ -50,6 +52,13 @@ export default function App() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // 🔥 MANTRA PAKSA: Otomatis ambil token HP player & lempar ke database tiap session aktif
+  useEffect(() => {
+    if (session) {
+      requestNotificationPermission()
+    }
+  }, [session])
 
   const handleSplashComplete = useCallback(() => {
     setTimeout(() => setShowSplash(false), 200)
