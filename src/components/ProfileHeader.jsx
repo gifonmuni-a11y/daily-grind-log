@@ -70,8 +70,8 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
       </div>
 
       <div className="px-4 pb-4">
-        <div className="flex items-start gap-3 mb-3">
-          {/* AVATAR DENGAN SIKU UNGU ORIGINAL KEMBALI */}
+        <div className="flex items-start gap-3 mb-3 relative">
+          {/* AVATAR DENGAN SIKU UNGU ORIGINAL */}
           <div className="relative shrink-0 -mt-10">
             <SystemFrame
               size={12}
@@ -101,7 +101,8 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 pt-1 overflow-hidden">
+          {/* DETAIL KONTEN */}
+          <div className="flex-1 min-w-0 pt-1 overflow-hidden pr-10">
             <div className="flex items-center gap-2 min-w-0 flex-wrap">
               <h2
                 className="font-display font-bold text-xl text-text-high truncate min-w-0"
@@ -128,9 +129,10 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
             )}
           </div>
 
+          {/* BUTTON EDIT PROFIL (LIFTED UPWARDS) */}
           <button
             onClick={onEditClick}
-            className="p-2 mt-1 shrink-0 hover:bg-border-hover transition-colors"
+            className="absolute top-1 right-0 p-2 shrink-0 hover:bg-border-hover transition-colors z-20"
             style={{ border: '1px solid #211D2C' }}
           >
             <Edit2 size={14} className="text-gray-400" />
@@ -179,12 +181,13 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* SPOTIFY NOW PLAYING */}
+        {/* SPOTIFY STATUS SECTION */}
         {profile?.spotify_link && (
           <div className="mt-3">
+            {/* 🎯 FIXED: Label teks "Now Playing" sudah diganti mutlak ke "Music Playlist" */}
             <div className="flex items-center gap-2 mb-1.5 font-mono text-xs text-gray-400">
               <Music size={12} />
-              <span>Now Playing</span>
+              <span>Music Playlist</span>
             </div>
             {spotifyEmbedUrl ? (
               <iframe
@@ -194,7 +197,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
                 style={{ borderRadius: 8, border: 'none' }}
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                title="Now Playing"
+                title="Music Playlist"
               />
             ) : (
               <a
