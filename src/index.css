@@ -26,7 +26,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   height: 0 !important;
 }
 
-/* 🎯 BACKGROUND PALING DASAR PWA JADI HITAM PEKAT MUTLAK */
+/* 🎯 FORCE HITAM PEKAT DI BACKGROUND JALANAN UTAMA APLIKASI */
 body {
   background-color: #000000 !important;
   background: #000000 !important;
@@ -43,16 +43,23 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* 🎯 MEMASTIKAN CANVAS UTAMA & STRUKTUR LUAR TERMASUK NAVBAR/HEADER ATAS IKUT HITAM PEKAT */
+/* 🎯 JINAKKAN SEMUA ELEMENT NAVIGASI ATAS YANG MASIH WARNA ABU-ABU */
 #root, 
 .app-container, 
 main, 
 .min-h-screen,
 header,
 nav,
-.sticky.top-0 {
+.sticky,
+[class*="bg-[#0A0A0E]"],
+[class*="bg-[#100E16]"] {
   background-color: #000000 !important;
   background: #000000 !important;
+}
+
+/* 🎯 PENGECUALIAN PROTEKSI: Memastikan bagian dalam kotak siku ungu (.bg-panel) TETAP ABU-ABU ASLI */
+.bg-panel {
+  background-color: #0A0A0E !important;
 }
 
 /* Memastikan kolom input chat/catatan tetap bisa diketik normal */
