@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { 
   Shield, Loader2, AlertTriangle, UserX, Trash2, 
-  Lock, Trash, Megaphone, Plus, Minus, RotateCcw, ChevronDown, Award
+  Lock, Trash, Megaphone, Plus, Minus, RotateCcw, ChevronDown, Award, Image
 } from 'lucide-react'
 
 // Engine Kalkulator Akurat Pertumbuhan Level RPG Manhwa Player
@@ -27,16 +27,17 @@ export default function AdminPanel({ userId, onClose }) {
   const [selectedUser, setSelectedUser] = useState(null)
   
   const [warningText, setWarningText] = useState('')
+  const [warningImgUrl, setWarningImgUrl] = useState('')
   const [durationSetting, setDurationSetting] = useState('once')
   
   const [broadcastText, setBroadcastText] = useState('')
+  const [broadcastImgUrl, setBroadcastImgUrl] = useState('')
   const [expInput, setExpInput] = useState('50')
   
   const [dbError, setDbError] = useState('')
   const [systemNotice, setSystemNotice] = useState({ isOpen: false, title: '', message: '', type: 'info' })
   const [systemConfirm, setSystemConfirm] = useState({ isOpen: false, title: '', message: '', onConfirm: null })
 
-  // 🎯 STATE BARU: Menangani buka/tutup dropdown kustom RPG Manhwa
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const durationOptions = [
@@ -135,6 +136,7 @@ export default function AdminPanel({ userId, onClose }) {
         .update({
           status: 'warned',
           warning_msg: `[PENGUMUMAN SISTEM]: ${broadcastText.trim()}`,
+          warning_img_url: broadcastImgUrl.trim() || null,
           warning_type: 'once',
           warning_expires_at: null
         })
@@ -143,8 +145,9 @@ export default function AdminPanel({ userId, onClose }) {
       if (error) {
         triggerNotice("SIARAN GAGAL", error.message, "error")
       } else {
-        triggerNotice("SIARAN BERHASIL", "Notifikasi massal berhasil ditembak ke seluruh Player.", "success")
+        triggerNotice("SIARAN BERHASIL", "Notifikasi massal + lampiran foto berhasil ditembak ke seluruh Player.", "success")
         setBroadcastText('')
+        setBroadcastImgUrl('')
         await fetchAllUsers()
       }
     } catch (err) {
@@ -152,6 +155,40 @@ export default function AdminPanel({ userId, onClose }) {
     } finally {
       setActionLoadingId(null)
     }
+  }
+
+  // 🎯 FITUR BARU: Hapus Semua Notifikasi Seluruh Player Sekaligus
+  const handleClearAllWarnings = () => {
+    triggerConfirm(
+      "PEMBERSIHAN MASSAL SISTEM",
+      "Apakah kamu yakin ingin menghapus seluruh notifikasi dan pesan siaran dari semua player sekaligus di server?",
+      async () => {
+        setActionLoadingId('clear_all')
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              status: 'active',
+              warning_msg: null,
+              warning_img_url: null,
+              warning_type: 'once',
+              warning_expires_at: null
+            })
+            .not('id', 'is', null)
+
+          if (error) {
+            triggerNotice("PEMBERSIHAN GAGAL", error.message, "error")
+          } else {
+            triggerNotice("SERVER DIBERSIHKAN", "Seluruh notifikasi player berhasil disapu bersih.", "success")
+            await fetchAllUsers()
+          }
+        } catch (err) {
+          triggerNotice("SISTEM CRASH", err.message, "error")
+        } finally {
+          setActionLoadingId(null)
+        }
+      }
+    )
   }
 
   const handleAdjustExp = async (targetUser, operation) => {
@@ -234,6 +271,7 @@ export default function AdminPanel({ userId, onClose }) {
       .update({ 
         status: 'warned', 
         warning_msg: warningText.trim(),
+        warning_img_url: warningImgUrl.trim() || null,
         warning_type: type,
         warning_expires_at: expiresAt
       })
@@ -241,6 +279,7 @@ export default function AdminPanel({ userId, onClose }) {
 
     if (error) triggerNotice("NOTIFIKASI GAGAL", error.message, "error")
     setWarningText('')
+    setWarningImgUrl('')
     setDurationSetting('once')
     setSelectedUser(null)
     await fetchAllUsers()
@@ -254,6 +293,7 @@ export default function AdminPanel({ userId, onClose }) {
       .update({ 
         status: 'active', 
         warning_msg: null,
+        warning_img_url: null,
         warning_type: 'once',
         warning_expires_at: null
       })
@@ -274,6 +314,7 @@ export default function AdminPanel({ userId, onClose }) {
           .update({ 
             status: 'banned', 
             warning_msg: 'AKUN DIBEKUKAN OLEH ADMIN KARENA PELANGGARAN SYARAT LAYANAN SYSTEM.',
+            warning_img_url: null,
             warning_type: 'once',
             warning_expires_at: null
           })
@@ -434,7 +475,7 @@ export default function AdminPanel({ userId, onClose }) {
         )}
 
         {/* WIDGET BROADCAST MASSAL KE EVERYONE */}
-        <div className="bg-[#100E16] border border-[#211D2C] p-3 relative flex flex-col gap-2">
+        <div className="bg-[#100E16] border border-[#211D2C] p-3 relative flex flex-col gap-3">
           <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
           <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
           <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
@@ -444,14 +485,32 @@ export default function AdminPanel({ userId, onClose }) {
             <Megaphone size={12} />
             <span>PANEL NOTIFIKASI MASSAL SYSTEM (@everyone)</span>
           </div>
-          <form onSubmit={handleBroadcastAll} className="flex flex-col gap-2">
-            <input 
-              type="text"
-              placeholder="Ketik pengumuman sistem untuk ditembak ke seluruh player..."
-              value={broadcastText}
-              onChange={(e) => setBroadcastText(e.target.value)}
-              className="bg-black border border-[#211D2C] p-2 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF] transition-colors"
-            />
+          <form onSubmit={handleBroadcastAll} className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-1">
+              <label className="text-[8px] text-gray-500 uppercase tracking-wider">PESAN TEKS PENGUMUMAN</label>
+              <input 
+                type="text"
+                placeholder="Ketik isi pengumuman sistem..."
+                value={broadcastText}
+                onChange={(e) => setBroadcastText(e.target.value)}
+                className="bg-black border border-[#211D2C] p-2 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF] transition-colors"
+              />
+            </div>
+
+            {/* 🎯 INPUT BARU: Tembak URL Foto untuk Notifikasi Massal */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[8px] text-[#7C5CFF] uppercase tracking-wider flex items-center gap-1">
+                <Image size={10} /> LAMPIRAN URL FOTO NOTIFIKASI (OPSIONAL)
+              </label>
+              <input 
+                type="text"
+                placeholder="Paste link gambar / tautan berkas foto..."
+                value={broadcastImgUrl}
+                onChange={(e) => setBroadcastImgUrl(e.target.value)}
+                className="bg-black border border-[#211D2C] p-2 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF] transition-colors"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={actionLoadingId === 'broadcast' || !broadcastText.trim()}
@@ -460,6 +519,18 @@ export default function AdminPanel({ userId, onClose }) {
               {actionLoadingId === 'broadcast' ? 'MENGIRIMKAN DATA PAKET...' : 'TEMBAK PENGUMUMAN MASSAL'}
             </button>
           </form>
+
+          {/* 🎯 TOMBOL BARU: Hapus Semua Notif Sekaligus dari Server */}
+          <div className="border-t border-[#211D2C] pt-2.5 mt-0.5">
+            <button
+              type="button"
+              onClick={handleClearAllWarnings}
+              disabled={actionLoadingId === 'clear_all' || users.length === 0}
+              className="w-full py-2 bg-transparent border border-red-500/40 text-red-400 hover:bg-red-950/20 text-[10px] font-bold uppercase tracking-wider transition-all"
+            >
+              {actionLoadingId === 'clear_all' ? 'MEMBERSIHKAN DATABASE...' : 'HAPUS SEMUA NOTIF PLAYER'}
+            </button>
+          </div>
         </div>
 
         {/* DAFTAR PLAYER */}
@@ -501,8 +572,13 @@ export default function AdminPanel({ userId, onClose }) {
                 </div>
 
                 {u.warning_msg && (
-                  <div className="bg-black/50 border border-dashed border-[#211D2C] p-2 text-[9px] text-[#7C5CFF] uppercase tracking-wide leading-relaxed flex flex-col gap-1">
+                  <div className="bg-black/50 border border-dashed border-[#211D2C] p-2 text-[9px] text-[#7C5CFF] uppercase tracking-wide leading-relaxed flex flex-col gap-1.5">
                     <div>LAMPIRAN NOTIF: {u.warning_msg}</div>
+                    {u.warning_img_url && (
+                      <div className="text-[8px] text-gray-500 border border-[#211D2C] p-1 bg-black/40 truncate">
+                        FOTO LINK: {u.warning_img_url}
+                      </div>
+                    )}
                     <div className="text-gray-500 text-[8px] tracking-wide">
                       JENIS DURASI: {u.warning_type === 'once' ? '1X MUNCUL LALU HILANG (ONCE)' : 'COOLDOWN BERDURASI AKTIF'}
                     </div>
@@ -554,7 +630,7 @@ export default function AdminPanel({ userId, onClose }) {
                   </div>
                 </div>
 
-                {/* ACCORDION ACCORDION PENGATURAN KUSTOM */}
+                {/* ACCORDION PENGATURAN KUSTOM */}
                 {selectedUser?.id === u.id && (
                   <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-4 animate-in fade-in duration-150">
                     
@@ -570,7 +646,21 @@ export default function AdminPanel({ userId, onClose }) {
                         />
                       </div>
 
-                      {/* 🎯 SOLUSI DROPDOWN FIX: Diganti dengan tombol pemicu list buatan sendiri agar tidak memicu native bottom sheet HP */}
+                      {/* 🎯 INPUT BARU: Kirim URL Foto untuk Notifikasi Perorangan */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[8px] text-[#7C5CFF] uppercase tracking-wider flex items-center gap-1">
+                          <Image size={10} /> URL FOTO NOTIFIKASI INDIVIDUAL (OPSIONAL)
+                        </label>
+                        <input 
+                          type="text"
+                          placeholder="Paste tautan gambar berkas foto..."
+                          value={warningImgUrl}
+                          onChange={(e) => setWarningImgUrl(e.target.value)}
+                          className="bg-black border border-[#211D2C] p-2.5 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
+                        />
+                      </div>
+
+                      {/* CUSTOM DROPDOWN SYSTEM */}
                       <div className="flex flex-col gap-1 relative">
                         <label className="text-[8px] text-gray-500 uppercase tracking-wider">PARAMETER DURASI KEMUNCULAN NOTIF</label>
                         <div className="relative w-full">
