@@ -26,7 +26,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   height: 0 !important;
 }
 
-/* 🎯 DI SINI FIXED: Background paling dasar/paling belakang PWA diubah jadi HITAM PEKAT MUTLAK */
+/* 🎯 BACKGROUND PALING DASAR PWA JADI HITAM PEKAT MUTLAK */
 body {
   background-color: #000000 !important;
   background: #000000 !important;
@@ -43,8 +43,14 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* 🎯 MEMASTIKAN DIV PEMBUNGKUS APP UTAMA JUGA IKUT HITAM PEKAT */
-#root, .app-container, main, .min-h-screen {
+/* 🎯 MEMASTIKAN CANVAS UTAMA & STRUKTUR LUAR TERMASUK NAVBAR/HEADER ATAS IKUT HITAM PEKAT */
+#root, 
+.app-container, 
+main, 
+.min-h-screen,
+header,
+nav,
+.sticky.top-0 {
   background-color: #000000 !important;
   background: #000000 !important;
 }
