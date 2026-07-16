@@ -1,9 +1,28 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { Shield, Loader2, AlertTriangle, UserX, Trash2, Lock, Trash } from 'lucide-react'
+import { Shield, Loader2, AlertTriangle, UserX, Trash2, Lock, Trash, Megaphone, Plus, Minus, RotateCcw } from 'lucide-react'
+
+// Formula lokal untuk menghitung level berdasarkan total EXP biar sinkron dengan sistem PWA lu
+function getComputedLevel(exp) {
+  const totalExp = Number(exp) || 0
+  let lvl = 1
+  let currentBasis = 0
+  
+  while (true) {
+    const nextLvlRequirement = 100 + (lvl - 1) * 50
+    if (totalExp >= currentBasis + nextLvlRequirement) {
+      currentBasis += nextLvlRequirement
+      lvl++
+    } else {
+      break
+    }
+  }
+  return lvl
+}
 
 export default function AdminPanel({ userId, onClose }) {
-  // Ganti dengan UUID Akun Supabase lu sendiri agar aman terkunci
+
+  // 🎯 PENTING: Ganti dengan UUID Akun Supabase lu sendiri agar aman terkunci
   const ADMIN_UUID = "d4ccb677-a547-4a7a-9b9b-ce2be6723ecd"
   // Password gerbang konsol admin
   const ADMIN_PASSWORD_KEY = "FounderGRIND1" 
@@ -19,7 +38,12 @@ export default function AdminPanel({ userId, onClose }) {
   
   const [warningText, setWarningText] = useState('')
   const [durationSetting, setDurationSetting] = useState('once') // 'once', '30', '60', '90', '1440'
+  
+  // State baru untuk penanganan input kustom EXP & text Chat All
+  const [broadcastText, setBroadcastText] = useState('')
+  const [expInput, setExpInput] = useState('50')
 
+  // Proteksi klik kanan dan F12 bawaan kode asli lu
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault()
     const handleKeyDown = (e) => {
@@ -40,12 +64,23 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }, [])
 
+  // 🎯 FITUR AUDIO: Memutar suara welcome founder otomatis pas sukses lolos verifikasi password
+  useEffect(() => {
+    if (isAuthenticated) {
+      const audioUrl = "https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/welcome/welcometoadminpanel.mp3"
+      const audio = new Audio(audioUrl)
+      audio.volume = 0.8
+      audio.play().catch(err => console.log("Autoplay audio terblokir browser kebijakan:", err))
+    }
+  }, [isAuthenticated])
+
+  // FIX QUERY: Sekarang ikut menarik kolom exp, avatar_url, dan banner_url dari database Supabase
   const fetchAllUsers = async () => {
     setLoadingUsers(true)
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, status, warning_msg, warning_type, warning_expires_at, created_at')
+        .select('id, name, status, warning_msg, warning_type, warning_expires_at, created_at, exp, avatar_url, banner_url')
         .order('created_at', { ascending: false })
       if (!error) setUsers(data || [])
     } catch (err) {
@@ -72,6 +107,84 @@ export default function AdminPanel({ userId, onClose }) {
       setAuthError('')
     } else {
       setAuthError("PASSWORD KONSOL SALAH. AKSES DI-BLOKIR.")
+    }
+  }
+
+  // 🎯 FITUR TAMBAHAN: Chat/Broadcast All Ke Semua User Sekaligus (@everyone)
+  const handleBroadcastAll = async (e) => {
+    e.preventDefault()
+    if (!broadcastText.trim()) return
+    setActionLoadingId('broadcast')
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          status: 'warned',
+          warning_msg: `[ANNOUNCEMENT FOUNDER]: ${broadcastText.trim()}`,
+          warning_type: 'once',
+          warning_expires_at: null
+        }) // Mengupdate massal karena tidak menggunakan filter .eq() target individu
+
+      if (!error) {
+        alert("Pesan pemberitahuan berhasil dikirim ke seluruh member!")
+        setBroadcastText('')
+        await fetchAllUsers()
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  // 🎯 FITUR TAMBAHAN: Kasih EXP / Kurangi EXP / Reset 0 EXP User Lain
+  const handleAdjustExp = async (targetUser, operation) => {
+    setActionLoadingId(targetUser.id)
+    let currentExp = Number(targetUser.exp) || 0
+    const value = Number(expInput) || 0
+
+    if (operation === 'add') currentExp += value
+    if (operation === 'sub') currentExp = Math.max(0, currentExp - value)
+    if (operation === 'reset') currentExp = 0
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ exp: currentExp })
+        .eq('id', targetUser.id)
+      
+      await fetchAllUsers()
+      // Perbarui objek user terpilih agar data modal ikut berubah realtime
+      setSelectedUser(prev => prev ? { ...prev, exp: currentExp } : null)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  // 🎯 FITUR TAMBAHAN: Hapus paksa avatar atau background banner milik user lain
+  const handleDeleteAsset = async (targetUser, assetType) => {
+    if (!window.confirm(`Hapus paksa berkas data ${assetType} milik ${targetUser.name}?`)) return
+    setActionLoadingId(targetUser.id)
+
+    const updatedField = {}
+    if (assetType === 'avatar') updatedField.avatar_url = null
+    if (assetType === 'banner') updatedField.banner_url = null
+
+    try {
+      await supabase
+        .from('profiles')
+        .update(updatedField)
+        .eq('id', targetUser.id)
+      
+      await fetchAllUsers()
+      setSelectedUser(prev => prev ? { ...prev, ...updatedField } : null)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setActionLoadingId(null)
     }
   }
 
@@ -188,9 +301,11 @@ export default function AdminPanel({ userId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#0A0A0E] z-[200] flex flex-col font-mono text-xs text-[#EDEAF6] select-none p-4 overflow-y-auto">
+    // 🎯 FIXED BACKGROUND: Diubah menjadi Hitam Pekat Mutlak (#000000)
+    <div className="fixed inset-0 bg-[#000000] z-[200] flex flex-col font-mono text-xs text-[#EDEAF6] select-none p-4 overflow-y-auto">
       <div className="max-w-md mx-auto w-full flex flex-col gap-4 pb-12">
         
+        {/* TOP NAVBAR KONSOL */}
         <div className="border border-[#211D2C] relative p-3 rounded-none bg-[#100E16] flex justify-between items-center">
           <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
           <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -203,126 +318,225 @@ export default function AdminPanel({ userId, onClose }) {
           <button onClick={onClose} className="text-gray-500 hover:text-white text-[10px] border border-[#211D2C] px-2 py-0.5 bg-black/40">CLOSE</button>
         </div>
 
+        {/* 🎯 FITUR BARU: PANEL BROADCAST GLOBAL (CHAT ALL / EVERYONE) */}
+        <div className="bg-[#100E16] border border-[#211D2C] p-3 relative flex flex-col gap-2">
+          <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+          <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+          <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+          <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+          
+          <div className="flex items-center gap-1.5 text-[#7C5CFF] font-bold text-[10px] uppercase tracking-wider">
+            <Megaphone size={12} />
+            <span>Kirim Notifikasi Massal (@Everyone)</span>
+          </div>
+          <form onSubmit={handleBroadcastAll} className="flex flex-col gap-2">
+            <input 
+              type="text"
+              placeholder="Ketik info penting untuk semua trainer disini..."
+              value={broadcastText}
+              onChange={(e) => setBroadcastText(e.target.value)}
+              className="bg-black border border-[#211D2C] p-2 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
+            />
+            <button
+              type="submit"
+              disabled={actionLoadingId === 'broadcast' || !broadcastText.trim()}
+              className="w-full py-2 bg-[#7C5CFF] disabled:opacity-30 text-white text-[10px] font-bold uppercase tracking-wider"
+            >
+              {actionLoadingId === 'broadcast' ? 'SENDING GLOBAL...' : 'BROADCAST TO EVERYONE'}
+            </button>
+          </form>
+        </div>
+
+        {/* LIST USER DENGAN PERBAIKAN TEMA ABU + SIKU UNGU */}
         <div className="flex flex-col gap-2">
           <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">DAFTAR AKUN TRAINER TERDAFTAR ({users.length}):</span>
           
           {loadingUsers ? (
             <div className="py-8 text-center text-gray-500 animate-pulse uppercase tracking-wider">Sinkronisasi Data User...</div>
-          ) : users.map(u => (
-            <div key={u.id} className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-3 relative">
-              
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-bold text-white text-sm tracking-wide uppercase">{u.name || 'Anonymous Trainer'}</p>
-                  <p className="text-[9px] text-gray-500 font-mono tracking-tighter mt-0.5">UID: {u.id}</p>
-                </div>
-                <span className={`text-[8px] font-bold px-1.5 py-0.5 tracking-wider uppercase ${
-                  u.status === 'banned' ? 'bg-red-950 text-red-400 border border-red-950' :
-                  u.status === 'warned' ? 'bg-purple-950 text-[#7C5CFF] border border-[#2B243C]' : 'bg-emerald-950 text-emerald-400 border border-emerald-950'
-                }`}>
-                  {u.status}
-                </span>
-              </div>
+          ) : users.map(u => {
+            // 🎯 BISA LIHAT LEVEL USER LAIN SECARA REALTIME
+            const calculatedLevel = getComputedLevel(u.exp)
 
-              {u.warning_msg && (
-                <div className="bg-black/50 border border-dashed border-[#211D2C] p-2 text-[9px] text-[#7C5CFF] uppercase tracking-wide leading-relaxed flex flex-col gap-1">
-                  <div>KONTEN NOTIF: {u.warning_msg}</div>
-                  <div className="text-gray-500 text-[8px] tracking-wide">
-                    DURASI SISTEM: {u.warning_type === 'once' ? 'CUMA 1X MUNCUL (ONCE)' : 'BERDURASI AKTIF'}
+            return (
+              <div key={u.id} className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-3 relative">
+                {/* 🎯 SIKU UNGU KUSTOM DISUNTIKKAN SEMPURNA DI SETIAP KOTAK USER */}
+                <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-white text-sm tracking-wide uppercase">{u.name || 'Anonymous Trainer'}</p>
+                      {/* Badge Level Indikator */}
+                      <span className="text-[9px] font-bold bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]/30 px-1 py-0.2">
+                        LVL {calculatedLevel}
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-gray-500 font-mono tracking-tighter mt-0.5">UID: {u.id} | EXP: {u.exp || 0}</p>
                   </div>
-                </div>
-              )}
-
-              {/* 🎯 MODIFIKASI GRID TACTICAL 2X2 BIAR TIDAK KEKECILAN DI LAYAR HP LU */}
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                
-                <div className="relative border border-[#211D2C] bg-[#16141F]">
-                  <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-[#7C5CFF]" />
-                  <div className="absolute -top-[1px] -right-[1px] w-1.5 h-1.5 border-t border-r border-[#7C5CFF]" />
-                  <div className="absolute -bottom-[1px] -left-[1px] w-1.5 h-1.5 border-b border-l border-[#7C5CFF]" />
-                  <div className="absolute -bottom-[1px] -right-[1px] w-1.5 h-1.5 border-b border-r border-[#7C5CFF]" />
-                  <button 
-                    onClick={() => setSelectedUser(selectedUser?.id === u.id ? null : u)}
-                    disabled={actionLoadingId === u.id}
-                    className="w-full py-2 bg-transparent text-[#7C5CFF] hover:text-white flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider outline-none"
-                  >
-                    WARN / SET NOTIF
-                  </button>
+                  <span className={`text-[8px] font-bold px-1.5 py-0.5 tracking-wider uppercase ${
+                    u.status === 'banned' ? 'bg-red-950 text-red-400 border border-red-950' :
+                    u.status === 'warned' ? 'bg-purple-950 text-[#7C5CFF] border border-[#2B243C]' : 'bg-emerald-950 text-emerald-400 border border-emerald-950'
+                  }`}>
+                    {u.status}
+                  </span>
                 </div>
 
-                <div className="relative border border-[#211D2C] bg-[#16141F]">
-                  <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-red-500" />
-                  <div className="absolute -top-[1px] -right-[1px] w-1.5 h-1.5 border-t border-r border-red-500" />
-                  <div className="absolute -bottom-[1px] -left-[1px] w-1.5 h-1.5 border-b border-l border-red-500" />
-                  <div className="absolute -bottom-[1px] -right-[1px] w-1.5 h-1.5 border-b border-r border-red-500" />
-                  <button 
-                    onClick={() => handleClearWarning(u.id)}
-                    disabled={actionLoadingId === u.id || u.status !== 'warned'}
-                    className="w-full py-2 bg-transparent text-red-400 disabled:opacity-20 flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider outline-none"
-                  >
-                    <Trash size={11} /> HAPUS NOTIF
-                  </button>
-                </div>
-
-                <div className="relative border border-[#211D2C] bg-[#16141F]">
-                  <button 
-                    onClick={() => handleBanUser(u.id)}
-                    disabled={actionLoadingId === u.id || u.status === 'banned'}
-                    className="w-full py-2 bg-transparent text-gray-500 disabled:opacity-30 text-[10px] font-bold uppercase tracking-wider outline-none"
-                  >
-                    BAN TRAINER
-                  </button>
-                </div>
-
-                <div className="relative border border-[#211D2C] bg-[#16141F]">
-                  <button 
-                    onClick={() => handleDeleteUser(u.id)}
-                    disabled={actionLoadingId === u.id}
-                    className="w-full py-2 bg-transparent text-gray-500 hover:text-white text-[10px] font-bold uppercase tracking-wider outline-none"
-                  >
-                    DROP DATA
-                  </button>
-                </div>
-
-              </div>
-
-              {selectedUser?.id === u.id && (
-                <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-3 animate-in fade-in duration-100">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[8px] text-gray-500 uppercase tracking-wider">ISI NOTIFIKASI KHUSUS</label>
-                    <input 
-                      type="text"
-                      placeholder="Misal: halo guys gitu"
-                      value={warningText}
-                      onChange={(e) => setWarningText(e.target.value)}
-                      className="bg-black border border-[#211D2C] p-2.5 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
-                    />
+                {u.warning_msg && (
+                  <div className="bg-black/50 border border-dashed border-[#211D2C] p-2 text-[9px] text-[#7C5CFF] uppercase tracking-wide leading-relaxed flex flex-col gap-1">
+                    <div>KONTEN NOTIF: {u.warning_msg}</div>
+                    <div className="text-gray-500 text-[8px] tracking-wide">
+                      DURASI SISTEM: {u.warning_type === 'once' ? 'CUMA 1X MUNCUL (ONCE)' : 'BERDURASI AKTIF'}
+                    </div>
                   </div>
+                )}
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[8px] text-gray-500 uppercase tracking-wider">SETTING TIMING KEMUNCULAN NOTIF</label>
-                    <select
-                      value={durationSetting}
-                      onChange={(e) => setDurationSetting(e.target.value)}
-                      className="bg-black border border-[#211D2C] p-2.5 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
+                {/* CONTROLS ACTIONS PANEL GRID */}
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  
+                  <div className="relative border border-[#211D2C] bg-[#16141F]">
+                    <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-[#7C5CFF]" />
+                    <div className="absolute -top-[1px] -right-[1px] w-1.5 h-1.5 border-t border-r border-[#7C5CFF]" />
+                    <div className="absolute -bottom-[1px] -left-[1px] w-1.5 h-1.5 border-b border-l border-[#7C5CFF]" />
+                    <div className="absolute -bottom-[1px] -right-[1px] w-1.5 h-1.5 border-b border-r border-[#7C5CFF]" />
+                    <button 
+                      onClick={() => setSelectedUser(selectedUser?.id === u.id ? null : u)}
+                      disabled={actionLoadingId === u.id}
+                      className="w-full py-2 bg-transparent text-[#7C5CFF] hover:text-white flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider outline-none"
                     >
-                      <option value="once">CUMA 1X MUNCUL (KLIK IYA LANGSUNG HILANG TEMPELANNYA)</option>
-                      <option value="30">30 MENIT MUNCUL TERUS</option>
-                      <option value="60">1 JAM MUNCUL TERUS</option>
-                      <option value="90">1 JAM 30 MENIT MUNCUL TERUS</option>
-                      <option value="1440">24 JAM MUNCUL TERUS</option>
-                    </select>
+                      WARN / SET NOTIF
+                    </button>
                   </div>
 
-                  <div className="flex justify-end gap-2 text-[10px]">
-                    <button type="button" onClick={() => setSelectedUser(null)} className="px-3 py-1.5 bg-transparent text-gray-400 border border-[#211D2C] uppercase font-bold">Batal</button>
-                    <button type="button" onClick={() => handleGiveWarning(u.id)} className="px-3 py-1.5 bg-[#7C5CFF] text-white uppercase font-black">FIRE NOTIF</button>
+                  <div className="relative border border-[#211D2C] bg-[#16141F]">
+                    <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-red-500" />
+                    <div className="absolute -top-[1px] -right-[1px] w-1.5 h-1.5 border-t border-r border-red-500" />
+                    <div className="absolute -bottom-[1px] -left-[1px] w-1.5 h-1.5 border-b border-l border-red-500" />
+                    <div className="absolute -bottom-[1px] -right-[1px] w-1.5 h-1.5 border-b border-r border-red-500" />
+                    <button 
+                      onClick={() => handleClearWarning(u.id)}
+                      disabled={actionLoadingId === u.id || u.status !== 'warned'}
+                      className="w-full py-2 bg-transparent text-red-400 disabled:opacity-20 flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider outline-none"
+                    >
+                      <Trash size={11} /> HAPUS NOTIF
+                    </button>
                   </div>
+
+                  <div className="relative border border-[#211D2C] bg-[#16141F]">
+                    <button 
+                      onClick={() => handleBanUser(u.id)}
+                      disabled={actionLoadingId === u.id || u.status === 'banned'}
+                      className="w-full py-2 bg-transparent text-gray-500 disabled:opacity-30 text-[10px] font-bold uppercase tracking-wider outline-none"
+                    >
+                      BAN TRAINER
+                    </button>
+                  </div>
+
+                  <div className="relative border border-[#211D2C] bg-[#16141F]">
+                    <button 
+                      onClick={() => handleDeleteUser(u.id)}
+                      disabled={actionLoadingId === u.id}
+                      className="w-full py-2 bg-transparent text-gray-500 hover:text-white text-[10px] font-bold uppercase tracking-wider outline-none"
+                    >
+                      DROP DATA
+                    </button>
+                  </div>
+
                 </div>
-              )}
 
-            </div>
-          ))
+                {/* DRAWER DRAWDOWNS: MANAJEMEN NOTIFIKASI INDIVIDU & DATA EXP & ASSET PROFIL */}
+                {selectedUser?.id === u.id && (
+                  <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-4 animate-in fade-in duration-100">
+                    
+                    {/* INPUT FORM NOTIF (BAWAAAN ASLI) */}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[8px] text-gray-500 uppercase tracking-wider">ISI NOTIFIKASI KHUSUS</label>
+                        <input 
+                          type="text"
+                          placeholder="Misal: halo guys gitu"
+                          value={warningText}
+                          onChange={(e) => setWarningText(e.target.value)}
+                          className="bg-black border border-[#211D2C] p-2.5 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[8px] text-gray-500 uppercase tracking-wider">SETTING TIMING KEMUNCULAN NOTIF</label>
+                        <select
+                          value={durationSetting}
+                          onChange={(e) => setDurationSetting(e.target.value)}
+                          className="bg-black border border-[#211D2C] p-2.5 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
+                        >
+                          <option value="once">CUMA 1X MUNCUL (KLIK IYA LANGSUNG HILANG TEMPELANNYA)</option>
+                          <option value="30">30 MENIT MUNCUL TERUS</option>
+                          <option value="60">1 JAM MUNCUL TERUS</option>
+                          <option value="90">1 JAM 30 MENIT MUNCUL TERUS</option>
+                          <option value="1440">24 JAM MUNCUL TERUS</option>
+                        </select>
+                      </div>
+
+                      <div className="flex justify-end gap-2 text-[10px] mb-2">
+                        <button type="button" onClick={() => setSelectedUser(null)} className="px-3 py-1.5 bg-transparent text-gray-400 border border-[#211D2C] uppercase font-bold">Batal</button>
+                        <button type="button" onClick={() => handleGiveWarning(u.id)} className="px-3 py-1.5 bg-[#7C5CFF] text-white uppercase font-black">FIRE NOTIF</button>
+                      </div>
+                    </div>
+
+                    {/* 🎯 FITUR BARU: PANEL MANAGEMEN VALUE EXP */}
+                    <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
+                      <label className="text-[8px] text-[#7C5CFF] uppercase tracking-wider font-bold">⚡ MANIPULASI EXP SYSTEM (CURRENT: {u.exp || 0} EXP)</label>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-[10px] text-text-dim">VALUE INDEKS:</span>
+                        <input 
+                          type="number"
+                          value={expInput}
+                          onChange={(e) => setExpInput(e.target.value)}
+                          className="w-20 bg-black border border-[#211D2C] p-1 text-white text-center text-xs outline-none focus:border-[#7C5CFF]"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 mt-1">
+                        <button type="button" onClick={() => handleAdjustExp(u, 'add')} className="py-1.5 bg-transparent border border-emerald-600 text-emerald-400 hover:bg-emerald-950/20 text-[9px] font-bold uppercase tracking-wide">
+                          <Plus size={9} className="inline mr-0.5" /> TAMBAH
+                        </button>
+                        <button type="button" onClick={() => handleAdjustExp(u, 'sub')} className="py-1.5 bg-transparent border border-red-600 text-red-400 hover:bg-red-950/20 text-[9px] font-bold uppercase tracking-wide">
+                          <Minus size={9} className="inline mr-0.5" /> KURANG
+                        </button>
+                        <button type="button" onClick={() => handleAdjustExp(u, 'reset')} className="py-1.5 bg-transparent border border-gray-600 text-gray-400 hover:bg-gray-800 text-[9px] font-bold uppercase tracking-wide">
+                          <RotateCcw size={9} className="inline mr-0.5" /> RESET 0
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 🎯 FITUR BARU: PANEL PENGHAPUSAN ASET GAMBAR PROFIL */}
+                    <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
+                      <label className="text-[8px] text-red-400 uppercase tracking-wider font-bold">🚨 HAPUS PAKSA ELEMEN KONTEN KUSTOM</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button 
+                          type="button" 
+                          onClick={() => handleDeleteAsset(u, 'avatar')}
+                          disabled={!u.avatar_url}
+                          className="py-1.5 bg-transparent border border-red-500/40 text-red-300 disabled:opacity-20 text-[9px] font-bold uppercase tracking-wide"
+                        >
+                          HAPUS AVATAR
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => handleDeleteAsset(u, 'banner')}
+                          disabled={!u.banner_url}
+                          className="py-1.5 bg-transparent border border-red-500/40 text-red-300 disabled:opacity-20 text-[9px] font-bold uppercase tracking-wide"
+                        >
+                          HAPUS BACKGROUND
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
+              </div>
+            ))
           }
         </div>
       </div>
