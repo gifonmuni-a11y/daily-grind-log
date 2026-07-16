@@ -26,8 +26,10 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
   height: 0 !important;
 }
 
+/* 🎯 DI SINI FIXED: Background paling dasar/paling belakang PWA diubah jadi HITAM PEKAT MUTLAK */
 body {
-  background-color: #0A0A0E;
+  background-color: #000000 !important;
+  background: #000000 !important;
   color: #EDEAF6;
   font-family: 'Inter', sans-serif;
   margin: 0;
@@ -39,6 +41,12 @@ body {
   -ms-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* 🎯 MEMASTIKAN DIV PEMBUNGKUS APP UTAMA JUGA IKUT HITAM PEKAT */
+#root, .app-container, main, .min-h-screen {
+  background-color: #000000 !important;
+  background: #000000 !important;
 }
 
 /* Memastikan kolom input chat/catatan tetap bisa diketik normal */
