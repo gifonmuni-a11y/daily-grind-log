@@ -230,7 +230,6 @@ export default function Home({ session }) {
           })
 
           if (newProfile.status === 'warned') {
-            // 🔥 FIX INJEKSI 1: Mengalirkan data gambar secara instan ke system drawer browser
             sendSystemNotification(newProfile.warning_title || "Notifikasi by founder HW", {
               body: newProfile.warning_msg || "Menerima pesan baru.",
               tag: "user-warning",
@@ -298,7 +297,8 @@ export default function Home({ session }) {
     welcomeAudio.play().catch(err => console.log("Gagal memuat file audio welcome:", err))
 
     if ('Notification' in window) {
-      await requestNotificationPermission()
+      // 🔥 FIX SAKTI: Menghapus kata 'await' agar proses token berjalan di background dan langsung masuk Home tanpa lag!
+      requestNotificationPermission()
     }
 
     setShowWelcomeCover(false)
@@ -308,7 +308,6 @@ export default function Home({ session }) {
       const isAlreadyReadOnce = profile.warning_type === 'once' && localStorage.getItem(`dg_read_warn_${profile.warning_msg}`) === 'true'
 
       if (!isExpired && !isAlreadyReadOnce) {
-        // 🔥 FIX INJEKSI 2: Menampilkan spanduk foto di sinkronisasi awal masuk sistem
         sendSystemNotification(profile.warning_title || "Notifikasi by founder HW", {
           body: profile.warning_msg || "Menerima pesan baru.",
           tag: "user-warning",
