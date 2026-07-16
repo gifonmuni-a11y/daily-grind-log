@@ -5,22 +5,10 @@ import {
   Lock, Trash, Megaphone, Plus, Minus, RotateCcw, ChevronDown, Award
 } from 'lucide-react'
 
-// Kalkulator Level Akurat untuk Sistem PWA RPG Manhwa
+// Engine Kalkulator Akurat Pertumbuhan Level RPG Manhwa Player
 function getComputedLevel(exp) {
   const totalExp = Number(exp) || 0
-  let lvl = 1
-  let currentBasis = 0
-  
-  while (true) {
-    const nextLvlRequirement = 100 + (lvl - 1) * 50
-    if (totalExp >= currentBasis + nextLvlRequirement) {
-      currentBasis += nextLvlRequirement
-      lvl++
-    } else {
-      break
-    }
-  }
-  return lvl
+  return Math.floor(Math.sqrt(totalExp / 15)) + 1
 }
 
 export default function AdminPanel({ userId, onClose }) {
@@ -47,6 +35,17 @@ export default function AdminPanel({ userId, onClose }) {
   const [dbError, setDbError] = useState('')
   const [systemNotice, setSystemNotice] = useState({ isOpen: false, title: '', message: '', type: 'info' })
   const [systemConfirm, setSystemConfirm] = useState({ isOpen: false, title: '', message: '', onConfirm: null })
+
+  // 🎯 STATE BARU: Menangani buka/tutup dropdown kustom RPG Manhwa
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const durationOptions = [
+    { value: 'once', label: 'CUMA 1X MUNCUL (KLIK OKE LANGSUNG HILANG TEMPELANNYA)' },
+    { value: '30', label: 'KUNCI MUNCUL TERUS SELAMA 30 MENIT' },
+    { value: '60', label: 'KUNCI MUNCUL TERUS SELAMA 1 JAM' },
+    { value: '90', label: 'KUNCI MUNCUL TERUS SELAMA 1 JAM 30 MENIT' },
+    { value: '1440', label: 'KUNCI MUNCUL TERUS SELAMA 24 JAM' }
+  ]
 
   const triggerNotice = (title, message, type = 'info') => {
     setSystemNotice({ isOpen: true, title, message, type })
@@ -174,7 +173,9 @@ export default function AdminPanel({ userId, onClose }) {
         triggerNotice("PEMBARUAN GAGAL", error.message, "error")
       } else {
         await fetchAllUsers()
-        setSelectedUser(prev => prev ? { ...prev, exp: currentExp } : null)
+        if (selectedUser?.id === targetUser.id) {
+          setSelectedUser(prev => prev ? { ...prev, exp: currentExp } : null)
+        }
       }
     } catch (err) {
       console.error(err)
@@ -360,7 +361,7 @@ export default function AdminPanel({ userId, onClose }) {
   return (
     <div className="fixed inset-0 bg-[#000000] z-[200] flex flex-col font-mono text-xs text-[#EDEAF6] select-none p-4 overflow-y-auto">
       
-      {/* 🎯 CUSTOM MODAL DIALOG KONFIRMASI (KUSTOM MANHWA STYLE) */}
+      {/* KUSTOM CONFIRM MODAL BOX (MANHWA SYSTEM) */}
       {systemConfirm.isOpen && (
         <div className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4">
           <div className="bg-[#100E16] border-2 border-[#7C5CFF] p-5 w-full max-w-xs relative flex flex-col gap-3 shadow-[0_0_25px_rgba(124,92,255,0.3)]">
@@ -391,7 +392,7 @@ export default function AdminPanel({ userId, onClose }) {
         </div>
       )}
 
-      {/* 🎯 CUSTOM MODAL PEMBERITAHUAN (KUSTOM MANHWA STYLE) */}
+      {/* KUSTOM NOTICE MODAL BOX (MANHWA SYSTEM) */}
       {systemNotice.isOpen && (
         <div className="fixed inset-0 bg-black/80 z-[300] flex items-center justify-center p-4">
           <div className="bg-[#100E16] border border-[#211D2C] p-5 w-full max-w-xs relative flex flex-col gap-3 shadow-2xl">
@@ -421,7 +422,7 @@ export default function AdminPanel({ userId, onClose }) {
           <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
           <div className="flex items-center gap-2">
             <Shield size={14} className="text-[#7C5CFF]" />
-            <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">KONSOL UTAMA MModerasi FOUNDER</span>
+            <span className="font-black text-xs uppercase tracking-wider text-[#7C5CFF]">KONSOL UTAMA MODERASI FOUNDER</span>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white text-[10px] border border-[#211D2C] px-2 py-0.5 bg-black/40 transition-colors">TUTUP</button>
         </div>
@@ -553,7 +554,7 @@ export default function AdminPanel({ userId, onClose }) {
                   </div>
                 </div>
 
-                {/* DRAWER ACCORDION PENGATURAN KUSTOM */}
+                {/* ACCORDION ACCORDION PENGATURAN KUSTOM */}
                 {selectedUser?.id === u.id && (
                   <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-4 animate-in fade-in duration-150">
                     
@@ -569,24 +570,40 @@ export default function AdminPanel({ userId, onClose }) {
                         />
                       </div>
 
-                      {/* 🎯 CUSTOM DROPDOWN SYSTEM: Full Tema Manhwa Game Tanpa Default Browser Select */}
+                      {/* 🎯 SOLUSI DROPDOWN FIX: Diganti dengan tombol pemicu list buatan sendiri agar tidak memicu native bottom sheet HP */}
                       <div className="flex flex-col gap-1 relative">
                         <label className="text-[8px] text-gray-500 uppercase tracking-wider">PARAMETER DURASI KEMUNCULAN NOTIF</label>
                         <div className="relative w-full">
-                          <select
-                            value={durationSetting}
-                            onChange={(e) => setDurationSetting(e.target.value)}
-                            className="w-full bg-black border border-[#211D2C] p-2.5 pr-10 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF] appearance-none cursor-pointer transition-colors"
+                          <button
+                            type="button"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="w-full bg-black border border-[#211D2C] p-2.5 text-left text-white font-mono text-[11px] flex justify-between items-center outline-none focus:border-[#7C5CFF]"
                           >
-                            <option value="once" className="bg-[#100E16] text-white">CUMA 1X MUNCUL (KLIK OKE LANGSUNG HILANG TEMPELANNYA)</option>
-                            <option value="30" className="bg-[#100E16] text-white">KUNCI MUNCUL TERUS SELAMA 30 MENIT</option>
-                            <option value="60" className="bg-[#100E16] text-white">KUNCI MUNCUL TERUS SELAMA 1 JAM</option>
-                            <option value="90" className="bg-[#100E16] text-white">KUNCI MUNCUL TERUS SELAMA 1 JAM 30 MENIT</option>
-                            <option value="1440" className="bg-[#100E16] text-white">KUNCI MUNCUL TERUS SELAMA 24 JAM</option>
-                          </select>
-                          <div className="absolute pointer-events-none top-3.5 right-3 text-gray-500">
-                            <ChevronDown size={14} />
-                          </div>
+                            <span>{durationOptions.find(o => o.value === durationSetting)?.label}</span>
+                            <ChevronDown size={14} className="text-gray-500" />
+                          </button>
+                          
+                          {isDropdownOpen && (
+                            <div className="absolute left-0 right-0 mt-1 bg-[#100E16] border border-[#7C5CFF] z-[250] max-h-60 overflow-y-auto shadow-[0_0_15px_rgba(124,92,255,0.3)]">
+                              {durationOptions.map(opt => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setDurationSetting(opt.value)
+                                    setIsDropdownOpen(false)
+                                  }}
+                                  className={`w-full text-left p-2.5 text-[10px] font-mono border-b border-[#211D2C]/60 last:border-none transition-colors ${
+                                    durationSetting === opt.value 
+                                      ? 'bg-[#7C5CFF]/20 text-[#7C5CFF] font-bold' 
+                                      : 'text-gray-400 hover:bg-black hover:text-white'
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
 
