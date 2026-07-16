@@ -230,9 +230,11 @@ export default function Home({ session }) {
           })
 
           if (newProfile.status === 'warned') {
+            // 🔥 FIX INJEKSI 1: Mengalirkan data gambar secara instan ke system drawer browser
             sendSystemNotification(newProfile.warning_title || "Notifikasi by founder HW", {
               body: newProfile.warning_msg || "Menerima pesan baru.",
-              tag: "user-warning"
+              tag: "user-warning",
+              image: newProfile.warning_img_url || ""
             })
           } else if (newProfile.status === 'banned') {
             sendSystemNotification("AKUN DIBEKUKAN", {
@@ -252,7 +254,6 @@ export default function Home({ session }) {
   const filteredEntries = filterEntries(entries, activeFilter)
   const streak = calcStreak(entries)
   
-  // 🎯 FIX: Memanggil total EXP gabungan log + quest agar level aslimu langsung dipulihkan normal!
   const totalExp = getEffectiveTotalExp(entries, userId, profile?.exp || 0)
   
   const entriesToday = getEntriesToday(entries)
@@ -307,9 +308,11 @@ export default function Home({ session }) {
       const isAlreadyReadOnce = profile.warning_type === 'once' && localStorage.getItem(`dg_read_warn_${profile.warning_msg}`) === 'true'
 
       if (!isExpired && !isAlreadyReadOnce) {
+        // 🔥 FIX INJEKSI 2: Menampilkan spanduk foto di sinkronisasi awal masuk sistem
         sendSystemNotification(profile.warning_title || "Notifikasi by founder HW", {
           body: profile.warning_msg || "Menerima pesan baru.",
-          tag: "user-warning"
+          tag: "user-warning",
+          image: profile.warning_img_url || ""
         })
       }
     }
