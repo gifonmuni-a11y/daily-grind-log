@@ -24,8 +24,6 @@ export default function AdminPanel({ userId, onClose }) {
 
   // 🎯 PENTING: Ganti dengan UUID Akun Supabase lu sendiri agar aman terkunci
   const ADMIN_UUID = "d4ccb677-a547-4a7a-9b9b-ce2be6723ecd"
-
-  // PIN Konsol Admin Utama
   const ADMIN_PASSWORD_KEY = "FounderGRIND1" 
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -38,9 +36,8 @@ export default function AdminPanel({ userId, onClose }) {
   const [selectedUser, setSelectedUser] = useState(null)
   
   const [warningText, setWarningText] = useState('')
-  const [durationSetting, setDurationSetting] = useState('once') // 'once', '30', '60', '90', '1440'
-
-  // State kustom baru buat fitur tambahan lu
+  const [durationSetting, setDurationSetting] = useState('once')
+  
   const [broadcastText, setBroadcastText] = useState('')
   const [expInput, setExpInput] = useState('50')
 
@@ -56,7 +53,6 @@ export default function AdminPanel({ userId, onClose }) {
         e.preventDefault()
       }
     }
-
     window.addEventListener('contextmenu', handleContextMenu)
     window.addEventListener('keydown', handleKeyDown)
     return () => {
@@ -65,27 +61,32 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }, [])
 
-  // 🎯 FITUR AUDIO: Memutar suara welcome founder begitu sukses lolos PIN verifikasi
+  // FITUR AUDIO: Memutar suara welcome founder begitu sukses lolos PIN verifikasi
   useEffect(() => {
     if (isAuthenticated) {
       const audioUrl = "https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/welcome/welcometoadminpanel.mp3"
       const audio = new Audio(audioUrl)
       audio.volume = 0.8
-      audio.play().catch(err => console.log("Autoplay blocked, waiting user action:", err))
+      audio.play().catch(err => console.log("Autoplay blocked:", err))
     }
   }, [isAuthenticated])
 
-  // Fetch data user dari tabel profiles Supabase
+  // 🎯 FIXED MUTLAK: Menggunakan .select('*') agar otomatis mengambil semua kolom tanpa takut typo nama kolom
   const fetchAllUsers = async () => {
     setLoadingUsers(true)
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, status, warning_msg, warning_type, warning_expires_at, created_at, exp, avatar_url, banner_url')
+        .select('*')
         .order('created_at', { ascending: false })
-      if (!error) setUsers(data || [])
+      
+      if (error) {
+        alert(`Supabase Error Ambil Data: ${error.message}`);
+      } else {
+        setUsers(data || [])
+      }
     } catch (err) {
-      console.error(err)
+      alert(`Crash Ambil Data: ${err.message}`);
     } finally {
       setLoadingUsers(false)
     }
@@ -126,14 +127,17 @@ export default function AdminPanel({ userId, onClose }) {
           warning_type: 'once',
           warning_expires_at: null
         })
+        .not('id', 'is', null) // Cara aman melakukan update massal global di Supabase
 
-      if (!error) {
+      if (error) {
+        alert(`Gagal Broadcast: ${error.message}`)
+      } else {
         alert("Notifikasi massal berhasil ditembak ke seluruh user!")
         setBroadcastText('')
         await fetchAllUsers()
       }
     } catch (err) {
-      console.error(err)
+      alert(`Crash Broadcast: ${err.message}`)
     } finally {
       setActionLoadingId(null)
     }
@@ -150,21 +154,22 @@ export default function AdminPanel({ userId, onClose }) {
     if (operation === 'reset') currentExp = 0
 
     try {
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ exp: currentExp })
         .eq('id', targetUser.id)
       
+      if (error) alert(`Gagal ubah EXP: ${error.message}`)
       await fetchAllUsers()
       setSelectedUser(prev => prev ? { ...prev, exp: currentExp } : null)
     } catch (err) {
-      console.error(err)
+      alert(`Crash EXP: ${err.message}`)
     } finally {
       setActionLoadingId(null)
     }
   }
 
-  // FITUR: Hapus paksa Avatar atau Banner background kustom milik user lain
+  // FITUR: Hapus paksa Avatar atau Banner kustom milik user lain
   const handleDeleteAsset = async (targetUser, assetType) => {
     if (!window.confirm(`Hapus paksa ${assetType} milik ${targetUser.name}?`)) return
     setActionLoadingId(targetUser.id)
@@ -174,17 +179,17 @@ export default function AdminPanel({ userId, onClose }) {
     if (assetType === 'banner') updateField.banner_url = null
 
     try {
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .update(updateField)
         .eq('id', targetUser.id)
       
+      if (error) alert(`Gagal hapus aset: ${error.message}`)
       await fetchAllUsers()
       setSelectedUser(prev => prev ? { ...prev, ...updateField } : null)
     } catch (err) {
-      console.error(err)
+      alert(`Crash Hapus Aset: ${err.message}`)
     } finally {
-      // 🎯 FIXED: Kata 'Jack' typo kemarin sudah diganti mutlak ke 'finally' agar build Vercel lolos
       setActionLoadingId(null)
     }
   }
@@ -202,7 +207,7 @@ export default function AdminPanel({ userId, onClose }) {
       expiresAt = new Date(now.getTime() + minutes * 60000).toISOString()
     }
 
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ 
         status: 'warned', 
@@ -212,6 +217,7 @@ export default function AdminPanel({ userId, onClose }) {
       })
       .eq('id', targetId)
 
+    if (error) alert(error.message)
     setWarningText('')
     setDurationSetting('once')
     setSelectedUser(null)
@@ -221,7 +227,7 @@ export default function AdminPanel({ userId, onClose }) {
 
   const handleClearWarning = async (targetId) => {
     setActionLoadingId(targetId)
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ 
         status: 'active', 
@@ -230,6 +236,7 @@ export default function AdminPanel({ userId, onClose }) {
         warning_expires_at: null
       })
       .eq('id', targetId)
+    if (error) alert(error.message)
     await fetchAllUsers()
     setActionLoadingId(null)
   }
@@ -237,7 +244,7 @@ export default function AdminPanel({ userId, onClose }) {
   const handleBanUser = async (targetId) => {
     if (!window.confirm("Konfirmasi pembekuan akun target?")) return
     setActionLoadingId(targetId)
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ 
         status: 'banned', 
@@ -246,6 +253,7 @@ export default function AdminPanel({ userId, onClose }) {
         warning_expires_at: null
       })
       .eq('id', targetId)
+    if (error) alert(error.message)
     await fetchAllUsers()
     setActionLoadingId(null)
   }
@@ -254,7 +262,8 @@ export default function AdminPanel({ userId, onClose }) {
     if (!window.confirm("Hapus profile user ini secara permanen dari basis data?")) return
     setActionLoadingId(targetId)
     await supabase.from('entries').delete().eq('user_id', targetId)
-    await supabase.from('profiles').delete().eq('id', targetId)
+    const { error } = await supabase.from('profiles').delete().eq('id', targetId)
+    if (error) alert(error.message)
     await fetchAllUsers()
     setActionLoadingId(null)
   }
@@ -351,6 +360,10 @@ export default function AdminPanel({ userId, onClose }) {
           
           {loadingUsers ? (
             <div className="py-8 text-center text-gray-500 animate-pulse uppercase tracking-wider">Sinkronisasi Data User...</div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-6 text-gray-600 border border-dashed border-[#211D2C] uppercase text-[10px]">
+              Tidak Ada Trainer Terbaca. Project database kosong atau terputus.
+            </div>
           ) : users.map(u => {
             const userLevel = getComputedLevel(u.exp)
 
@@ -388,7 +401,6 @@ export default function AdminPanel({ userId, onClose }) {
                   </div>
                 )}
 
-                {/* GRID 2X2 CONTROLS */}
                 <div className="grid grid-cols-2 gap-2 mt-1">
                   <div className="relative border border-[#211D2C] bg-[#16141F]">
                     <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-[#7C5CFF]" />
@@ -439,10 +451,8 @@ export default function AdminPanel({ userId, onClose }) {
                   </div>
                 </div>
 
-                {/* DRAWER DROPDOWN MODERASI */}
                 {selectedUser?.id === u.id && (
                   <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-4">
-                    
                     <div className="flex flex-col gap-3">
                       <div className="flex flex-col gap-1">
                         <label className="text-[8px] text-gray-500 uppercase tracking-wider">ISI NOTIFIKASI KHUSUS</label>
@@ -454,7 +464,6 @@ export default function AdminPanel({ userId, onClose }) {
                           className="bg-black border border-[#211D2C] p-2.5 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
                         />
                       </div>
-
                       <div className="flex flex-col gap-1">
                         <label className="text-[8px] text-gray-500 uppercase tracking-wider">SETTING TIMING KEMUNCULAN NOTIF</label>
                         <select
@@ -469,14 +478,12 @@ export default function AdminPanel({ userId, onClose }) {
                           <option value="1440">24 JAM MUNCUL TERUS</option>
                         </select>
                       </div>
-
                       <div className="flex justify-end gap-2 text-[10px] mb-2">
                         <button type="button" onClick={() => setSelectedUser(null)} className="px-3 py-1.5 bg-transparent text-gray-400 border border-[#211D2C] uppercase font-bold">Batal</button>
                         <button type="button" onClick={() => handleGiveWarning(u.id)} className="px-3 py-1.5 bg-[#7C5CFF] text-white uppercase font-black">FIRE NOTIF</button>
                       </div>
                     </div>
 
-                    {/* MANIPULASI EXP */}
                     <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
                       <label className="text-[8px] text-[#7C5CFF] uppercase tracking-wider font-bold">⚡ MANIPULASI DATA EXP</label>
                       <div className="flex gap-2 items-center">
@@ -490,34 +497,31 @@ export default function AdminPanel({ userId, onClose }) {
                       </div>
                       <div className="grid grid-cols-3 gap-1.5 mt-1">
                         <button type="button" onClick={() => handleAdjustExp(u, 'add')} className="py-1.5 bg-transparent border border-emerald-600 text-emerald-400 hover:bg-emerald-950/20 text-[9px] font-bold uppercase tracking-wide">
-                          <Plus size={9} className="inline mr-0.5" /> TAMBAH
+                          TAMBAH
                         </button>
                         <button type="button" onClick={() => handleAdjustExp(u, 'sub')} className="py-1.5 bg-transparent border border-red-600 text-red-400 hover:bg-red-950/20 text-[9px] font-bold uppercase tracking-wide">
-                          <Minus size={9} className="inline mr-0.5" /> KURANG
+                          KURANG
                         </button>
                         <button type="button" onClick={() => handleAdjustExp(u, 'reset')} className="py-1.5 bg-transparent border border-gray-600 text-gray-400 hover:bg-gray-800 text-[9px] font-bold uppercase tracking-wide">
-                          <RotateCcw size={9} className="inline mr-0.5" /> RESET 0
+                          RESET 0
                         </button>
                       </div>
                     </div>
 
-                    {/* DELETE ASET */}
                     <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
                       <label className="text-[8px] text-red-400 uppercase tracking-wider font-bold">🚨 DELETE PAKSA ASET KONTEN USER</label>
                       <div className="grid grid-cols-2 gap-2">
                         <button 
                           type="button" 
                           onClick={() => handleDeleteAsset(u, 'avatar')}
-                          disabled={!u.avatar_url}
-                          className="py-1.5 bg-transparent border border-red-500/40 text-red-300 disabled:opacity-20 text-[9px] font-bold uppercase tracking-wide"
+                          className="py-1.5 bg-transparent border border-red-500/40 text-red-300 text-[9px] font-bold uppercase tracking-wide"
                         >
                           HAPUS AVATAR
                         </button>
                         <button 
                           type="button" 
                           onClick={() => handleDeleteAsset(u, 'banner')}
-                          disabled={!u.banner_url}
-                          className="py-1.5 bg-transparent border border-red-500/40 text-red-300 disabled:opacity-20 text-[9px] font-bold uppercase tracking-wide"
+                          className="py-1.5 bg-transparent border border-red-500/40 text-red-300 text-[9px] font-bold uppercase tracking-wide"
                         >
                           HAPUS BACKGROUND
                         </button>
