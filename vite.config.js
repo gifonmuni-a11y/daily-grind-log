@@ -19,6 +19,8 @@ export default defineConfig({
         runtimeCaching: [],
         skipWaiting: true,
         clientsClaim: true,
+        // MENYUNTIKKAN SCRIPT PENANGKAP PUSH NOTIFIKASI SECARA PERMANEN
+        importScripts: ['/custom-push.js']
       }
     })
   ]
