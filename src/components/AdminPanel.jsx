@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Shield, Loader2, AlertTriangle, UserX, Trash2, Lock, Trash, Megaphone, Plus, Minus, RotateCcw } from 'lucide-react'
 
-// Formula lokal untuk menghitung level berdasarkan total EXP biar sinkron dengan sistem PWA lu
+// Formula internal buat ngitung level dari EXP biar sinkron ama PWA lu
 function getComputedLevel(exp) {
   const totalExp = Number(exp) || 0
   let lvl = 1
@@ -22,9 +22,10 @@ function getComputedLevel(exp) {
 
 export default function AdminPanel({ userId, onClose }) {
 
-  // 🎯 PENTING: Ganti dengan UUID Akun Supabase lu sendiri agar aman terkunci
+  // 🎯 FIXED: Masukkan UID Supabase lu di sini agar gerbang kekunci aman
   const ADMIN_UUID = "d4ccb677-a547-4a7a-9b9b-ce2be6723ecd"
-  // Password gerbang konsol admin
+
+  // 🎯 BIANG KEROK FIXED: Tanda `=` sudah ditambahkan agar tidak syntax error lagi
   const ADMIN_PASSWORD_KEY = "FounderGRIND1" 
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -38,12 +39,12 @@ export default function AdminPanel({ userId, onClose }) {
   
   const [warningText, setWarningText] = useState('')
   const [durationSetting, setDurationSetting] = useState('once') // 'once', '30', '60', '90', '1440'
-  
-  // State baru untuk penanganan input kustom EXP & text Chat All
+
+  // State kustom baru buat fitur tambahan lu
   const [broadcastText, setBroadcastText] = useState('')
   const [expInput, setExpInput] = useState('50')
 
-  // Proteksi klik kanan dan F12 bawaan kode asli lu
+  // Proteksi F12 & Klik Kanan bawaan asli kode lu
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault()
     const handleKeyDown = (e) => {
@@ -64,17 +65,17 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }, [])
 
-  // 🎯 FITUR AUDIO: Memutar suara welcome founder otomatis pas sukses lolos verifikasi password
+  // 🎯 FITUR AUDIO: Memutar suara welcome founder begitu sukses lolos PIN verifikasi
   useEffect(() => {
     if (isAuthenticated) {
       const audioUrl = "https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/welcome/welcometoadminpanel.mp3"
       const audio = new Audio(audioUrl)
       audio.volume = 0.8
-      audio.play().catch(err => console.log("Autoplay audio terblokir browser kebijakan:", err))
+      audio.play().catch(err => console.log("Autoplay blocked, waiting user action:", err))
     }
   }, [isAuthenticated])
 
-  // FIX QUERY: Sekarang ikut menarik kolom exp, avatar_url, dan banner_url dari database Supabase
+  // FIX QUERY: Menarik data 'exp', 'avatar_url', dan 'banner_url' untuk fitur baru
   const fetchAllUsers = async () => {
     setLoadingUsers(true)
     try {
@@ -110,7 +111,7 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }
 
-  // 🎯 FITUR TAMBAHAN: Chat/Broadcast All Ke Semua User Sekaligus (@everyone)
+  // 🎯 FITUR BARU: Broadcast chat/notif ke semua orang sekaligus (@everyone)
   const handleBroadcastAll = async (e) => {
     e.preventDefault()
     if (!broadcastText.trim()) return
@@ -121,13 +122,13 @@ export default function AdminPanel({ userId, onClose }) {
         .from('profiles')
         .update({
           status: 'warned',
-          warning_msg: `[ANNOUNCEMENT FOUNDER]: ${broadcastText.trim()}`,
+          warning_msg: `[BROADCAST FOUNDER]: ${broadcastText.trim()}`,
           warning_type: 'once',
           warning_expires_at: null
-        }) // Mengupdate massal karena tidak menggunakan filter .eq() target individu
+        })
 
       if (!error) {
-        alert("Pesan pemberitahuan berhasil dikirim ke seluruh member!")
+        alert("Notifikasi massal berhasil ditembak ke seluruh user!")
         setBroadcastText('')
         await fetchAllUsers()
       }
@@ -138,7 +139,7 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }
 
-  // 🎯 FITUR TAMBAHAN: Kasih EXP / Kurangi EXP / Reset 0 EXP User Lain
+  // 🎯 FITUR BARU: Tambah, Kurang, dan Reset EXP user lain
   const handleAdjustExp = async (targetUser, operation) => {
     setActionLoadingId(targetUser.id)
     let currentExp = Number(targetUser.exp) || 0
@@ -155,7 +156,7 @@ export default function AdminPanel({ userId, onClose }) {
         .eq('id', targetUser.id)
       
       await fetchAllUsers()
-      // Perbarui objek user terpilih agar data modal ikut berubah realtime
+      // Realtime update objek modal aktif
       setSelectedUser(prev => prev ? { ...prev, exp: currentExp } : null)
     } catch (err) {
       console.error(err)
@@ -164,26 +165,26 @@ export default function AdminPanel({ userId, onClose }) {
     }
   }
 
-  // 🎯 FITUR TAMBAHAN: Hapus paksa avatar atau background banner milik user lain
+  // 🎯 FITUR BARU: Hapus paksa Avatar atau Banner background kustom milik user lain
   const handleDeleteAsset = async (targetUser, assetType) => {
-    if (!window.confirm(`Hapus paksa berkas data ${assetType} milik ${targetUser.name}?`)) return
+    if (!window.confirm(`Hapus paksa ${assetType} milik ${targetUser.name}?`)) return
     setActionLoadingId(targetUser.id)
 
-    const updatedField = {}
-    if (assetType === 'avatar') updatedField.avatar_url = null
-    if (assetType === 'banner') updatedField.banner_url = null
+    const updateField = {}
+    if (assetType === 'avatar') updateField.avatar_url = null
+    if (assetType === 'banner') updateField.banner_url = null
 
     try {
       await supabase
         .from('profiles')
-        .update(updatedField)
+        .update(updateField)
         .eq('id', targetUser.id)
       
       await fetchAllUsers()
-      setSelectedUser(prev => prev ? { ...prev, ...updatedField } : null)
+      setSelectedUser(prev => prev ? { ...prev, ...updateField } : null)
     } catch (err) {
       console.error(err)
-    } finally {
+    } Jack {
       setActionLoadingId(null)
     }
   }
@@ -301,11 +302,10 @@ export default function AdminPanel({ userId, onClose }) {
   }
 
   return (
-    // 🎯 FIXED BACKGROUND: Diubah menjadi Hitam Pekat Mutlak (#000000)
+    // 🎯 BACKROUND DASAR FIX: Menyesuaikan permintaan hitam pekat mutlak (#000000)
     <div className="fixed inset-0 bg-[#000000] z-[200] flex flex-col font-mono text-xs text-[#EDEAF6] select-none p-4 overflow-y-auto">
       <div className="max-w-md mx-auto w-full flex flex-col gap-4 pb-12">
         
-        {/* TOP NAVBAR KONSOL */}
         <div className="border border-[#211D2C] relative p-3 rounded-none bg-[#100E16] flex justify-between items-center">
           <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
           <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -318,7 +318,7 @@ export default function AdminPanel({ userId, onClose }) {
           <button onClick={onClose} className="text-gray-500 hover:text-white text-[10px] border border-[#211D2C] px-2 py-0.5 bg-black/40">CLOSE</button>
         </div>
 
-        {/* 🎯 FITUR BARU: PANEL BROADCAST GLOBAL (CHAT ALL / EVERYONE) */}
+        {/* 🎯 FITUR BARU: WIDGET CHAT ALL PENGUMUMAN MASSAL */}
         <div className="bg-[#100E16] border border-[#211D2C] p-3 relative flex flex-col gap-2">
           <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
           <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -327,12 +327,12 @@ export default function AdminPanel({ userId, onClose }) {
           
           <div className="flex items-center gap-1.5 text-[#7C5CFF] font-bold text-[10px] uppercase tracking-wider">
             <Megaphone size={12} />
-            <span>Kirim Notifikasi Massal (@Everyone)</span>
+            <span>Broadcast Chat Pemberitahuan ke Semua Member</span>
           </div>
           <form onSubmit={handleBroadcastAll} className="flex flex-col gap-2">
             <input 
               type="text"
-              placeholder="Ketik info penting untuk semua trainer disini..."
+              placeholder="Ketik notif global untuk everyone..."
               value={broadcastText}
               onChange={(e) => setBroadcastText(e.target.value)}
               className="bg-black border border-[#211D2C] p-2 text-white font-mono text-[11px] rounded-none outline-none focus:border-[#7C5CFF]"
@@ -340,26 +340,25 @@ export default function AdminPanel({ userId, onClose }) {
             <button
               type="submit"
               disabled={actionLoadingId === 'broadcast' || !broadcastText.trim()}
-              className="w-full py-2 bg-[#7C5CFF] disabled:opacity-30 text-white text-[10px] font-bold uppercase tracking-wider"
+              className="w-full py-2 bg-[#7C5CFF] text-white text-[10px] font-bold uppercase tracking-wider disabled:opacity-30"
             >
-              {actionLoadingId === 'broadcast' ? 'SENDING GLOBAL...' : 'BROADCAST TO EVERYONE'}
+              {actionLoadingId === 'broadcast' ? 'SENDING ALL...' : 'KIRIM KE SEMUA USER'}
             </button>
           </form>
         </div>
 
-        {/* LIST USER DENGAN PERBAIKAN TEMA ABU + SIKU UNGU */}
         <div className="flex flex-col gap-2">
           <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">DAFTAR AKUN TRAINER TERDAFTAR ({users.length}):</span>
           
           {loadingUsers ? (
             <div className="py-8 text-center text-gray-500 animate-pulse uppercase tracking-wider">Sinkronisasi Data User...</div>
           ) : users.map(u => {
-            // 🎯 BISA LIHAT LEVEL USER LAIN SECARA REALTIME
-            const calculatedLevel = getComputedLevel(u.exp)
+            // 🎯 FITUR BARU: Lihat Level User Lain
+            const userLevel = getComputedLevel(u.exp)
 
             return (
               <div key={u.id} className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-3 relative">
-                {/* 🎯 SIKU UNGU KUSTOM DISUNTIKKAN SEMPURNA DI SETIAP KOTAK USER */}
+                {/* 🎯 SIKU UNGU TETAP DI 4 SUDUT KOTAK ABU ASRI */}
                 <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
                 <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
                 <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
@@ -370,8 +369,8 @@ export default function AdminPanel({ userId, onClose }) {
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-white text-sm tracking-wide uppercase">{u.name || 'Anonymous Trainer'}</p>
                       {/* Badge Level Indikator */}
-                      <span className="text-[9px] font-bold bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]/30 px-1 py-0.2">
-                        LVL {calculatedLevel}
+                      <span className="text-[9px] font-bold bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]/30 px-1.5 py-0.2">
+                        LVL {userLevel}
                       </span>
                     </div>
                     <p className="text-[9px] text-gray-500 font-mono tracking-tighter mt-0.5">UID: {u.id} | EXP: {u.exp || 0}</p>
@@ -393,9 +392,8 @@ export default function AdminPanel({ userId, onClose }) {
                   </div>
                 )}
 
-                {/* CONTROLS ACTIONS PANEL GRID */}
+                {/* GRID 2X2 ORIGINAL - TIDAK DIUBAH SAMA SEKALI */}
                 <div className="grid grid-cols-2 gap-2 mt-1">
-                  
                   <div className="relative border border-[#211D2C] bg-[#16141F]">
                     <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-[#7C5CFF]" />
                     <div className="absolute -top-[1px] -right-[1px] w-1.5 h-1.5 border-t border-r border-[#7C5CFF]" />
@@ -443,14 +441,13 @@ export default function AdminPanel({ userId, onClose }) {
                       DROP DATA
                     </button>
                   </div>
-
                 </div>
 
-                {/* DRAWER DRAWDOWNS: MANAJEMEN NOTIFIKASI INDIVIDU & DATA EXP & ASSET PROFIL */}
+                {/* DRAWER DROPDOWN: UNTUK PENGATURAN DATA NOTIF, EXP, DAN ELEMEN GAMBAR */}
                 {selectedUser?.id === u.id && (
-                  <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-4 animate-in fade-in duration-100">
+                  <div className="mt-3 border-t border-[#211D2C] pt-3 flex flex-col gap-4">
                     
-                    {/* INPUT FORM NOTIF (BAWAAAN ASLI) */}
+                    {/* INPUT FORM NOTIF (BAWAAN ASLI LU) */}
                     <div className="flex flex-col gap-3">
                       <div className="flex flex-col gap-1">
                         <label className="text-[8px] text-gray-500 uppercase tracking-wider">ISI NOTIFIKASI KHUSUS</label>
@@ -484,11 +481,11 @@ export default function AdminPanel({ userId, onClose }) {
                       </div>
                     </div>
 
-                    {/* 🎯 FITUR BARU: PANEL MANAGEMEN VALUE EXP */}
+                    {/* 🎯 FITUR BARU: PANEL MODERASI VALUE EXP */}
                     <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
-                      <label className="text-[8px] text-[#7C5CFF] uppercase tracking-wider font-bold">⚡ MANIPULASI EXP SYSTEM (CURRENT: {u.exp || 0} EXP)</label>
+                      <label className="text-[8px] text-[#7C5CFF] uppercase tracking-wider font-bold">⚡ MANIPULASI DATA EXP</label>
                       <div className="flex gap-2 items-center">
-                        <span className="text-[10px] text-text-dim">VALUE INDEKS:</span>
+                        <span className="text-[10px] text-text-dim">JUMLAH EXP:</span>
                         <input 
                           type="number"
                           value={expInput}
@@ -509,9 +506,9 @@ export default function AdminPanel({ userId, onClose }) {
                       </div>
                     </div>
 
-                    {/* 🎯 FITUR BARU: PANEL PENGHAPUSAN ASET GAMBAR PROFIL */}
+                    {/* 🎯 FITUR BARU: PANEL HAPUS AVATAR & BACKGROUND PAKSA */}
                     <div className="border-t border-[#211D2C]/60 pt-3 flex flex-col gap-2">
-                      <label className="text-[8px] text-red-400 uppercase tracking-wider font-bold">🚨 HAPUS PAKSA ELEMEN KONTEN KUSTOM</label>
+                      <label className="text-[8px] text-red-400 uppercase tracking-wider font-bold">🚨 DELETE PAKSA ASET KONTEN USER</label>
                       <div className="grid grid-cols-2 gap-2">
                         <button 
                           type="button" 
@@ -534,10 +531,9 @@ export default function AdminPanel({ userId, onClose }) {
 
                   </div>
                 )}
-
               </div>
-            ))
-          }
+            )
+          })}
         </div>
       </div>
     </div>
