@@ -120,6 +120,48 @@ export default function FitnessFoodMap({ onBackToHome }) {
   const currentFoodItem = FOOD_NUTRITION_BASE.find(f => f.id === selectedFoodId);
   const currentActivityItem = ACTIVITY_OPTIONS.find(a => a.value === parseFloat(activity)) || ACTIVITY_OPTIONS[3];
 
+  // 🔥 ANIMASI SKELETON PREMIUM HANYA JIKA KONEKSI/GPS USER LEMOT
+  if (geoLoading) {
+    return (
+      <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-36 animate-pulse">
+        {/* Skeleton Header Utama */}
+        <div className="flex items-center gap-3 bg-[#100E16] border border-[#211D2C] p-3 rounded-xl h-[58px]">
+          <div className="w-8 h-8 rounded-lg bg-[#211D2C] border border-[#312C42]" />
+          <div className="flex flex-col gap-1.5 flex-1">
+            <div className="w-32 h-3.5 bg-[#211D2C] rounded" />
+            <div className="w-24 h-2 bg-[#100E16] rounded" />
+          </div>
+        </div>
+
+        {/* Skeleton Tab Bar */}
+        <div className="flex bg-[#100E16] p-1 border border-[#211D2C] rounded-xl h-[46px]">
+          <div className="flex-1 bg-[#211D2C] rounded-lg m-0.5" />
+          <div className="flex-1 bg-[#100E16] rounded-lg m-0.5" />
+          <div className="flex-1 bg-[#100E16] rounded-lg m-0.5" />
+        </div>
+
+        {/* Skeleton Box Frame Map */}
+        <div className="w-full h-[220px] bg-[#100E16] border border-[#211D2C] rounded-2xl" />
+
+        {/* Skeleton Controls List */}
+        <div className="flex flex-col gap-3.5 mt-1">
+          <div className="flex flex-col gap-1.5">
+            <div className="w-20 h-2.5 bg-[#211D2C] rounded ml-1" />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="h-9 bg-[#100E16] border border-[#211D2C] rounded-xl" />
+              <div className="h-9 bg-[#100E16] border border-[#211D2C] rounded-xl" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="w-28 h-2.5 bg-[#211D2C] rounded ml-1" />
+            <div className="h-9 bg-[#100E16] border border-[#211D2C] rounded-xl" />
+            <div className="h-9 bg-[#100E16] border border-[#211D2C] rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full text-[#EDEAF6] px-4 pt-2 select-none flex flex-col gap-4 pb-36">
       
@@ -158,11 +200,6 @@ export default function FitnessFoodMap({ onBackToHome }) {
             <div className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 border-b-2 border-r-2 border-[#7C5CFF] z-40" />
             
             <div className="w-full h-[220px] bg-[#100E16] border border-[#211D2C] rounded-2xl overflow-hidden relative shadow-inner">
-              {geoLoading && (
-                <div className="absolute inset-0 bg-black z-20 flex flex-col items-center justify-center font-mono text-xs text-[#EDEAF6]/60">
-                  <Loader2 className="animate-spin text-[#7C5CFF]" size={20} />
-                </div>
-              )}
               {userCoords && (
                 <iframe 
                   title="Google Live Lock Radius" 
@@ -409,7 +446,8 @@ export default function FitnessFoodMap({ onBackToHome }) {
 
             {calResult && (
               <div className="mt-2 bg-black border border-[#211D2C] rounded-xl p-3 space-y-2 font-mono text-[10px]">
-                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Tingkat Metabolisme Basal (BMR):</span><span className="text-white font-black">{calResult.Bmr} kkal</span></div>
+                {/* 🔥 FIX BUG MINOR: Diubah dari calResult.Bmr ke calResult.bmr agar datanya ter-render valid */}
+                <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Tingkat Metabolisme Basal (BMR):</span><span className="text-white font-black">{calResult.bmr} kkal</span></div>
                 <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Maintenance Kalori (TDEE):</span><span className="text-purple-400 font-black">{calResult.maintenance} kkal</span></div>
                 <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Defisit (Turun Berat Badan):</span><span className="text-emerald-400 font-black">{calResult.loss} kkal</span></div>
                 <div className="flex justify-between items-center bg-[#100E16] p-2 border border-[#211D2C]/60 rounded-lg"><span>Surplus (Naik Berat Badan):</span><span className="text-amber-400 font-black">{calResult.gain} kkal</span></div>
