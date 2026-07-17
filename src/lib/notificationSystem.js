@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient.js';
 
-// 🔥 FIX UTAMA: Kunci VAPID baru yang sudah disinkronkan dengan backend Supabase Secrets
-const VAPID_PUBLIC_KEY = "BCUa0_jV9xDyNT20zb1Q_vHr9IHrs-ii5HDW-4bTDcVjfqvsta34hZXsqA2GLIGgQAUBm6ZYXZSy7QC9ltBcPJQ";
+// 🔥 FIX MUTLAK: Kunci VAPID baru yang 100% sinkron dengan Supabase Secrets & Bebas Spasi Cacat
+const VAPID_PUBLIC_KEY = "BE6PceD0R-DH03HnKaPC3kn6GYqJxk374DlCSsrTei3eRlH3UgJ-8jNisCMHf9YjdaGbQVlPlAqYAjmBuP5S6nI";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
