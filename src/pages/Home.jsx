@@ -445,10 +445,75 @@ export default function Home({ session }) {
     setDismissWarnPopup(true)
   }
 
+  // 🔥 SKELETON LOADING PREMIUM UNTUK MENCEGAH LAYOUT SHIFTING KASAR
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="font-mono text-text-dim text-sm animate-pulse">LOADING...</div>
+      <div className="min-h-screen bg-background flex flex-col justify-between select-none animate-pulse">
+        <div className="max-w-lg mx-auto pb-32 w-full flex-1">
+          {/* Skeleton Top Navbar */}
+          <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
+            <div className="flex items-center gap-3 h-full">
+              <div className="w-14 h-full bg-[#100E16]" />
+              <div className="w-36 h-4 bg-[#211D2C]" />
+            </div>
+            <div className="flex gap-2">
+              <div className="w-7 h-7 bg-[#100E16]" />
+              <div className="w-7 h-7 bg-[#100E16]" />
+            </div>
+          </div>
+
+          {/* Skeleton ProfileHeader */}
+          <div className="p-4 bg-[#0A0A0E] space-y-4" style={{ borderBottom: '1px solid #211D2C' }}>
+            <div className="w-full h-28 bg-[#100E16] border border-[#211D2C]" />
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-[#211D2C] border border-[#312C42]" />
+              <div className="flex-1 space-y-2">
+                <div className="w-28 h-4 bg-[#211D2C]" />
+                <div className="w-44 h-3 bg-[#100E16]" />
+              </div>
+            </div>
+          </div>
+
+          {/* Skeleton Daily Quest Container */}
+          <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
+            <div className="px-4 py-3 bg-[#0A0A0E]" style={{ borderBottom: '1px solid #211D2C' }}>
+              <div className="w-24 h-3 bg-[#211D2C]" />
+            </div>
+            <div className="p-3 flex flex-col gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-[#0A0A0E]" style={{ border: '1px solid #211D2C' }}>
+                  <div className="flex items-center gap-3 w-2/3">
+                    <div className="w-4 h-4 bg-[#211D2C] rounded-full" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="w-full h-3 bg-[#211D2C]" />
+                      <div className="w-2/3 h-2 bg-[#100E16]" />
+                    </div>
+                  </div>
+                  <div className="w-14 h-6 bg-[#100E16]" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Skeleton Achievements Container */}
+          <div className="mx-4 mb-4" style={{ border: '1px solid #211D2C' }}>
+            <div className="px-4 py-3 bg-[#0A0A0E]" style={{ borderBottom: '1px solid #211D2C' }}>
+              <div className="w-36 h-3 bg-[#211D2C]" />
+            </div>
+            <div className="p-3 grid grid-cols-3 gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-[#0A0A0E]" style={{ border: '1px solid #211D2C' }} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Skeleton Fixed Menu Dock */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 rounded-2xl max-w-[90%] w-max">
+          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
+          <div className="w-14 h-14 rounded-2xl bg-[#211D2C]" />
+          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
+        </div>
       </div>
     )
   }
@@ -476,7 +541,7 @@ export default function Home({ session }) {
         
         <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
           <div 
-            onMouseDown={handleAdminPressStart}
+            onClassName={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
             onMouseLeave={handleAdminPressEnd}
             onTouchStart={handleAdminPressStart}
@@ -756,7 +821,7 @@ export default function Home({ session }) {
               <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
               <button 
                 type="button" 
-                onClick={handleDismissWarning}
+                onClick={profile.warning_type === 'once' ? handleDismissWarning : () => setDismissWarnPopup(true)}
                 className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block shadow-[0_0_12px_rgba(124,92,255,0.3)]"
               >
                 IYA
