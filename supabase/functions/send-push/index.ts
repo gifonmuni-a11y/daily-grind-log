@@ -1,12 +1,10 @@
 import { serve } from "./server_lokal.ts";
 
-// 🔥 FIX UTAMA: Mengambil kunci secara dinamis dari Supabase Secrets (Anti-Mismatch & Aman)
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") || "";
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") || "";
+const VAPID_PUBLIC_KEY = (Deno.env.get("VAPID_PUBLIC_KEY") || "").trim().replace(/^"|"$/g, "");
+const VAPID_PRIVATE_KEY = (Deno.env.get("VAPID_PRIVATE_KEY") || "").trim().replace(/^"|"$/g, "");
 
-// Validasi darurat jika secrets belum terpasang di Supabase
 if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-  console.log("❌ EROR KRUSIAL: VAPID_PUBLIC_KEY atau VAPID_PRIVATE_KEY belum terdaftar di Supabase Secrets!");
+  console.log("❌ EROR KRUSIAL: VAPID keys belum terdaftar di Secrets!");
 }
 
 function b64ToUint8(b64: string): Uint8Array {
@@ -42,7 +40,8 @@ async function createVapidHeader(endpoint: string) {
   
   const key = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
   const signature = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(tokenContent));
-  return `vapid t=${tokenContent}.${uint8ToB64Url(new Uint8Array(signature))}, k=${VAPID_PUBLIC_KEY}`;
+  
+  return `VAPID t=${tokenContent}.${uint8ToB64Url(new Uint8Array(signature))}, k=${VAPID_PUBLIC_KEY}`;
 }
 
 async function encryptPayload(payloadData: any, userPkB64: string, userAuthB64: string) {
@@ -67,6 +66,8 @@ async function encryptPayload(payloadData: any, userPkB64: string, userAuthB64: 
   const ikmKey2 = await crypto.subtle.importKey("raw", ikm, "HKDF", false, ["deriveBits"]);
   
   const cek = new Uint8Array(await crypto.subtle.deriveBits({ name: "HKDF", hash: "SHA-256", salt: salt, info: new TextEncoder().encode("Content-Encoding: aes128gcm\0") }, ikmKey2, 128));
+  
+  // 🔥 FIX TYPO: "SHA-256-" berkurang tanda minusnya jadi "SHA-256" yang valid
   const nonce = new Uint8Array(await crypto.subtle.deriveBits({ name: "HKDF", hash: "SHA-256", salt: salt, info: new TextEncoder().encode("Content-Encoding: nonce\0") }, ikmKey2, 96));
   
   const payloadText = new TextEncoder().encode(JSON.stringify(payloadData));
@@ -87,7 +88,6 @@ async function encryptPayload(payloadData: any, userPkB64: string, userAuthB64: 
   return body;
 }
 
-// SERVER HANDLER DENGAN DETEKSI LOGS TOTAL
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -102,15 +102,7 @@ serve(async (req) => {
   try {
     const payload = await req.json();
     console.log("=== DATA WEBHOOK MASUK ===");
-    console.log("Isi Payload Mentah:", JSON.stringify(payload));
-
     const record = payload.record;
-    
-    if (!record) {
-      console.log("⚠️ Peringatan: Data 'record' kosong di dalam payload.");
-    } else {
-      console.log("🔍 Cek Data -> push_subscription ada:", !!record.push_subscription, " | warning_msg ada:", !!record.warning_msg, " | warning_img_url:", record.warning_img_url);
-    }
 
     if (record && record.push_subscription && record.warning_msg) {
       console.log("Memulai proses bongkar JSON token...");
@@ -143,8 +135,6 @@ serve(async (req) => {
         console.log("📊 Status Balasan Server Browser:", response.status);
         const resText = await response.text();
         console.log("💬 Detail Balasan Server:", resText);
-      } else {
-        console.log("⚠️ Gagal: Struktur di dalam push_subscription tidak memiliki endpoint/keys.");
       }
     }
 

@@ -322,64 +322,6 @@ export default function Home({ session }) {
     }
   }
 
-  // 🎯 DEFERED STREAK CHECK: Deteksi pecah streak dialihkan ke pasca splash screen ("MASUK SYSTEM")
-  useEffect(() => {
-    if (loading || showWelcomeCover) return
-    const storedStreak = parseInt(localStorage.getItem('dg_rpg_streak') || '-1', 10)
-    
-    if (storedStreak > 0 && streak === 0) {
-      const breakAudio = new Audio(AUDIO_URLS.others.pecahStreak)
-      breakAudio.play().catch(e => console.log(e))
-      // Memicu modal bertema kustom Manhwa
-      setShowStreakBreakModal(true)
-    }
-    localStorage.setItem('dg_rpg_streak', streak.toString())
-  }, [loading, streak, showWelcomeCover])
-
-  useEffect(() => {
-    if (loading) return
-
-    const currentIds = unlockedAchievements.map(a => a.id)
-
-    if (prevLevelRef.current === null) {
-      prevLevelRef.current = level
-      prevUnlockedIdsRef.current = currentIds
-      return
-    }
-
-    if (level > prevLevelRef.current) {
-      const oldTier = getRankTier(prevLevelRef.current)
-      const newTier = getRankTier(level)
-      if (newTier !== oldTier) {
-        setLevelUpData({ oldTier, newTier, newLevel: level })
-        setShowLevelUp(true)
-        
-        const tierKey = newTier.toUpperCase()
-        const tierAudioUrl = AUDIO_URLS.tiers[tierKey]
-        if (tierAudioUrl) {
-          new Audio(tierAudioUrl).play().catch(e => console.log(e))
-        }
-      }
-    }
-
-    prevLevelRef.current = level
-
-    if (prevUnlockedIdsRef.current) {
-      const newlyUnlocked = unlockedAchievements.find(a => !prevUnlockedIdsRef.current.includes(a.id))
-      if (newlyUnlocked) {
-        setActiveUnlockAchievement(newlyUnlocked)
-        setShowAchievementUnlock(true)
-        
-        const achKey = newlyUnlocked.title.toUpperCase()
-        const achAudioUrl = AUDIO_URLS.achievements[achKey]
-        if (achAudioUrl) {
-          new Audio(achAudioUrl).play().catch(e => console.log(e))
-        }
-      }
-      prevUnlockedIdsRef.current = currentIds
-    }
-  }, [loading, level, unlockedAchievements])
-
   function handleDeleteRequest(id) {
     setDeleteTargetId(id)
   }
@@ -445,7 +387,41 @@ export default function Home({ session }) {
     setDismissWarnPopup(true)
   }
 
-  // 🔥 SKELETON LOADING PREMIUM UNTUK MENCEGAH LAYOUT SHIFTING KASAR
+  // 1️⃣ OPTIMASI TIMING PERDANA: Splash Screen Cover harus jadi rajanya, tampil pertama tanpa diblokir skeleton
+  if (showWelcomeCover) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
+        <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-none p-5 flex flex-col gap-4 relative shadow-2xl text-center">
+          <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
+          <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
+          <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
+          <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
+          
+          <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
+            <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
+            <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
+            <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
+            <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
+            <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">SYSTEM SIAP</span>
+          </div>
+          
+          <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
+            Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+          </p>
+          
+          <button 
+            type="button" 
+            onClick={handleWelcomeInitialization}
+            className="w-full py-3 bg-[#7C5CFF] text-white font-black rounded-none uppercase tracking-wider text-xs shadow-lg hover:bg-[#6b52e0] font-mono animate-pulse"
+          >
+            MASUK SYSTEM
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // 2️⃣ KONDISI SKELETON: Hanya muncul setelah "MASUK SYSTEM" dan JIKA koneksi user lemot (loading masih true)
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-between select-none animate-pulse">
@@ -775,7 +751,6 @@ export default function Home({ session }) {
               <button 
                 type="button" 
                 onClick={() => {
-                  // 🛠️ FIX TERMINAL EXIT: Lepaskan interupsi navigasi, matikan modal, lalu buang history keluar
                   isExitingRef.current = true;
                   setShowBackConfirm(false);
                   window.close();
@@ -790,7 +765,7 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {profile?.status === 'warned' && !dismissWarnPopup && !showWelcomeCover && !isWarningExpired && !isWarningDismissedOnce && (
+      {profile?.status === 'warned' && !dismissWarnPopup && !isWarningExpired && !isWarningDismissedOnce && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
             
@@ -821,7 +796,7 @@ export default function Home({ session }) {
               <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#9A80FF]" />
               <button 
                 type="button" 
-                onClick={profile.warning_type === 'once' ? handleDismissWarning : () => setDismissWarnPopup(true)}
+                onClick={handleDismissWarning}
                 className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block shadow-[0_0_12px_rgba(124,92,255,0.3)]"
               >
                 IYA
@@ -831,7 +806,6 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {/* 🎯 MODAL OVERLAY STREAK HANCUR: Box informasi kustom pengganti native alert browser */}
       {showStreakBreakModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[300] flex items-center justify-center p-4 select-none animate-in fade-in zoom-in-95 duration-150">
           <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 font-mono text-center">
@@ -898,38 +872,6 @@ export default function Home({ session }) {
           userId={userId} 
           onClose={() => setShowAdminModal(false)} 
         />
-      )}
-
-      {showWelcomeCover && (
-        <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs rounded-none p-5 flex flex-col gap-4 relative shadow-2xl text-center">
-            <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
-            <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
-            <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-[3px] border-l-[3px] border-[#7C5CFF] z-[110]" />
-            <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-[3px] border-r-[3px] border-[#7C5CFF] z-[110]" />
-            
-            {/* 🛠️ FIX FRAME ACCENT: Ditambahkan 4 buah siku ungu absolute di dalam border header agar serasi */}
-            <div className="border border-[#211D2C] relative p-3 rounded-none bg-black/40 flex items-center justify-center gap-2">
-              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF]" />
-              <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF]" />
-              <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF]" />
-              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF]" />
-              <span className="font-display font-black text-xs uppercase tracking-wider text-[#7C5CFF]">SYSTEM SIAP</span>
-            </div>
-            
-            <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-              Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
-            </p>
-            
-            <button 
-              type="button" 
-              onClick={handleWelcomeInitialization}
-              className="w-full py-3 bg-[#7C5CFF] text-white font-black rounded-none uppercase tracking-wider text-xs shadow-lg hover:bg-[#6b52e0] font-mono animate-pulse"
-            >
-              MASUK SYSTEM
-            </button>
-          </div>
-        </div>
       )}
 
     </div>
