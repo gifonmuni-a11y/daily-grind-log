@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient.js';
 
-// KUNCI PUBLIC VAPID LU
-const VAPID_PUBLIC_KEY = "BAo4G1F5-EC8xFcYi7KVA0gx1Zq3bv3zrcHIFvY-xc2cvRJtzfCmOxp6q400rCm62lr4Txq04ccixvWRIaT1pFo";
+// 🔥 FIX UTAMA: Kunci VAPID baru yang sudah disinkronkan dengan backend Supabase Secrets
+const VAPID_PUBLIC_KEY = "BCUa0_jV9xDyNT20zb1Q_vHr9IHrs-ii5HDW-4bTDcVjfqvsta34hZXsqA2GLIGgQAUBm6ZYXZSy7QC9ltBcPJQ";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -32,7 +32,7 @@ export async function requestNotificationPermission() {
   try {
     const registration = await navigator.serviceWorker.ready;
     
-    // 🔥 FIX UTAMA: Paksa hapus token lama yang nyangkut di browser biar gak 403 Mismatch lagi!
+    // Paksa hapus token lama yang nyangkut di browser biar gak 403 Mismatch lagi!
     const existingSubscription = await registration.pushManager.getSubscription();
     if (existingSubscription) {
       await existingSubscription.unsubscribe();
@@ -46,7 +46,7 @@ export async function requestNotificationPermission() {
     };
     
     const subscription = await registration.pushManager.subscribe(subscribeOptions);
-    console.log("Token Push Perangkat Baru Sukses Dibuat.");
+    console.log("Token Push Perangkat Baru Sukses Dibuat:", JSON.stringify(subscription));
 
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
@@ -62,9 +62,11 @@ export async function requestNotificationPermission() {
       } else {
         console.log("🔥 BERHASIL! Token baru resmi masuk database.");
       }
+    } else {
+      console.warn("Sesi user tidak ditemukan. Gagal sinkronisasi token.");
     }
   } catch (err) {
-    console.error("Gagal memproses pendaftaran Web Push Token PWA:", err);
+    console.error("Gagal memproses pendaftaran Web Push Token PWA:", err.message);
   }
 
   return true;
