@@ -6,7 +6,7 @@ export function calcLevel(totalExp) {
   while (true) {
     // RUMUS BARU: Disesuaikan agar Level 80 tercapai dalam ~1 tahun (365 hari)
     const maxExpThisLevel = Math.round(50 + (level * 15)) 
-    
+
     if (totalExp - expSpentOnPrevLevels < maxExpThisLevel) {
       return {
         level,

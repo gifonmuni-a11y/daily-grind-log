@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { X, Loader2, Upload, ChevronDown, Calendar, ChevronLeft, ChevronRight, Move, Sparkles } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 
-export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onSaved }) {
+export default function LogModal({ userId, maxDayNumber, editEntry, draftData, onClose, onSaved }) {
   const [loading, setLoading] = useState(false)
   const [dayNumber, setDayNumber] = useState(maxDayNumber + 1)
   
@@ -75,8 +75,12 @@ export default function LogModal({ userId, maxDayNumber, editEntry, onClose, onS
           setCalendarMonth(parsedDate.getMonth());
         }
       }
+    } else if (draftData) {
+      // 🎯 Nangkep data lemparan dari QuestBoard
+      setTitle(draftData.title || '')
+      setNote(draftData.note || '')
     }
-  }, [editEntry])
+  }, [editEntry, draftData])
 
   const getDisplayDateLabel = (dateStr) => {
     const d = new Date(dateStr);

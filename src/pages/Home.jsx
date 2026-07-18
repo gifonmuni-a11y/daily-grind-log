@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map, AlertTriangle } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map, AlertTriangle, Swords } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel, getRankTier, getEffectiveTotalExp } from '../lib/expSystem'
@@ -30,6 +30,7 @@ import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
 import AdminPanel from '../components/AdminPanel'
+import QuestBoard from '../components/QuestBoard'
 import { requestNotificationPermission, sendSystemNotification } from '../lib/notificationSystem'
 
 // 🎯 DIRECT SUPABASE STORAGE AUDIO URL MAPPER
@@ -121,7 +122,10 @@ export default function Home({ session }) {
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
   const [showCompanion, setShowCompanion] = useState(false)
+  
   const [editEntry, setEditEntry] = useState(null)
+  const [draftData, setDraftData] = useState(null) // 🎯 STATE BARU: Penangkap data QuestBoard
+
   const [seeding, setSeeding] = useState(false)
   const [questClaims, setQuestClaims] = useState([])
   const [claimingId, setClaimingId] = useState(null)
@@ -149,6 +153,13 @@ export default function Home({ session }) {
 
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
+
+  // 🎯 FUNGSI BARU: Nangkep Evaluasi dari QuestBoard ke LogModal
+  const handleFinalizeBattle = (data) => {
+    setDraftData(data)
+    setEditEntry(null)
+    setShowLogModal(true)
+  }
 
   useEffect(() => {
     window.history.pushState(null, null, window.location.pathname);
@@ -343,6 +354,7 @@ export default function Home({ session }) {
 
   function handleNewLog() {
     setEditEntry(null)
+    setDraftData(null)
     setShowLogModal(true)
   }
 
@@ -633,10 +645,25 @@ export default function Home({ session }) {
           </>
         )}
 
+        {/* 🎯 TAB BARU: QUESTBOARD */}
+        {activeTab === 'battle' && <QuestBoard onFinalizeBattle={handleFinalizeBattle} />}
+
         {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
       </div>
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[90%] w-max">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-4 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[95%] w-max">
+        
+        {/* 🎯 TOMBOL BARU DI DOCK: SWORDS (QUESTBOARD) */}
+        <button 
+          type="button" 
+          onClick={() => setActiveTab(activeTab === 'battle' ? 'grind' : 'battle')} 
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
+            activeTab === 'battle' ? 'bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]' : 'bg-[#211D2C] text-white border border-[#312C42] hover:bg-[#7C5CFF]/20'
+          }`}
+        >
+          <Swords size={22} className={activeTab === 'battle' ? 'animate-pulse' : ''} />
+        </button>
+
         <button 
           type="button" 
           onClick={handleNewLog} 
@@ -845,12 +872,14 @@ export default function Home({ session }) {
 
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
       
+      {/* 🎯 LOG MODAL UPDATE UNTUK NANGKEP DATA DRAFT */}
       {showLogModal && (
         <LogModal 
           userId={userId} 
           maxDayNumber={maxDayNumber} 
           editEntry={editEntry} 
-          onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
+          draftData={draftData}
+          onClose={() => { setShowLogModal(false); setEditEntry(null); setDraftData(null) }} 
           onSaved={() => {
             const updateAudio = new Audio(AUDIO_URLS.others.updateLog)
             updateAudio.play().catch(e => console.log(e))
