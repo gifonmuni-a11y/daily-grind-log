@@ -140,8 +140,8 @@ export default function FitnessFoodMap({ onBackToHome }) {
           <div className="flex-1 bg-[#100E16] rounded-lg m-0.5" />
         </div>
 
-        {/* Skeleton Box Frame Map */}
-        <div className="w-full h-[220px] bg-[#100E16] border border-[#211D2C] rounded-2xl" />
+        {/* Skeleton Box Frame Map (FIXED: Menghilangkan border penyebab kedip putih) */}
+        <div className="w-full h-[220px] bg-[#14121C] rounded-2xl relative overflow-hidden" />
 
         {/* Skeleton Controls List */}
         <div className="flex flex-col gap-3.5 mt-1">
