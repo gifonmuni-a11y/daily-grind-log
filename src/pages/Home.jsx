@@ -30,7 +30,7 @@ import LevelUpModal from '../components/LevelUpModal'
 import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
 import AdminPanel from '../components/AdminPanel'
-import QuestBoard from '../components/QuestBoard'
+import JadwalLatihan from '../components/JadwalLatihan'
 import { requestNotificationPermission, sendSystemNotification } from '../lib/notificationSystem'
 
 // 🎯 DIRECT SUPABASE STORAGE AUDIO URL MAPPER
@@ -123,7 +123,6 @@ export default function Home({ session }) {
   const [showCompanion, setShowCompanion] = useState(false)
   
   const [editEntry, setEditEntry] = useState(null)
-  const [draftData, setDraftData] = useState(null) // 🎯 STATE BARU: Penangkap data QuestBoard
 
   const [seeding, setSeeding] = useState(false)
   const [questClaims, setQuestClaims] = useState([])
@@ -152,13 +151,6 @@ export default function Home({ session }) {
 
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
-
-  // 🎯 FUNGSI BARU: Nangkep Evaluasi dari QuestBoard ke LogModal
-  const handleFinalizeBattle = (data) => {
-    setDraftData(data)
-    setEditEntry(null)
-    setShowLogModal(true)
-  }
 
   useEffect(() => {
     window.history.pushState(null, null, window.location.pathname);
@@ -353,7 +345,6 @@ export default function Home({ session }) {
 
   function handleNewLog() {
     setEditEntry(null)
-    setDraftData(null)
     setShowLogModal(true)
   }
 
@@ -644,12 +635,9 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* 🎯 TAB BARU: QUESTBOARD (Sudah di-update dengan onBack) */}
+        {/* 🎯 TAB BARU: JADWAL LATIHAN */}
         {activeTab === 'battle' && (
-          <QuestBoard 
-            onFinalizeBattle={handleFinalizeBattle} 
-            onBack={() => setActiveTab('grind')} 
-          />
+          <JadwalLatihan onBack={() => setActiveTab('grind')} />
         )}
 
         {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
@@ -657,7 +645,7 @@ export default function Home({ session }) {
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-4 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[95%] w-max">
         
-        {/* 🎯 TOMBOL BARU DI DOCK: SWORDS (QUESTBOARD) */}
+        {/* 🎯 TOMBOL BARU DI DOCK: SWORDS (JADWAL LATIHAN) */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'battle' ? 'grind' : 'battle')} 
@@ -876,14 +864,12 @@ export default function Home({ session }) {
 
       {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
       
-      {/* 🎯 LOG MODAL UPDATE UNTUK NANGKEP DATA DRAFT */}
       {showLogModal && (
         <LogModal 
           userId={userId} 
           maxDayNumber={maxDayNumber} 
           editEntry={editEntry} 
-          draftData={draftData}
-          onClose={() => { setShowLogModal(false); setEditEntry(null); setDraftData(null) }} 
+          onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
           onSaved={() => {
             const updateAudio = new Audio(AUDIO_URLS.others.updateLog)
             updateAudio.play().catch(e => console.log(e))
