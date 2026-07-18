@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Plus, Trash2, ChevronDown, BookOpen, X, Play, DownloadCloud, Target, Shield, Activity, HardDrive } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, BookOpen, X, DownloadCloud, Target, Shield, HardDrive } from 'lucide-react';
 
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 const GENERATED_RANGE = Array.from({ length: 100 }, (_, i) => i + 1);
@@ -16,7 +16,6 @@ const EXERCISE_DATABASE = [
   'Latihan Kustom'
 ];
 
-// DATA TERIALISASI: TERPISAH ANATOMI & ALAT
 const ANATOMY_AREAS = [
   { id: 'Chest', name: 'DADA / PUSH', img: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=400&q=80' },
   { id: 'Back', name: 'PUNGGUNG / PULL', img: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=400&q=80' },
@@ -35,13 +34,13 @@ const EQUIPMENT_AREAS = [
   { id: 'Hybrid', name: 'HYBRID SYSTEM', img: 'https://images.unsplash.com/photo-1544033527-b192daee1f5b?auto=format&fit=crop&w=400&q=80' }
 ];
 
-// Komponen Visual Sudut (Manhwa System Corner Brackets)
+// Siku ungu aja, box abu-abu
 const CornerBrackets = () => (
   <>
-    <div className="absolute -top-[1px] -left-[1px] w-2.5 h-2.5 border-t-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
-    <div className="absolute -top-[1px] -right-[1px] w-2.5 h-2.5 border-t-2 border-r-2 border-[#7C5CFF] pointer-events-none z-10" />
-    <div className="absolute -bottom-[1px] -left-[1px] w-2.5 h-2.5 border-b-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
-    <div className="absolute -bottom-[1px] -right-[1px] w-2.5 h-2.5 border-b-2 border-r-2 border-[#7C5CFF] pointer-events-none z-10" />
+    <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
+    <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF] pointer-events-none z-10" />
+    <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
+    <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF] pointer-events-none z-10" />
   </>
 );
 
@@ -50,21 +49,20 @@ export default function JadwalLatihan({ onBack }) {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [guideTab, setGuideTab] = useState('fullbody');
   
-  // States Modal Kalender
   const [showCalendarAppPrompt, setShowCalendarAppPrompt] = useState(false);
+  const [customAlert, setCustomAlert] = useState({ isOpen: false, message: '' });
 
   const [schedule, setSchedule] = useState(() => {
     return DAYS.reduce((acc, day) => ({ 
       ...acc, 
-      [day]: { focus: 'FullBody', equip: 'Hybrid', items: [] } 
+      [day]: { focus: 'Chest', equip: 'Barbell', items: [] } 
     }), {});
   });
   
   const [activeDay, setActiveDay] = useState('Senin');
   const [isAdding, setIsAdding] = useState(false);
   
-  // Custom Dropdown States (NO NATIVE SELECT)
-  const [openDropdown, setOpenDropdown] = useState(null); // 'exercise', 'kg', 'reps', null
+  const [openDropdown, setOpenDropdown] = useState(null); 
   const [selectedExercise, setSelectedExercise] = useState('');
   const [customExerciseText, setCustomExerciseText] = useState('');
   const [selectedKg, setSelectedKg] = useState('40');
@@ -110,9 +108,10 @@ export default function JadwalLatihan({ onBack }) {
     }
   }, [schedule, isLoading]);
 
-  // LOGIC AUTO-REKAP (Membaca Kg & Reps dari teks)
+  // LOGIKA AUTO-REKAP (SUDAH TERMASUK REPETISI)
   const recapData = useMemo(() => {
     let totalWeeklyVolume = 0;
+    let totalWeeklyReps = 0;
     let totalItems = 0;
 
     DAYS.forEach(day => {
@@ -123,14 +122,17 @@ export default function JadwalLatihan({ onBack }) {
           const kg = parseInt(match[1], 10);
           const reps = parseInt(match[2], 10);
           totalWeeklyVolume += (kg * reps);
+          totalWeeklyReps += reps;
         }
       });
     });
 
     return {
       items: totalItems,
-      weekly: totalWeeklyVolume,
-      monthly: totalWeeklyVolume * 4
+      weeklyKg: totalWeeklyVolume,
+      monthlyKg: totalWeeklyVolume * 4,
+      weeklyReps: totalWeeklyReps,
+      monthlyReps: totalWeeklyReps * 4
     };
   }, [schedule]);
 
@@ -169,15 +171,42 @@ export default function JadwalLatihan({ onBack }) {
     }));
   };
 
-  const executeCloudRouting = () => {
+  // LOGIKA PINTAR CLOUD ROUTING (HARIAN VS MINGGUAN)
+  const executeCloudRouting = (mode) => {
     setShowCalendarAppPrompt(false);
-    const dayData = schedule[activeDay];
-    if (dayData.items.length === 0) return;
 
-    const title = encodeURIComponent(`[GRIND LOG] HARI LATIHAN`);
-    const details = encodeURIComponent(dayData.items.map((it, idx) => `${idx + 1}. ${it.text}`).join('\n'));
-    
-    // Direct Intent Web Cal
+    let title = '';
+    let details = '';
+
+    if (mode === 'daily') {
+      const dayData = schedule[activeDay];
+      if (dayData.items.length === 0) {
+        setCustomAlert({ isOpen: true, message: `JADWAL HARI ${activeDay.toUpperCase()} KOSONG! ISI DULU SEBELUM SINKRONISASI.` });
+        return;
+      }
+      title = encodeURIComponent(`[GRIND LOG] HARI ${activeDay.toUpperCase()}`);
+      details = encodeURIComponent(dayData.items.map((it, idx) => `${idx + 1}. ${it.text}`).join('\n'));
+    } 
+    else if (mode === 'weekly') {
+      title = encodeURIComponent(`[GRIND LOG] JADWAL 1 MINGGU FULL`);
+      let fullDetails = [];
+      
+      DAYS.forEach(day => {
+        const dayItems = schedule[day].items;
+        if (dayItems.length > 0) {
+          fullDetails.push(`=== ${day.toUpperCase()} ===`);
+          dayItems.forEach((it, idx) => fullDetails.push(`${idx + 1}. ${it.text}`));
+          fullDetails.push(''); // Baris kosong pemisah
+        }
+      });
+
+      if (fullDetails.length === 0) {
+        setCustomAlert({ isOpen: true, message: 'SELURUH JADWAL MINGGUAN KOSONG! ISI MINIMAL 1 HARI SEBELUM SINKRONISASI.' });
+        return;
+      }
+      details = encodeURIComponent(fullDetails.join('\n'));
+    }
+
     const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&recur=RRULE:FREQ=WEEKLY`;
     window.open(gCalUrl, '_blank');
   };
@@ -215,7 +244,7 @@ export default function JadwalLatihan({ onBack }) {
         <button
           type="button"
           onClick={() => setShowGuideModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-[#211D2C] border border-[#312C42] text-[#A28EFF] text-[10px] font-black uppercase tracking-wider active:scale-95 transition-all relative"
+          className="flex items-center gap-1.5 px-3 py-2 bg-[#14121C] border border-[#312C42] text-[#A28EFF] text-[10px] font-black uppercase tracking-wider active:scale-95 transition-all relative"
         >
           <BookOpen size={12} /> PANDUAN
         </button>
@@ -228,22 +257,23 @@ export default function JadwalLatihan({ onBack }) {
           [INTEGRASI ALARM KALENDER HP]
         </span>
         <p className="text-[9px] text-[#EDEAF6]/50 uppercase leading-relaxed tracking-wide">
-          Sistem akan mengirimkan jadwal hari {activeDay} ke aplikasi Kalender bawaan perangkat sebagai rutinitas berulang mingguan.
+          Atur jadwal alarm olahraga Anda. Pilih untuk sinkronisasi per hari atau kirim seluruh jadwal mingguan sekaligus.
         </p>
         <button
           type="button"
           onClick={() => setShowCalendarAppPrompt(true)}
-          className="w-full mt-1 py-3 bg-[#7C5CFF] text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-[0_0_15px_rgba(124,92,255,0.2)] flex items-center justify-center gap-1.5 relative border border-[#9E85FF]"
+          className="w-full mt-1 py-3 bg-[#211D2C] text-[#7C5CFF] font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 relative border border-[#312C42]"
         >
+          <CornerBrackets />
           <HardDrive size={13} /> HUBUNGKAN KE KALENDER
         </button>
       </div>
 
-      {/* AUTO-REKAP PROGRESS SYSTEM */}
+      {/* AUTO-REKAP PROGRESS SYSTEM LENGKAP (KG & REPS) */}
       <div className="bg-[#100E16] border border-[#211D2C] p-4 shadow-lg relative flex flex-col gap-3">
         <CornerBrackets />
         <span className="text-[10px] text-[#7C5CFF] font-bold uppercase tracking-wider border-b border-[#211D2C] pb-2">
-          [REKAPITULASI PROYEKSI VOLUME LATIHAN]
+          [REKAP PROYEKSI BEBAN KERJA]
         </span>
         
         {recapData.items === 0 ? (
@@ -252,15 +282,30 @@ export default function JadwalLatihan({ onBack }) {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col bg-black/40 border border-[#211D2C] p-2.5 relative">
-              <CornerBrackets />
-              <span className="text-[8px] text-[#EDEAF6]/50 uppercase font-bold">TOTAL VOLUME / MINGGU</span>
-              <span className="text-sm font-black text-white">{recapData.weekly.toLocaleString()} <span className="text-[9px] text-[#7C5CFF]">KG</span></span>
+            {/* Rekap Mingguan */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[9px] text-[#EDEAF6]/50 uppercase font-bold text-center">TOTAL MINGGUAN</span>
+              <div className="flex flex-col bg-black/40 border border-[#211D2C] p-2 relative text-center">
+                <CornerBrackets />
+                <span className="text-xs font-black text-white">{recapData.weeklyKg.toLocaleString()} <span className="text-[8px] text-[#7C5CFF]">KG</span></span>
+              </div>
+              <div className="flex flex-col bg-black/40 border border-[#211D2C] p-2 relative text-center">
+                <CornerBrackets />
+                <span className="text-xs font-black text-white">{recapData.weeklyReps.toLocaleString()} <span className="text-[8px] text-[#7C5CFF]">REPS</span></span>
+              </div>
             </div>
-            <div className="flex flex-col bg-[#7C5CFF]/10 border border-[#7C5CFF]/30 p-2.5 relative">
-              <CornerBrackets />
-              <span className="text-[8px] text-[#7C5CFF] uppercase font-bold">PROYEKSI / BULAN</span>
-              <span className="text-sm font-black text-[#7C5CFF]">{recapData.monthly.toLocaleString()} <span className="text-[9px] text-white">KG</span></span>
+            
+            {/* Rekap Bulanan */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[9px] text-[#7C5CFF] uppercase font-bold text-center">PROYEKSI BULANAN</span>
+              <div className="flex flex-col bg-[#7C5CFF]/10 border border-[#312C42] p-2 relative text-center">
+                <CornerBrackets />
+                <span className="text-xs font-black text-[#7C5CFF]">{recapData.monthlyKg.toLocaleString()} <span className="text-[8px] text-white">KG</span></span>
+              </div>
+              <div className="flex flex-col bg-[#7C5CFF]/10 border border-[#312C42] p-2 relative text-center">
+                <CornerBrackets />
+                <span className="text-xs font-black text-[#7C5CFF]">{recapData.monthlyReps.toLocaleString()} <span className="text-[8px] text-white">REPS</span></span>
+              </div>
             </div>
           </div>
         )}
@@ -277,19 +322,19 @@ export default function JadwalLatihan({ onBack }) {
               onClick={() => { setActiveDay(day); setIsAdding(false); setOpenDropdown(null); }}
               className={`px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-all relative flex-shrink-0 flex items-center gap-2 border ${
                 isActive 
-                  ? 'bg-[#7C5CFF] text-white border-[#9E85FF] shadow-[0_0_10px_rgba(124,92,255,0.4)]' 
+                  ? 'bg-[#211D2C] text-white border-[#312C42]' 
                   : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/40 hover:bg-[#211D2C]'
               }`}
             >
               {isActive && <CornerBrackets />}
               {day}
-              {hasItems && <span className={`w-1.5 h-1.5 ${isActive ? 'bg-white' : 'bg-[#7C5CFF]'}`} />}
+              {hasItems && <span className={`w-1.5 h-1.5 ${isActive ? 'bg-[#7C5CFF]' : 'bg-[#312C42]'}`} />}
             </button>
           )
         })}
       </div>
 
-      {/* MATRIKS GAMBAR KATEGORI */}
+      {/* MATRIKS KATEGORI */}
       <div className="flex flex-col gap-4">
         {/* SECTION 1: ANATOMI OTOT */}
         <div className="flex flex-col gap-2 bg-[#100E16] border border-[#211D2C] p-3 relative">
@@ -305,13 +350,13 @@ export default function JadwalLatihan({ onBack }) {
                   key={area.id}
                   type="button"
                   onClick={() => handleSetData('focus', area.id)}
-                  className={`group h-16 relative overflow-hidden text-left font-mono border transition-all duration-200 ${isTarget ? 'border-[#7C5CFF] shadow-[0_0_10px_rgba(124,92,255,0.2)]' : 'border-[#211D2C] opacity-40 hover:opacity-75'}`}
+                  className={`group h-16 relative overflow-hidden text-left font-mono border transition-all duration-200 ${isTarget ? 'border-[#312C42]' : 'border-[#211D2C] opacity-40 hover:opacity-75'}`}
                 >
                   {isTarget && <CornerBrackets />}
                   <img src={area.img} alt={area.name} className="absolute inset-0 w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0" loading="lazy" />
                   <div className={`absolute inset-0 transition-opacity duration-300 ${isTarget ? 'bg-gradient-to-r from-[#0A0A0E] via-[#0A0A0E]/80 to-transparent' : 'bg-black/80'}`} />
                   <div className="absolute inset-y-0 left-2 flex flex-col justify-center">
-                    <span className={`text-[8px] font-black uppercase tracking-widest ${isTarget ? 'text-white' : 'text-[#EDEAF6]/50'}`}>{area.name}</span>
+                    <span className={`text-[8px] font-black uppercase tracking-widest ${isTarget ? 'text-[#7C5CFF]' : 'text-[#EDEAF6]/50'}`}>{area.name}</span>
                   </div>
                 </button>
               )
@@ -319,7 +364,7 @@ export default function JadwalLatihan({ onBack }) {
           </div>
         </div>
 
-        {/* SECTION 2: PERALATAN ALAT GYM */}
+        {/* SECTION 2: PERALATAN GYM */}
         <div className="flex flex-col gap-2 bg-[#100E16] border border-[#211D2C] p-3 relative">
           <CornerBrackets />
           <span className="text-[9px] uppercase font-bold text-[#7C5CFF] tracking-widest flex items-center gap-1 border-b border-[#211D2C] pb-2">
@@ -333,13 +378,13 @@ export default function JadwalLatihan({ onBack }) {
                   key={area.id}
                   type="button"
                   onClick={() => handleSetData('equip', area.id)}
-                  className={`group h-16 relative overflow-hidden text-left font-mono border transition-all duration-200 ${isTarget ? 'border-[#7C5CFF] shadow-[0_0_10px_rgba(124,92,255,0.2)]' : 'border-[#211D2C] opacity-40 hover:opacity-75'}`}
+                  className={`group h-16 relative overflow-hidden text-left font-mono border transition-all duration-200 ${isTarget ? 'border-[#312C42]' : 'border-[#211D2C] opacity-40 hover:opacity-75'}`}
                 >
                   {isTarget && <CornerBrackets />}
                   <img src={area.img} alt={area.name} className="absolute inset-0 w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0" loading="lazy" />
                   <div className={`absolute inset-0 transition-opacity duration-300 ${isTarget ? 'bg-gradient-to-r from-[#0A0A0E] via-[#0A0A0E]/80 to-transparent' : 'bg-black/80'}`} />
                   <div className="absolute inset-y-0 left-2 flex flex-col justify-center">
-                    <span className={`text-[8px] font-black uppercase tracking-widest ${isTarget ? 'text-white' : 'text-[#EDEAF6]/50'}`}>{area.name}</span>
+                    <span className={`text-[8px] font-black uppercase tracking-widest ${isTarget ? 'text-[#7C5CFF]' : 'text-[#EDEAF6]/50'}`}>{area.name}</span>
                   </div>
                 </button>
               )
@@ -348,7 +393,7 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       </div>
 
-      {/* PANEL TARGET AKTIVITAS - HILANGKAN OVERFLOW HIDDEN BIAR DROPDOWN BISA KELUAR */}
+      {/* PANEL DAFTAR AKTIVITAS - OVERFLOW DIBUKA BIAR DROPDOWN GAK TERPOTONG */}
       <div className="bg-[#100E16] border border-[#211D2C] flex flex-col relative shadow-md min-h-[220px]">
         <CornerBrackets />
         <div className="bg-[#14121C] border-b border-[#211D2C] p-3 flex justify-between items-center relative z-10">
@@ -365,30 +410,29 @@ export default function JadwalLatihan({ onBack }) {
             </div>
           ) : (
             currentDayData.items.map((item, idx) => (
-              <div key={item.id} className="flex items-center justify-between p-3 bg-black/40 border border-[#211D2C] relative hover:border-[#7C5CFF]/50 transition-colors">
+              <div key={item.id} className="flex items-center justify-between p-3 bg-black/40 border border-[#211D2C] relative transition-colors">
                 <CornerBrackets />
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-[#7C5CFF] text-[10px] font-black">#{idx + 1}</span>
                   <span className="text-[#EDEAF6] text-xs font-bold uppercase tracking-wide truncate">{item.text}</span>
                 </div>
-                <button type="button" onClick={() => handleDeleteItem(activeDay, item.id)} className="text-[#EDEAF6]/20 hover:text-red-400 p-1.5 transition-colors">
+                <button type="button" onClick={() => handleDeleteItem(activeDay, item.id)} className="text-[#EDEAF6]/20 hover:text-red-400 p-1.5 transition-colors z-10">
                   <Trash2 size={14} />
                 </button>
               </div>
             ))
           )}
 
-          {/* DYNAMIC FORM ROW INPUT DENGAN CUSTOM UI DROPDOWN */}
+          {/* DYNAMIC FORM DENGAN BUG DROPDOWN DIPERBAIKI (BORDER ABU-ABU) */}
           {isAdding ? (
             <form onSubmit={handleAddItem} className="mt-auto pt-4 flex flex-col gap-4 border-t border-[#211D2C] relative z-20">
               
-              {/* Dropdown 1: Jenis Gerakan */}
               <div className="relative">
                 <span className="text-[8px] font-black text-[#EDEAF6]/40 uppercase tracking-widest mb-1.5 block">KATEGORI GERAKAN:</span>
                 <button
                   type="button"
                   onClick={() => setOpenDropdown(openDropdown === 'exercise' ? null : 'exercise')}
-                  className="w-full bg-black border border-[#7C5CFF] text-white text-xs p-3.5 flex items-center justify-between text-left font-mono relative"
+                  className="w-full bg-black border border-[#312C42] text-white text-xs p-3.5 flex items-center justify-between text-left font-mono relative"
                 >
                   <CornerBrackets />
                   <span className="font-bold uppercase text-[#EDEAF6] truncate pr-4">{selectedExercise || 'PILIH PROTOKOL GERAKAN...'}</span>
@@ -396,14 +440,14 @@ export default function JadwalLatihan({ onBack }) {
                 </button>
 
                 {openDropdown === 'exercise' && (
-                  <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#7C5CFF] max-h-56 overflow-y-auto z-[100] shadow-[0_15px_40px_rgba(0,0,0,0.8)] flex flex-col">
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#312C42] max-h-56 overflow-y-auto z-[100] shadow-[0_15px_40px_rgba(0,0,0,0.8)] flex flex-col relative">
                     <CornerBrackets />
                     {EXERCISE_DATABASE.map(ex => (
                       <button
                         key={ex}
                         type="button"
                         onClick={() => { setSelectedExercise(ex); setOpenDropdown(null); }}
-                        className={`w-full text-left px-4 py-3 text-[10px] font-mono uppercase font-bold border-b border-[#211D2C] ${selectedExercise === ex ? 'bg-[#7C5CFF] text-white' : 'text-[#EDEAF6]/70 hover:bg-[#211D2C] hover:text-[#7C5CFF]'}`}
+                        className={`w-full text-left px-4 py-3 text-[10px] font-mono uppercase font-bold border-b border-[#211D2C] ${selectedExercise === ex ? 'bg-[#211D2C] text-[#7C5CFF]' : 'text-[#EDEAF6]/70 hover:bg-[#211D2C]'}`}
                       >
                         {ex}
                       </button>
@@ -421,13 +465,12 @@ export default function JadwalLatihan({ onBack }) {
                     placeholder="INPUT MANUAL NAMA GERAKAN..."
                     value={customExerciseText}
                     onChange={(e) => setCustomExerciseText(e.target.value)}
-                    className="w-full bg-black border border-[#7C5CFF] text-white text-xs p-3.5 outline-none font-mono uppercase font-bold"
+                    className="w-full bg-black border border-[#312C42] text-white text-xs p-3.5 outline-none font-mono uppercase font-bold"
                     required
                   />
                 </div>
               )}
 
-              {/* 🎯 CUSTOM DROPDOWN UNTUK KG & REPS */}
               <div className="grid grid-cols-2 gap-3 relative z-10">
                 {/* Selector KG */}
                 <div className="relative">
@@ -435,21 +478,21 @@ export default function JadwalLatihan({ onBack }) {
                   <button
                     type="button"
                     onClick={() => setOpenDropdown(openDropdown === 'kg' ? null : 'kg')}
-                    className="w-full bg-black border border-[#7C5CFF]/60 text-white font-bold text-xs p-3.5 flex items-center justify-between font-mono relative"
+                    className="w-full bg-black border border-[#312C42] text-white font-bold text-xs p-3.5 flex items-center justify-between font-mono relative"
                   >
                     <CornerBrackets />
                     <span>{selectedKg} KG</span>
                     <ChevronDown size={14} className="text-[#7C5CFF]" />
                   </button>
                   {openDropdown === 'kg' && (
-                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#7C5CFF] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl">
+                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#312C42] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl relative">
                       <CornerBrackets />
                       {GENERATED_RANGE.map(val => (
                         <button
                           key={`kg-${val}`}
                           type="button"
                           onClick={() => { setSelectedKg(val.toString()); setOpenDropdown(null); }}
-                          className={`w-full text-left px-4 py-2.5 text-[10px] font-mono font-bold uppercase border-b border-[#211D2C] ${selectedKg === val.toString() ? 'bg-[#7C5CFF] text-white' : 'text-[#EDEAF6]/70 hover:bg-[#211D2C]'}`}
+                          className={`w-full text-left px-4 py-2.5 text-[10px] font-mono font-bold uppercase border-b border-[#211D2C] ${selectedKg === val.toString() ? 'bg-[#211D2C] text-[#7C5CFF]' : 'text-[#EDEAF6]/70 hover:bg-[#211D2C]'}`}
                         >
                           {val} KG
                         </button>
@@ -464,21 +507,21 @@ export default function JadwalLatihan({ onBack }) {
                   <button
                     type="button"
                     onClick={() => setOpenDropdown(openDropdown === 'reps' ? null : 'reps')}
-                    className="w-full bg-black border border-[#7C5CFF]/60 text-white font-bold text-xs p-3.5 flex items-center justify-between font-mono relative"
+                    className="w-full bg-black border border-[#312C42] text-white font-bold text-xs p-3.5 flex items-center justify-between font-mono relative"
                   >
                     <CornerBrackets />
                     <span>{selectedReps} REPS</span>
                     <ChevronDown size={14} className="text-[#7C5CFF]" />
                   </button>
                   {openDropdown === 'reps' && (
-                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#7C5CFF] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl">
+                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#312C42] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl relative">
                       <CornerBrackets />
                       {GENERATED_RANGE.map(val => (
                         <button
                           key={`rep-${val}`}
                           type="button"
                           onClick={() => { setSelectedReps(val.toString()); setOpenDropdown(null); }}
-                          className={`w-full text-left px-4 py-2.5 text-[10px] font-mono font-bold uppercase border-b border-[#211D2C] ${selectedReps === val.toString() ? 'bg-[#7C5CFF] text-white' : 'text-[#EDEAF6]/70 hover:bg-[#211D2C]'}`}
+                          className={`w-full text-left px-4 py-2.5 text-[10px] font-mono font-bold uppercase border-b border-[#211D2C] ${selectedReps === val.toString() ? 'bg-[#211D2C] text-[#7C5CFF]' : 'text-[#EDEAF6]/70 hover:bg-[#211D2C]'}`}
                         >
                           {val} REPETISI
                         </button>
@@ -490,10 +533,10 @@ export default function JadwalLatihan({ onBack }) {
 
               {/* ACTION BUTTONS */}
               <div className="grid grid-cols-2 gap-3 mt-2">
-                <button type="button" onClick={() => { setIsAdding(false); setOpenDropdown(null); }} className="py-3 bg-transparent border border-[#211D2C] text-xs font-black text-[#EDEAF6]/70 hover:text-white uppercase relative">
+                <button type="button" onClick={() => { setIsAdding(false); setOpenDropdown(null); }} className="py-3 bg-transparent border border-[#312C42] text-xs font-black text-[#EDEAF6]/70 hover:text-white uppercase relative">
                   <CornerBrackets /> BATAL
                 </button>
-                <button type="submit" className="py-3 bg-[#7C5CFF] text-white text-xs font-black uppercase shadow-[0_0_15px_rgba(124,92,255,0.3)] relative">
+                <button type="submit" className="py-3 bg-[#211D2C] text-[#7C5CFF] text-xs font-black uppercase relative border border-[#312C42]">
                   <CornerBrackets /> SIMPAN
                 </button>
               </div>
@@ -510,42 +553,46 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       </div>
 
-      {/* MODAL PERINTAH DOWNLOAD APLIKASI KALENDER (SYSTEM REQUIREMENT) */}
+      {/* MODAL OTORISASI KALENDER (DENGAN 2 PILIHAN HARIAN & MINGGUAN) */}
       {showCalendarAppPrompt && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#100E16] border border-[#7C5CFF] w-full max-w-sm p-5 relative shadow-[0_0_30px_rgba(124,92,255,0.2)] flex flex-col gap-4 text-center font-mono">
+          <div className="bg-[#100E16] border border-[#312C42] w-full max-w-sm p-5 relative shadow-[0_0_30px_rgba(0,0,0,0.8)] flex flex-col gap-4 text-center font-mono">
             <CornerBrackets />
-            <div className="w-12 h-12 bg-black border border-[#7C5CFF]/50 flex items-center justify-center mx-auto text-[#7C5CFF] relative">
+            
+            <div className="w-12 h-12 bg-black border border-[#312C42] flex items-center justify-center mx-auto text-[#7C5CFF] relative">
               <CornerBrackets />
               <DownloadCloud size={20} className="animate-pulse" />
             </div>
+            
             <div className="flex flex-col gap-1">
-              <span className="text-[#7C5CFF] font-black text-xs uppercase tracking-widest">[SYSTEM REQUIREMENT]</span>
-              <span className="text-white font-bold text-sm uppercase">WAJIB GOOGLE KALENDER</span>
+              <span className="text-[#7C5CFF] font-black text-xs uppercase tracking-widest">[INTEGRASI CLOUD]</span>
+              <span className="text-white font-bold text-sm uppercase">PILIH METODE SINKRONISASI</span>
             </div>
-            <p className="text-[10px] text-[#EDEAF6]/60 leading-relaxed uppercase tracking-wide border-t border-b border-[#211D2C] py-3">
-              UNTUK MENGHINDARI ERROR BROWSER WEB, SISTEM MENGHARUSKAN ANDA MEMILIKI APLIKASI RESMI GOOGLE CALENDAR TERPASANG DI PERANGKAT INI.
+            
+            <p className="text-[9px] text-[#EDEAF6]/60 leading-relaxed uppercase tracking-wide border-t border-b border-[#211D2C] py-3 text-left">
+              * **HARI INI SAJA:** Mengirim jadwal <span className="text-[#7C5CFF]">[{activeDay}]</span> ke 1 slot event Kalender.<br/><br/>
+              * **FULL 1 MINGGU:** Menyatukan seluruh jadwal <span className="text-[#7C5CFF]">[Senin s/d Minggu]</span> ke dalam 1 Catatan Event Kalender raksasa sekaligus.
             </p>
+            
             <div className="flex flex-col gap-2 mt-1">
-              <a 
-                href="https://play.google.com/store/apps/details?id=com.google.android.calendar" 
-                target="_blank" 
-                rel="noreferrer"
-                className="w-full py-3 bg-[#211D2C] text-[#7C5CFF] font-black text-xs uppercase relative flex items-center justify-center gap-2"
-              >
-                <CornerBrackets /> DOWNLOAD DI PLAYSTORE
-              </a>
               <button 
                 type="button" 
-                onClick={executeCloudRouting} 
-                className="w-full py-3 bg-[#7C5CFF] text-white font-black text-xs uppercase shadow-lg relative"
+                onClick={() => executeCloudRouting('daily')} 
+                className="w-full py-3 bg-[#14121C] text-[#EDEAF6] font-black text-[10px] uppercase border border-[#312C42] relative active:scale-95 transition-transform"
               >
-                <CornerBrackets /> LANJUTKAN SINKRONISASI
+                <CornerBrackets /> SINKRONISASI HARI INI SAJA
+              </button>
+              <button 
+                type="button" 
+                onClick={() => executeCloudRouting('weekly')} 
+                className="w-full py-3 bg-[#211D2C] text-[#7C5CFF] font-black text-[10px] uppercase border border-[#312C42] relative active:scale-95 transition-transform"
+              >
+                <CornerBrackets /> SINKRONISASI FULL 1 MINGGU
               </button>
               <button 
                 type="button" 
                 onClick={() => setShowCalendarAppPrompt(false)} 
-                className="w-full py-3 text-[#EDEAF6]/40 text-xs font-bold uppercase mt-1"
+                className="w-full py-3 text-[#EDEAF6]/40 text-xs font-bold uppercase mt-1 hover:text-white"
               >
                 BATAL
               </button>
@@ -554,10 +601,28 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       )}
 
+      {/* ALERT DIALOG CUSTOM */}
+      {customAlert.isOpen && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[300] flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-[#100E16] border border-red-900/50 w-full max-w-xs p-5 relative text-center font-mono flex flex-col gap-4 shadow-2xl">
+            <CornerBrackets />
+            <span className="text-red-400 font-black text-xs tracking-widest">[SYSTEM WARNING]</span>
+            <p className="text-[9px] text-[#EDEAF6]/70 leading-relaxed tracking-wide">{customAlert.message}</p>
+            <button
+              type="button"
+              onClick={() => setCustomAlert({ isOpen: false, message: '' })}
+              className="w-full py-3 bg-[#211D2C] text-white font-black text-xs uppercase relative active:scale-95 mt-1 border border-[#312C42]"
+            >
+              <CornerBrackets /> KONFIRMASI
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* MODAL PANDUAN DOKUMEN SISTEM */}
       {showGuideModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-md relative shadow-[0_0_50px_rgba(124,92,255,0.2)] flex flex-col max-h-[85vh]">
+          <div className="bg-[#100E16] border border-[#312C42] w-full max-w-md relative flex flex-col max-h-[85vh]">
             <CornerBrackets />
             <div className="bg-[#14121C] border-b border-[#211D2C] p-4 flex justify-between items-center relative z-10">
               <span className="text-white font-display font-black text-xs uppercase tracking-widest">[DOKUMEN PANDUAN]</span>
@@ -565,18 +630,17 @@ export default function JadwalLatihan({ onBack }) {
             </div>
 
             <div className="grid grid-cols-4 border-b border-[#211D2C] bg-black/20 text-[9px] font-black uppercase tracking-wider text-center">
-              <button onClick={() => setGuideTab('fullbody')} className={`py-3.5 border-r border-[#211D2C] ${guideTab === 'fullbody' ? 'text-[#7C5CFF] border-b-2 border-[#7C5CFF] bg-[#100E16]' : 'text-gray-500'}`}>Full Body</button>
-              <button onClick={() => setGuideTab('bulking')} className={`py-3.5 border-r border-[#211D2C] ${guideTab === 'bulking' ? 'text-[#7C5CFF] border-b-2 border-[#7C5CFF] bg-[#100E16]' : 'text-gray-500'}`}>Bulking</button>
-              <button onClick={() => setGuideTab('cutting')} className={`py-3.5 border-r border-[#211D2C] ${guideTab === 'cutting' ? 'text-[#7C5CFF] border-b-2 border-[#7C5CFF] bg-[#100E16]' : 'text-gray-500'}`}>Cutting</button>
-              <button onClick={() => setGuideTab('cal')} className={`py-3.5 ${guideTab === 'cal' ? 'text-[#7C5CFF] border-b-2 border-[#7C5CFF] bg-[#100E16]' : 'text-gray-500'}`}>Kalori</button>
+              <button onClick={() => setGuideTab('fullbody')} className={`py-3.5 border-r border-[#211D2C] ${guideTab === 'fullbody' ? 'text-[#7C5CFF] bg-[#211D2C]' : 'text-[#EDEAF6]/50'}`}>Full Body</button>
+              <button onClick={() => setGuideTab('bulking')} className={`py-3.5 border-r border-[#211D2C] ${guideTab === 'bulking' ? 'text-[#7C5CFF] bg-[#211D2C]' : 'text-[#EDEAF6]/50'}`}>Bulking</button>
+              <button onClick={() => setGuideTab('cutting')} className={`py-3.5 border-r border-[#211D2C] ${guideTab === 'cutting' ? 'text-[#7C5CFF] bg-[#211D2C]' : 'text-[#EDEAF6]/50'}`}>Cutting</button>
+              <button onClick={() => setGuideTab('cal')} className={`py-3.5 ${guideTab === 'cal' ? 'text-[#7C5CFF] bg-[#211D2C]' : 'text-[#EDEAF6]/50'}`}>Kalori</button>
             </div>
 
             <div className="p-5 overflow-y-auto text-[10px] uppercase text-[#EDEAF6]/80 flex flex-col gap-4 leading-relaxed font-mono">
               {guideTab === 'fullbody' && (
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">PROTOKOL 1 BULAN FULL BODY</div>
-                  <p className="text-[#EDEAF6]/40">REKOMENDASI GERAKAN INTI HARIAN:</p>
-                  <div className="bg-black border border-[#211D2C] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
+                  <div className="bg-black border border-[#312C42] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
                     <CornerBrackets />
                     <div>1. BARBELL SQUAT (3 SET X 8-10 REPS)</div>
                     <div>2. BENCH PRESS (3 SET X 8-10 REPS)</div>
@@ -589,8 +653,7 @@ export default function JadwalLatihan({ onBack }) {
               {guideTab === 'bulking' && (
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">PROTOKOL REKAYASA BULKING</div>
-                  <p className="text-[#EDEAF6]/40">POLA BEBAN ANGKATAN PROGRESIF:</p>
-                  <div className="bg-black border border-[#211D2C] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
+                  <div className="bg-black border border-[#312C42] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
                     <CornerBrackets />
                     <div>M1: COBA BEBAN DASAR (50KG X 10 REPS)</div>
                     <div>M2: NAIKKAN INTENSITAS (+2.5KG)</div>
@@ -603,8 +666,7 @@ export default function JadwalLatihan({ onBack }) {
               {guideTab === 'cutting' && (
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">PROTOKOL REDUKSI LEMAK (CUTTING)</div>
-                  <p className="text-[#EDEAF6]/40">DEFISIT & DEFEND MASSA:</p>
-                  <div className="bg-black border border-[#211D2C] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
+                  <div className="bg-black border border-[#312C42] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
                     <CornerBrackets />
                     <div>1. BENCH PRESS (PERTAHANKAN BEBAN)</div>
                     <div>2. LAT PULLDOWN (JAGA INTENSITAS)</div>
@@ -616,8 +678,7 @@ export default function JadwalLatihan({ onBack }) {
               {guideTab === 'cal' && (
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">FORMULA KALORI & MANAJEMEN TIDUR</div>
-                  <p className="font-bold text-[#A28EFF]">METODE MIFFLIN-ST JEOR:</p>
-                  <p className="bg-black p-3 border border-[#211D2C] relative text-white text-[9px]">
+                  <p className="bg-black p-3 border border-[#312C42] relative text-white text-[9px]">
                     <CornerBrackets />
                     PRIA = (10 X BERAT KG) + (6.25 X TINGGI CM) - (5 X UMUR) + 5
                   </p>
