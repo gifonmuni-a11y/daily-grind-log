@@ -4,16 +4,17 @@ import { ArrowLeft, Plus, Trash2, ChevronDown, BookOpen, X, DownloadCloud, Targe
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 const GENERATED_RANGE = Array.from({ length: 100 }, (_, i) => i + 1);
 
+// DATABASE GERAKAN + TRANSLASI INDONESIA
 const EXERCISE_DATABASE = [
-  'Barbell Bench Press', 'Dumbbell Incline Press', 'Chest Fly Machine', 'Cable Crossover',
-  'Weighted Pull Up', 'Barbell Bent Over Row', 'Seated Cable Row', 'Lat Pulldown',
-  'Overhead Barbell Press', 'Dumbbell Lateral Raise', 'Cable Face Pull',
-  'Barbell Bicep Curl', 'Tricep Overhead Extension', 'Cable Tricep Pushdown',
-  'Barbell Back Squat', 'Leg Press Machine', 'Bulgarian Split Squat', 'Dumbbell Lunge',
-  'Romanian Deadlift', 'Lying Leg Curl Machine', 'Seated Leg Extension', 'Standing Calf Raise',
-  'Hanging Leg Raise', 'Cable Crunch', 'Ab Wheel Rollout',
-  'Treadmill Interval Sprint', 'Rowing Machine', 'Stationary Bike',
-  'Latihan Kustom'
+  'Barbell Bench Press (Dada Barbel)', 'Dumbbell Incline Press (Dada Atas)', 'Chest Fly Machine (Mesin Otot Dada)', 'Cable Crossover (Kabel Dada)',
+  'Weighted Pull Up (Tarik Badan Beban)', 'Barbell Bent Over Row (Dayung Barbel)', 'Seated Cable Row (Dayung Kabel)', 'Lat Pulldown (Tarik Punggung)',
+  'Overhead Barbell Press (Dorong Bahu)', 'Dumbbell Lateral Raise (Bahu Samping)', 'Cable Face Pull (Bahu Belakang)',
+  'Barbell Bicep Curl (Bicep Barbel)', 'Tricep Overhead Extension (Tricep Atas)', 'Cable Tricep Pushdown (Tricep Bawah)',
+  'Barbell Back Squat (Jongkok Barbel)', 'Leg Press Machine (Mesin Dorong Kaki)', 'Bulgarian Split Squat (Jongkok 1 Kaki)', 'Dumbbell Lunge (Langkah Beban)',
+  'Romanian Deadlift (Angkat Beban Paha)', 'Lying Leg Curl Machine (Mesin Tekuk Kaki)', 'Seated Leg Extension (Mesin Lurus Kaki)', 'Standing Calf Raise (Jinjit Betis)',
+  'Hanging Leg Raise (Angkat Kaki Gantung)', 'Cable Crunch (Perut Kabel)', 'Ab Wheel Rollout (Roda Perut)',
+  'Treadmill Interval Sprint (Lari Treadmill)', 'Rowing Machine (Mesin Dayung)', 'Stationary Bike (Sepeda Statis)',
+  'Latihan Kustom (Isi Manual)'
 ];
 
 const ANATOMY_AREAS = [
@@ -34,7 +35,6 @@ const EQUIPMENT_AREAS = [
   { id: 'Hybrid', name: 'HYBRID SYSTEM', img: 'https://images.unsplash.com/photo-1544033527-b192daee1f5b?auto=format&fit=crop&w=400&q=80' }
 ];
 
-// Siku ungu aja, box abu-abu
 const CornerBrackets = () => (
   <>
     <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
@@ -108,7 +108,6 @@ export default function JadwalLatihan({ onBack }) {
     }
   }, [schedule, isLoading]);
 
-  // LOGIKA AUTO-REKAP (SUDAH TERMASUK REPETISI)
   const recapData = useMemo(() => {
     let totalWeeklyVolume = 0;
     let totalWeeklyReps = 0;
@@ -145,7 +144,7 @@ export default function JadwalLatihan({ onBack }) {
 
   const handleAddItem = (e) => {
     e.preventDefault();
-    const coreName = selectedExercise === 'Latihan Kustom' ? customExerciseText.trim() : selectedExercise;
+    const coreName = selectedExercise === 'Latihan Kustom (Isi Manual)' ? customExerciseText.trim() : selectedExercise.split(' (')[0];
     if (!coreName) return;
     
     const fullLogText = `${coreName} [ ${selectedKg} KG X ${selectedReps} REPS ]`;
@@ -171,7 +170,6 @@ export default function JadwalLatihan({ onBack }) {
     }));
   };
 
-  // LOGIKA PINTAR CLOUD ROUTING (HARIAN VS MINGGUAN)
   const executeCloudRouting = (mode) => {
     setShowCalendarAppPrompt(false);
 
@@ -196,7 +194,7 @@ export default function JadwalLatihan({ onBack }) {
         if (dayItems.length > 0) {
           fullDetails.push(`=== ${day.toUpperCase()} ===`);
           dayItems.forEach((it, idx) => fullDetails.push(`${idx + 1}. ${it.text}`));
-          fullDetails.push(''); // Baris kosong pemisah
+          fullDetails.push('');
         }
       });
 
@@ -269,7 +267,7 @@ export default function JadwalLatihan({ onBack }) {
         </button>
       </div>
 
-      {/* AUTO-REKAP PROGRESS SYSTEM LENGKAP (KG & REPS) */}
+      {/* AUTO-REKAP PROGRESS SYSTEM */}
       <div className="bg-[#100E16] border border-[#211D2C] p-4 shadow-lg relative flex flex-col gap-3">
         <CornerBrackets />
         <span className="text-[10px] text-[#7C5CFF] font-bold uppercase tracking-wider border-b border-[#211D2C] pb-2">
@@ -393,7 +391,7 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       </div>
 
-      {/* PANEL DAFTAR AKTIVITAS - OVERFLOW DIBUKA BIAR DROPDOWN GAK TERPOTONG */}
+      {/* PANEL DAFTAR AKTIVITAS (Form & List) */}
       <div className="bg-[#100E16] border border-[#211D2C] flex flex-col relative shadow-md min-h-[220px]">
         <CornerBrackets />
         <div className="bg-[#14121C] border-b border-[#211D2C] p-3 flex justify-between items-center relative z-10">
@@ -416,18 +414,19 @@ export default function JadwalLatihan({ onBack }) {
                   <span className="text-[#7C5CFF] text-[10px] font-black">#{idx + 1}</span>
                   <span className="text-[#EDEAF6] text-xs font-bold uppercase tracking-wide truncate">{item.text}</span>
                 </div>
-                <button type="button" onClick={() => handleDeleteItem(activeDay, item.id)} className="text-[#EDEAF6]/20 hover:text-red-400 p-1.5 transition-colors z-10">
+                <button type="button" onClick={() => handleDeleteItem(activeDay, item.id)} className="text-[#EDEAF6]/20 hover:text-red-400 p-1.5 transition-colors z-10 relative">
                   <Trash2 size={14} />
                 </button>
               </div>
             ))
           )}
 
-          {/* DYNAMIC FORM DENGAN BUG DROPDOWN DIPERBAIKI (BORDER ABU-ABU) */}
+          {/* DYNAMIC FORM (Z-INDEX FIXED) */}
           {isAdding ? (
-            <form onSubmit={handleAddItem} className="mt-auto pt-4 flex flex-col gap-4 border-t border-[#211D2C] relative z-20">
+            <form onSubmit={handleAddItem} className="mt-auto pt-4 flex flex-col gap-4 border-t border-[#211D2C] relative">
               
-              <div className="relative">
+              {/* WRAPPER LAPISAN ATAS UNTUK DROPDOWN GERAKAN */}
+              <div className="relative z-[60]">
                 <span className="text-[8px] font-black text-[#EDEAF6]/40 uppercase tracking-widest mb-1.5 block">KATEGORI GERAKAN:</span>
                 <button
                   type="button"
@@ -440,8 +439,8 @@ export default function JadwalLatihan({ onBack }) {
                 </button>
 
                 {openDropdown === 'exercise' && (
-                  <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#312C42] max-h-56 overflow-y-auto z-[100] shadow-[0_15px_40px_rgba(0,0,0,0.8)] flex flex-col relative">
-                    <CornerBrackets />
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#7C5CFF] max-h-56 overflow-y-auto z-[100] shadow-[0_15px_40px_rgba(0,0,0,0.8)] flex flex-col">
+                    {/* Tidak ada CornerBracket di dalam popup agar tidak bug/menumpuk */}
                     {EXERCISE_DATABASE.map(ex => (
                       <button
                         key={ex}
@@ -456,8 +455,8 @@ export default function JadwalLatihan({ onBack }) {
                 )}
               </div>
 
-              {selectedExercise === 'Latihan Kustom' && (
-                <div className="relative">
+              {selectedExercise === 'Latihan Kustom (Isi Manual)' && (
+                <div className="relative z-[10]">
                   <CornerBrackets />
                   <input
                     autoFocus
@@ -471,7 +470,8 @@ export default function JadwalLatihan({ onBack }) {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3 relative z-10">
+              {/* WRAPPER LAPISAN KEDUA UNTUK DROPDOWN KG & REPS */}
+              <div className="grid grid-cols-2 gap-3 relative z-[50]">
                 {/* Selector KG */}
                 <div className="relative">
                   <span className="text-[8px] font-black text-[#EDEAF6]/40 uppercase tracking-widest mb-1.5 block">BEBAN (KG):</span>
@@ -485,8 +485,8 @@ export default function JadwalLatihan({ onBack }) {
                     <ChevronDown size={14} className="text-[#7C5CFF]" />
                   </button>
                   {openDropdown === 'kg' && (
-                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#312C42] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl relative">
-                      <CornerBrackets />
+                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#7C5CFF] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl">
+                      {/* Tidak ada CornerBracket di dalam popup */}
                       {GENERATED_RANGE.map(val => (
                         <button
                           key={`kg-${val}`}
@@ -514,8 +514,8 @@ export default function JadwalLatihan({ onBack }) {
                     <ChevronDown size={14} className="text-[#7C5CFF]" />
                   </button>
                   {openDropdown === 'reps' && (
-                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#312C42] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl relative">
-                      <CornerBrackets />
+                    <div className="absolute top-full mt-1 left-0 right-0 bg-[#100E16] border border-[#7C5CFF] max-h-48 overflow-y-auto z-[100] flex flex-col shadow-2xl">
+                      {/* Tidak ada CornerBracket di dalam popup */}
                       {GENERATED_RANGE.map(val => (
                         <button
                           key={`rep-${val}`}
@@ -531,10 +531,11 @@ export default function JadwalLatihan({ onBack }) {
                 </div>
               </div>
 
-              {/* ACTION BUTTONS */}
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <button type="button" onClick={() => { setIsAdding(false); setOpenDropdown(null); }} className="py-3 bg-transparent border border-[#312C42] text-xs font-black text-[#EDEAF6]/70 hover:text-white uppercase relative">
-                  <CornerBrackets /> BATAL
+              {/* ACTION BUTTONS (BERADA DI LAPISAN BAWAH SENDIRI) */}
+              <div className="grid grid-cols-2 gap-3 mt-2 relative z-10">
+                {/* Tombol BATAL polos tanpa CornerBrackets sesuai instruksi */}
+                <button type="button" onClick={() => { setIsAdding(false); setOpenDropdown(null); }} className="py-3 bg-transparent border border-[#312C42] text-xs font-black text-[#EDEAF6]/70 hover:text-white uppercase">
+                  BATAL
                 </button>
                 <button type="submit" className="py-3 bg-[#211D2C] text-[#7C5CFF] text-xs font-black uppercase relative border border-[#312C42]">
                   <CornerBrackets /> SIMPAN
@@ -545,7 +546,7 @@ export default function JadwalLatihan({ onBack }) {
             <button
               type="button"
               onClick={() => setIsAdding(true)}
-              className="mt-auto py-3.5 border border-dashed border-[#312C42] text-[#EDEAF6]/40 text-[10px] uppercase font-black tracking-widest flex items-center justify-center gap-1.5 hover:bg-[#211D2C] hover:text-white transition-all active:scale-95 relative"
+              className="mt-auto py-3.5 border border-dashed border-[#312C42] text-[#EDEAF6]/40 text-[10px] uppercase font-black tracking-widest flex items-center justify-center gap-1.5 hover:bg-[#211D2C] hover:text-white transition-all active:scale-95 relative z-10"
             >
               <Plus size={14} /> TAMBAH BLOK GERAKAN
             </button>
@@ -553,7 +554,7 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       </div>
 
-      {/* MODAL OTORISASI KALENDER (DENGAN 2 PILIHAN HARIAN & MINGGUAN) */}
+      {/* MODAL OTORISASI KALENDER (TULISAN MARKDOWN SUDAH DIHAPUS) */}
       {showCalendarAppPrompt && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#312C42] w-full max-w-sm p-5 relative shadow-[0_0_30px_rgba(0,0,0,0.8)] flex flex-col gap-4 text-center font-mono">
@@ -569,10 +570,11 @@ export default function JadwalLatihan({ onBack }) {
               <span className="text-white font-bold text-sm uppercase">PILIH METODE SINKRONISASI</span>
             </div>
             
-            <p className="text-[9px] text-[#EDEAF6]/60 leading-relaxed uppercase tracking-wide border-t border-b border-[#211D2C] py-3 text-left">
-              * **HARI INI SAJA:** Mengirim jadwal <span className="text-[#7C5CFF]">[{activeDay}]</span> ke 1 slot event Kalender.<br/><br/>
-              * **FULL 1 MINGGU:** Menyatukan seluruh jadwal <span className="text-[#7C5CFF]">[Senin s/d Minggu]</span> ke dalam 1 Catatan Event Kalender raksasa sekaligus.
-            </p>
+            <div className="text-[9px] text-[#EDEAF6]/60 leading-relaxed uppercase tracking-wide border-t border-b border-[#211D2C] py-3 text-left">
+              <p>✦ HARI INI SAJA: Mengirim jadwal <span className="text-[#7C5CFF]">[{activeDay}]</span> ke 1 slot event Kalender.</p>
+              <p className="mt-2">✦ FULL 1 MINGGU: Menyatukan seluruh jadwal <span className="text-[#7C5CFF]">[Senin s/d Minggu]</span> ke dalam 1 Catatan Event Kalender raksasa sekaligus.</p>
+              <p className="mt-3 text-red-400 font-bold">*Wajib install Google Calendar untuk notifikasi optimal.</p>
+            </div>
             
             <div className="flex flex-col gap-2 mt-1">
               <button 
