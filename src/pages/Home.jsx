@@ -52,8 +52,7 @@ const AUDIO_URLS = {
     'IRON GRIND': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/irongrind.mp3',
     'CENTURION': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/centurion.mp3',
     'LEGENDARY PERFORMER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/legendaryperformer.mp3',
-    'ALL-ROUNDER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/allrounder.mp3',
-    'LIFTER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/lifter.mp3',
+    'ALL-ROUNDER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/lifter.mp3',
     'CARDIO KING': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/achievement/cardioking.mp3'
   },
   welcome: {
@@ -645,8 +644,13 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* 🎯 TAB BARU: QUESTBOARD */}
-        {activeTab === 'battle' && <QuestBoard onFinalizeBattle={handleFinalizeBattle} />}
+        {/* 🎯 TAB BARU: QUESTBOARD (Sudah di-update dengan onBack) */}
+        {activeTab === 'battle' && (
+          <QuestBoard 
+            onFinalizeBattle={handleFinalizeBattle} 
+            onBack={() => setActiveTab('grind')} 
+          />
+        )}
 
         {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
       </div>
