@@ -1,287 +1,196 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  ArrowLeft, User, Zap, Activity, Shield, Target, TrendingUp, Save 
-} from 'lucide-react';
-
-// --- MANHWA UI TOKENS ---
-const SYS_COLORS = {
-  primary: "#7C5CFF",
-  bg: "#100E16",
-  panel: "#14121C",
-  border: "#211D2C",
-  borderActive: "#312C42",
-  textMuted: "rgba(237, 234, 246, 0.4)",
-  textBright: "#EDEAF6"
-};
-
-const CornerBrackets = () => (
-  <>
-    <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
-    <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-[#7C5CFF] pointer-events-none z-10" />
-    <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
-    <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-[#7C5CFF] pointer-events-none z-10" />
-  </>
-);
-
-function ProgressBar({ label, value, max, color, icon: Icon }) {
-  const percentage = Math.min((value / max) * 100, 100);
-  return (
-    <div className="mb-4 relative">
-      <div className="flex justify-between items-end mb-1">
-        <span className="text-[10px] font-black uppercase tracking-widest text-[#EDEAF6] flex items-center gap-1.5">
-          <Icon size={12} style={{ color }} /> {label}
-        </span>
-        <span className="text-[10px] font-black" style={{ color }}>
-          {value} <span className="text-[#EDEAF6]/40">/ {max}</span>
-        </span>
-      </div>
-      <div className="h-2 w-full bg-black border border-[#211D2C] relative overflow-hidden">
-        <div 
-          className="h-full transition-all duration-1000 ease-out relative"
-          style={{ width: `${percentage}%`, backgroundColor: color }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/30" />
-        </div>
-      </div>
-    </div>
-  );
-}
+import React, { useState, useEffect } from 'react'
+import { Camera, User, Activity, Zap, Shield, Brain, Eye, ChevronLeft, Upload } from 'lucide-react'
 
 export default function StatusWindow({ onBack }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [syncedExp, setSyncedExp] = useState(0);
-  
-  // Player Stats State
-  const [playerData, setPlayerData] = useState({
-    weightPR: 0,
-    cardioMin: 0,
-    bodyWeight: 0,
-  });
+  const [avatar, setAvatar] = useState(null)
+  const [stats, setStats] = useState({
+    level: 1,
+    str: 15,
+    agi: 12,
+    vit: 14,
+    int: 10,
+    per: 11,
+    exp: 450,
+    nextExp: 1000,
+    job: 'NONE',
+    title: 'AWAKENED'
+  })
 
-  // Load Data
   useEffect(() => {
-    // 1. Tarik Data EXP dari Jadwal Latihan
-    const savedSchedule = localStorage.getItem('dg_workout_schedule');
-    let totalExpCalc = 0;
-    if (savedSchedule) {
-      try {
-        const schedule = JSON.parse(savedSchedule);
-        Object.values(schedule).forEach(day => {
-          if (day.items && Array.isArray(day.items)) {
-            let dailyVolume = 0;
-            day.items.forEach(item => {
-              const match = item.text.match(/(.+) \[\s*(\d+)\s*KG\s*X\s*(\d+)\s*REPS\s*\]/i);
-              if (match) {
-                dailyVolume += (parseInt(match[2], 10) * parseInt(match[3], 10));
-              }
-            });
-            totalExpCalc += day.items.length > 0 ? Math.floor((day.items.length * 15) + (dailyVolume / 25)) : 0;
-          }
-        });
-      } catch (e) { console.error(e); }
+    const savedAvatar = localStorage.getItem('dg_status_avatar')
+    if (savedAvatar) {
+      setAvatar(savedAvatar)
     }
-    // Proyeksi bulanan (dikali 4 minggu)
-    setSyncedExp(totalExpCalc * 4);
+  }, [])
 
-    // 2. Tarik Data Status Pemain
-    const savedStats = localStorage.getItem('dg_player_status');
-    if (savedStats) {
-      try {
-        setPlayerData(JSON.parse(savedStats));
-      } catch (e) { console.error(e); }
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result
+        setAvatar(base64String)
+        localStorage.setItem('dg_status_avatar', base64String)
+      }
+      reader.readAsDataURL(file)
     }
-    
-    setIsLoading(false);
-  }, []);
-
-  // Simpan Status
-  const handleSaveStats = (e) => {
-    e.preventDefault();
-    localStorage.setItem('dg_player_status', JSON.stringify(playerData));
-    
-    // Animasi efek simpan (Opsional)
-    const btn = document.getElementById('btn-save-stats');
-    if(btn) {
-      btn.innerText = "[ TERSIMPAN ]";
-      btn.style.color = "#3FE6C4";
-      setTimeout(() => {
-        btn.innerText = "KALIBRASI SISTEM";
-        btn.style.color = SYS_COLORS.primary;
-      }, 2000);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setPlayerData(prev => ({
-      ...prev,
-      [name]: value === '' ? 0 : parseInt(value, 10) || 0
-    }));
-  };
-
-  // ==========================================
-  // PROFESSOR GYM LOGIC: TRANSLASI STATS RPG
-  // ==========================================
-  const stats = useMemo(() => {
-    const level = Math.floor(syncedExp / 500) + 1;
-    const currentLevelExp = syncedExp % 500;
-    
-    // STR: Base 10 + 1 point per 2.5kg PR
-    const str = 10 + Math.floor((playerData.weightPR || 0) / 2.5);
-    
-    // AGI: Base 10 + 1 point per 3 menit kardio
-    const agi = 10 + Math.floor((playerData.cardioMin || 0) / 3);
-    
-    // VIT: Base 10 + Level Bonus + Konsistensi Berat Badan (Asumsi ideal 70-80kg dapet bonus)
-    let vitBonus = 0;
-    if (playerData.bodyWeight > 0) {
-      vitBonus = 5; // Bonus stat karena udah input data
-    }
-    const vit = 10 + Math.floor(level * 1.5) + vitBonus;
-
-    let jobClass = "KANDIDAT PEMULA";
-    if (level >= 15) jobClass = "MONARCH OF IRON";
-    else if (level >= 10) jobClass = "VETERAN LIFTER";
-    else if (level >= 5) jobClass = "AWAKENED HUNTER";
-
-    return { level, currentLevelExp, str, agi, vit, jobClass };
-  }, [syncedExp, playerData]);
-
-  if (isLoading) return <div className="p-4 bg-[#100E16] h-screen animate-pulse" />;
+  }
 
   return (
-    <div className="flex flex-col gap-5 font-mono animate-in fade-in duration-200 mt-2 mx-2 sm:mx-4 select-none pb-32">
+    <div className="w-full h-full bg-[#0A0A0E] text-white font-mono p-4 pb-32 animate-in fade-in duration-300">
       
-      {/* HEADER */}
-      <div className="flex items-center justify-between bg-[#100E16] border border-[#211D2C] p-3 shadow-lg relative">
-        <CornerBrackets />
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 bg-[#211D2C] text-[#7C5CFF] active:scale-95 transition-all">
-            <ArrowLeft size={18} />
-          </button>
-          <div className="flex flex-col">
-            <span className="text-[#7C5CFF] font-bold text-[10px] tracking-widest uppercase flex items-center gap-1">
-              [INFORMASI PEMAIN]
-            </span>
-            <span className="font-display font-black text-sm text-white uppercase tracking-widest">
-              STATUS WINDOW
-            </span>
+      <div className="flex items-center gap-3 mb-6 border-b border-[#211D2C] pb-4">
+        <button 
+          onClick={onBack}
+          className="p-2 bg-[#100E16] border border-[#211D2C] hover:bg-[#7C5CFF]/20 text-white transition-all active:scale-95"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <h1 className="text-lg font-black tracking-widest text-[#7C5CFF] uppercase">
+          STATUS WINDOW
+        </h1>
+      </div>
+
+      <div className="relative bg-[#100E16] border border-[#211D2C] p-5 shadow-[0_0_30px_rgba(124,92,255,0.1)] mb-6">
+        <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF]" />
+        <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF]" />
+        <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF]" />
+        <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF]" />
+
+        <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+          
+          <div className="relative group flex-shrink-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 border-2 border-[#312C42] bg-[#0A0A0E] overflow-hidden relative shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+              {avatar ? (
+                <img src={avatar} alt="Player Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-[#312C42] gap-2">
+                  <User size={40} />
+                  <span className="text-[10px] tracking-widest uppercase">NO IMAGE</span>
+                </div>
+              )}
+              
+              <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200">
+                <Camera size={24} className="text-[#7C5CFF] mb-1" />
+                <span className="text-[10px] text-white tracking-wider uppercase font-bold">Upload</span>
+                <input 
+                  type="file" 
+                  accept="image/jpeg, image/png, image/webp" 
+                  onChange={handlePhotoUpload} 
+                  className="hidden" 
+                />
+              </label>
+            </div>
+            
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#7C5CFF] text-white text-[10px] font-black px-3 py-1 tracking-widest uppercase shadow-[0_0_10px_rgba(124,92,255,0.4)] whitespace-nowrap">
+              LV. {stats.level}
+            </div>
+          </div>
+
+          <div className="flex-1 w-full space-y-4">
+            <div className="grid grid-cols-2 gap-4 border-b border-[#211D2C] pb-4">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Name</p>
+                <p className="text-sm font-bold tracking-wider text-[#EDEAF6]">PLAYER</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Job</p>
+                <p className="text-sm font-bold tracking-wider text-[#7C5CFF]">{stats.job}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Title</p>
+                <p className="text-sm font-bold tracking-wider text-[#EDEAF6]">{stats.title}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-end mb-1">
+                <p className="text-[10px] text-[#7C5CFF] uppercase tracking-widest font-bold">Experience</p>
+                <p className="text-[10px] text-gray-400 font-mono">{stats.exp} / {stats.nextExp}</p>
+              </div>
+              <div className="w-full h-2 bg-[#211D2C] overflow-hidden">
+                <div 
+                  className="h-full bg-[#7C5CFF] shadow-[0_0_10px_rgba(124,92,255,0.6)]" 
+                  style={{ width: '45%' }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* PROFIL & LEVEL */}
-      <div className="bg-[#100E16] border border-[#211D2C] p-5 shadow-lg relative flex flex-col items-center justify-center text-center">
-        <CornerBrackets />
-        <div className="w-16 h-16 border-2 border-[#7C5CFF] bg-[#14121C] flex items-center justify-center mb-3 relative shadow-[0_0_15px_rgba(124,92,255,0.3)]">
-          <CornerBrackets />
-          <User size={28} className="text-[#7C5CFF]" />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        <h2 className="text-white font-black text-xl tracking-widest uppercase">PLAYER</h2>
-        <span className="text-[10px] text-[#3FE6C4] font-bold tracking-widest uppercase mt-1 px-3 py-1 bg-[#3FE6C4]/10 border border-[#3FE6C4]/30">
-          CLASS: {stats.jobClass}
-        </span>
+        <div className="bg-[#100E16] border border-[#211D2C] p-4 relative">
+          <h2 className="text-xs font-black text-[#7C5CFF] tracking-widest uppercase mb-4 flex items-center gap-2">
+            <Activity size={14} />
+            Physical Stats
+          </h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-[#211D2C] text-red-400 group-hover:bg-red-500/20 transition-colors">
+                  <Zap size={14} />
+                </div>
+                <span className="text-xs tracking-wider text-gray-300">STRENGTH (STR)</span>
+              </div>
+              <span className="text-sm font-bold text-white">{stats.str}</span>
+            </div>
 
-        <div className="w-full mt-5 relative">
-          <div className="flex justify-between items-end mb-1 px-1">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#7C5CFF]">LEVEL {stats.level}</span>
-            <span className="text-[9px] font-black text-[#EDEAF6]/50">{stats.currentLevelExp} / 500 EXP</span>
-          </div>
-          <div className="h-1.5 w-full bg-black border border-[#211D2C] overflow-hidden">
-            <div 
-              className="h-full bg-[#7C5CFF] transition-all duration-1000"
-              style={{ width: `${(stats.currentLevelExp / 500) * 100}%` }}
-            />
+            <div className="flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-[#211D2C] text-green-400 group-hover:bg-green-500/20 transition-colors">
+                  <Activity size={14} />
+                </div>
+                <span className="text-xs tracking-wider text-gray-300">AGILITY (AGI)</span>
+              </div>
+              <span className="text-sm font-bold text-white">{stats.agi}</span>
+            </div>
+
+            <div className="flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-[#211D2C] text-blue-400 group-hover:bg-blue-500/20 transition-colors">
+                  <Shield size={14} />
+                </div>
+                <span className="text-xs tracking-wider text-gray-300">VITALITY (VIT)</span>
+              </div>
+              <span className="text-sm font-bold text-white">{stats.vit}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ATRIBUT STATUS */}
-      <div className="bg-[#100E16] border border-[#211D2C] p-4 shadow-lg relative">
-        <CornerBrackets />
-        <span className="font-black text-[#7C5CFF] text-[10px] tracking-widest uppercase flex items-center gap-1.5 mb-4 border-b border-[#211D2C] pb-2">
-          <Activity size={12} /> [ATRIBUT FISIK]
-        </span>
-        
-        <ProgressBar label="STR (STRENGTH)" value={stats.str} max={100} color="#FF4D4D" icon={Zap} />
-        <ProgressBar label="AGI (AGILITY)" value={stats.agi} max={100} color="#3FE6C4" icon={TrendingUp} />
-        <ProgressBar label="VIT (VITALITY)" value={stats.vit} max={100} color="#7C5CFF" icon={Shield} />
-      </div>
+        <div className="bg-[#100E16] border border-[#211D2C] p-4 relative">
+          <h2 className="text-xs font-black text-[#7C5CFF] tracking-widest uppercase mb-4 flex items-center gap-2">
+            <Brain size={14} />
+            Mental Stats
+          </h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-[#211D2C] text-purple-400 group-hover:bg-purple-500/20 transition-colors">
+                  <Brain size={14} />
+                </div>
+                <span className="text-xs tracking-wider text-gray-300">INTELLIGENCE (INT)</span>
+              </div>
+              <span className="text-sm font-bold text-white">{stats.int}</span>
+            </div>
 
-      {/* FORM KALIBRASI PR (PERSONAL RECORD) */}
-      <div className="bg-[#14121C] border border-[#312C42] p-4 shadow-lg relative">
-        <CornerBrackets />
-        <div className="flex justify-between items-center mb-4 border-b border-[#211D2C] pb-2">
-          <span className="font-black text-white text-[10px] tracking-widest uppercase flex items-center gap-1.5">
-            <Target size={12} className="text-[#7C5CFF]"/> [KALIBRASI REKOR]
-          </span>
-          <span className="text-[8px] text-[#EDEAF6]/40 uppercase tracking-widest">Update Manual</span>
+            <div className="flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-[#211D2C] text-yellow-400 group-hover:bg-yellow-500/20 transition-colors">
+                  <Eye size={14} />
+                </div>
+                <span className="text-xs tracking-wider text-gray-300">PERCEPTION (PER)</span>
+              </div>
+              <span className="text-sm font-bold text-white">{stats.per}</span>
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSaveStats} className="flex flex-col gap-3">
-          {/* STR INPUT */}
-          <div className="relative">
-            <span className="text-[8px] font-black text-[#FF4D4D] uppercase tracking-widest mb-1.5 block">MAX ANGKATAN BEBAN (KG):</span>
-            <div className="relative">
-              <CornerBrackets />
-              <input
-                type="number"
-                name="weightPR"
-                value={playerData.weightPR || ''}
-                onChange={handleInputChange}
-                placeholder="Misal: 100"
-                className="w-full bg-black border border-[#211D2C] focus:border-[#FF4D4D] text-white text-xs p-3.5 outline-none font-mono uppercase font-bold transition-colors"
-              />
-            </div>
-            <p className="text-[7px] text-[#EDEAF6]/40 mt-1">*Meningkatkan Atribut STR</p>
-          </div>
-
-          {/* AGI INPUT */}
-          <div className="relative">
-            <span className="text-[8px] font-black text-[#3FE6C4] uppercase tracking-widest mb-1.5 block">REKOR KARDIO TERLAMA (MENIT):</span>
-            <div className="relative">
-              <CornerBrackets />
-              <input
-                type="number"
-                name="cardioMin"
-                value={playerData.cardioMin || ''}
-                onChange={handleInputChange}
-                placeholder="Misal: 30"
-                className="w-full bg-black border border-[#211D2C] focus:border-[#3FE6C4] text-white text-xs p-3.5 outline-none font-mono uppercase font-bold transition-colors"
-              />
-            </div>
-            <p className="text-[7px] text-[#EDEAF6]/40 mt-1">*Meningkatkan Atribut AGI</p>
-          </div>
-
-          {/* VIT INPUT */}
-          <div className="relative">
-            <span className="text-[8px] font-black text-[#7C5CFF] uppercase tracking-widest mb-1.5 block">BERAT BADAN SAAT INI (KG):</span>
-            <div className="relative">
-              <CornerBrackets />
-              <input
-                type="number"
-                name="bodyWeight"
-                value={playerData.bodyWeight || ''}
-                onChange={handleInputChange}
-                placeholder="Misal: 75"
-                className="w-full bg-black border border-[#211D2C] focus:border-[#7C5CFF] text-white text-xs p-3.5 outline-none font-mono uppercase font-bold transition-colors"
-              />
-            </div>
-            <p className="text-[7px] text-[#EDEAF6]/40 mt-1">*Meningkatkan Atribut VIT bersama dengan Level Karakter</p>
-          </div>
-
-          <button 
-            type="submit" 
-            id="btn-save-stats"
-            className="w-full mt-4 py-3.5 bg-[#211D2C] text-[#7C5CFF] font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 relative border border-[#312C42]"
-          >
-            <CornerBrackets />
-            <Save size={14} /> KALIBRASI SISTEM
-          </button>
-        </form>
       </div>
 
     </div>
-  );
+  )
 }
