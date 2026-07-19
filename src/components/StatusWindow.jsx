@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Camera, User, Activity, Zap, Shield, Brain, Eye, ChevronLeft } from 'lucide-react'
+import { Camera, User, Activity, Zap, Shield, Brain, Eye, ChevronLeft, Pencil, Check } from 'lucide-react'
 
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
 
@@ -14,10 +14,10 @@ const JOB_MAP = {
   Arms: 'BRAWLER', Core: 'ASSASSIN', Legs: 'TANK'
 }
 
-const TITLE_MAP = { S: 'MONARCH', A: 'AWAKENED', B: 'HUNTER', C: 'NOVICE', D: 'E-RANK', '-': 'UNRANKED' }
+const TITLE_MAP = { EX: 'ABSOLUTE BEING', SSS: 'RULER', SS: 'SOVEREIGN', S: 'MONARCH', A: 'AWAKENED', B: 'HUNTER', C: 'NOVICE', D: 'E-RANK', '-': 'UNRANKED' }
 
 const BASE_STATS = { str: 15, agi: 12, vit: 14, int: 10, per: 11 }
-const RANK_ORDER = { S: 5, A: 4, B: 3, C: 2, D: 1, rest: 0 }
+const RANK_ORDER = { EX: 8, SSS: 7, SS: 6, S: 5, A: 4, B: 3, C: 2, D: 1, rest: 0 }
 
 function computePlayerProgress(schedule) {
   const bonus = { str: 0, agi: 0, vit: 0, int: 0, per: 0 }
@@ -55,7 +55,10 @@ function computePlayerProgress(schedule) {
       bonus[statKey] += Math.floor(dailyVolume / 200)
 
       let rank = 'D'
-      if (dailyExp >= 280) rank = 'S'
+      if (dailyExp >= 600) rank = 'EX'
+      else if (dailyExp >= 450) rank = 'SSS'
+      else if (dailyExp >= 360) rank = 'SS'
+      else if (dailyExp >= 280) rank = 'S'
       else if (dailyExp >= 200) rank = 'A'
       else if (dailyExp >= 120) rank = 'B'
       else if (dailyExp >= 50) rank = 'C'
@@ -102,10 +105,16 @@ function loadSchedule() {
 export default function StatusWindow({ onBack }) {
   const [avatar, setAvatar] = useState(null)
   const [schedule, setSchedule] = useState(() => loadSchedule() || {})
+  const [playerName, setPlayerName] = useState('PLAYER')
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
 
   useEffect(() => {
     const savedAvatar = localStorage.getItem('dg_status_avatar')
     if (savedAvatar) setAvatar(savedAvatar)
+
+    const savedName = localStorage.getItem('dg_player_name')
+    if (savedName) setPlayerName(savedName)
 
     // Sinkron ulang setiap kali StatusWindow dibuka
     const fresh = loadSchedule()
@@ -125,6 +134,24 @@ export default function StatusWindow({ onBack }) {
   }, [])
 
   const stats = useMemo(() => computePlayerProgress(schedule), [schedule])
+
+  const startEditingName = () => {
+    setNameDraft(playerName)
+    setIsEditingName(true)
+  }
+
+  const saveName = () => {
+    const trimmed = nameDraft.trim()
+    const finalName = trimmed.length > 0 ? trimmed.slice(0, 20) : 'PLAYER'
+    setPlayerName(finalName)
+    localStorage.setItem('dg_player_name', finalName)
+    setIsEditingName(false)
+  }
+
+  const handleNameKeyDown = (e) => {
+    if (e.key === 'Enter') saveName()
+    if (e.key === 'Escape') setIsEditingName(false)
+  }
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0]
@@ -199,7 +226,35 @@ export default function StatusWindow({ onBack }) {
             <div className="grid grid-cols-2 gap-4 border-b border-[#211D2C] pb-4">
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Name</p>
-                <p className="text-sm font-bold tracking-wider text-[#EDEAF6]">PLAYER</p>
+                {isEditingName ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={nameDraft}
+                      onChange={(e) => setNameDraft(e.target.value)}
+                      onKeyDown={handleNameKeyDown}
+                      onBlur={saveName}
+                      maxLength={20}
+                      className="bg-black border border-[#7C5CFF] text-[#EDEAF6] text-sm font-bold tracking-wider px-2 py-1 w-full outline-none"
+                    />
+                    <button
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={saveName}
+                      className="p-1.5 bg-[#7C5CFF] text-[#100E16] flex-shrink-0"
+                    >
+                      <Check size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={startEditingName}
+                    className="flex items-center gap-1.5 group"
+                  >
+                    <p className="text-sm font-bold tracking-wider text-[#EDEAF6]">{playerName}</p>
+                    <Pencil size={11} className="text-[#7C5CFF]/50 group-hover:text-[#7C5CFF] transition-colors" />
+                  </button>
+                )}
               </div>
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Job</p>

@@ -30,6 +30,9 @@ const ANATOMY_AREAS = [
 
 // --- MANHWA UI TOKENS ---
 const SYS_COLORS = {
+  rankEX: "#FF4D6D",
+  rankSSS: "#FFD86B",
+  rankSS: "#FF9F5C",
   rankS: "#9B8CFF",
   rankA: "#3FE6C4",
   rankB: "#EFEDFA",
@@ -132,12 +135,12 @@ export default function JadwalLatihan({ onBack }) {
   const syncedStats = useMemo(() => {
     const weekMap = [];
     const detailMap = {};
-    const rankDist = { S: 0, A: 0, B: 0, C: 0, D: 0 };
+    const rankDist = { EX: 0, SSS: 0, SS: 0, S: 0, A: 0, B: 0, C: 0, D: 0 };
     let totalWeekExp = 0;
     let totalSessions = 0;
     let bestRank = 'D';
 
-    const rankOrder = { 'S': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1, 'rest': 0 };
+    const rankOrder = { 'EX': 8, 'SSS': 7, 'SS': 6, 'S': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1, 'rest': 0 };
 
     DAYS.forEach((day, index) => {
       const dayData = schedule[day] || { items: [], focus: 'Chest' };
@@ -168,7 +171,10 @@ export default function JadwalLatihan({ onBack }) {
         else if (dailyExp < 120) rank = 'C';
         else if (dailyExp < 200) rank = 'B';
         else if (dailyExp < 280) rank = 'A';
-        else rank = 'S';
+        else if (dailyExp < 360) rank = 'S';
+        else if (dailyExp < 450) rank = 'SS';
+        else if (dailyExp < 600) rank = 'SSS';
+        else rank = 'EX';
         
         rankDist[rank]++;
         if (rankOrder[rank] > rankOrder[bestRank]) bestRank = rank;
