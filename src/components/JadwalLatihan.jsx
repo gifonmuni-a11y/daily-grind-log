@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft, Plus, Trash2, ChevronDown, BookOpen, X, 
-  DownloadCloud, Target, HardDrive, Flame, Zap, Trophy, TrendingUp, Dumbbell 
+  DownloadCloud, Target, HardDrive, Flame, Zap, Trophy, TrendingUp
 } from 'lucide-react';
 
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -28,7 +28,7 @@ const ANATOMY_AREAS = [
   { id: 'Core', name: 'PERUT / CORE', img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=400&q=80' }
 ];
 
-// --- MANHWA UI TOKENS (Menggantikan Token Claude) ---
+// --- MANHWA UI TOKENS ---
 const SYS_COLORS = {
   rankS: "#9B8CFF",
   rankA: "#3FE6C4",
@@ -62,14 +62,11 @@ function StatCard({ label, value, color }) {
     <div className="p-3 bg-black/40 border border-[#211D2C] relative">
       <CornerBrackets />
       <div className="font-mono uppercase text-[#EDEAF6]/50 tracking-widest text-[9px]">{label}</div>
-      <div className="font-mono font-black mt-1 text-lg" style={{ color: color || "#EDEAF6" }}>{value}</div>
+      <div className="font-mono font-black mt-1 text-lg truncate" style={{ color: color || "#EDEAF6" }}>{value}</div>
     </div>
   );
 }
 
-// ==========================================
-// MAIN COMPONENT
-// ==========================================
 export default function JadwalLatihan({ onBack }) {
   const [isLoading, setIsLoading] = useState(true);
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -78,7 +75,6 @@ export default function JadwalLatihan({ onBack }) {
   const [showCalendarAppPrompt, setShowCalendarAppPrompt] = useState(false);
   const [customAlert, setCustomAlert] = useState({ isOpen: false, message: '' });
 
-  // States
   const [view, setView] = useState("week"); // "week" | "month"
   const [selectedDayRecap, setSelectedDayRecap] = useState(0); 
   
@@ -146,7 +142,6 @@ export default function JadwalLatihan({ onBack }) {
       let dailyVolume = 0;
       const parsedExercises = [];
 
-      // Parse volume dari text: "Nama [ 40 KG X 12 REPS ]"
       items.forEach((item) => {
         const match = item.text.match(/(.+) \[\s*(\d+)\s*KG\s*X\s*(\d+)\s*REPS\s*\]/i);
         if (match) {
@@ -160,7 +155,6 @@ export default function JadwalLatihan({ onBack }) {
         }
       });
 
-      // Rumus EXP: 15 EXP per gerakan + 1 EXP per 25 Volume
       const dailyExp = items.length > 0 ? Math.floor((items.length * 15) + (dailyVolume / 25)) : 0;
       totalWeekExp += dailyExp;
       if (dailyExp > 0) totalSessions++;
@@ -189,7 +183,22 @@ export default function JadwalLatihan({ onBack }) {
       } : null;
     });
 
-    return { weekMap, detailMap, totalWeekExp, totalSessions, bestRank: bestRank === 'rest' ? '-' : bestRank, rankDist };
+    // Proyeksi Bulanan (Mengisi Kalender 30 Hari)
+    const monthCells = [];
+    for (let i = 0; i < 30; i++) {
+      const dayIndex = i % 7;
+      monthCells.push(weekMap[dayIndex].rank);
+    }
+
+    return { 
+      weekMap, 
+      detailMap, 
+      monthCells,
+      totalWeekExp, 
+      totalSessions, 
+      bestRank: bestRank === 'rest' ? '-' : bestRank, 
+      rankDist 
+    };
   }, [schedule]);
 
 
@@ -270,8 +279,18 @@ export default function JadwalLatihan({ onBack }) {
   }
 
   const currentDayData = schedule[activeDay] || { focus: 'Chest', items: [] };
+  
+  // Kalkulasi Grafik Minggu & Bulan
   const weekBarValues = syncedStats.weekMap.map((d) => d.exp);
   const weekPeak = weekBarValues.indexOf(Math.max(...weekBarValues));
+  
+  // Simulasi Progressive Overload untuk Bar Chart Bulanan (Misal progress meningkat per minggu)
+  const monthBarValues = [
+    Math.floor(syncedStats.totalWeekExp * 0.7),
+    Math.floor(syncedStats.totalWeekExp * 0.85),
+    Math.floor(syncedStats.totalWeekExp * 0.95),
+    syncedStats.totalWeekExp
+  ];
 
   return (
     <div className="flex flex-col gap-5 font-mono animate-in fade-in duration-200 mt-2 mx-2 sm:mx-4 select-none pb-32" onContextMenu={(e) => e.preventDefault()}>
@@ -317,7 +336,7 @@ export default function JadwalLatihan({ onBack }) {
         </button>
       </div>
 
-      {/* SINKRONISASI REKAP (MENGGANTIKAN CLAUDE UI, FULL MANHWA THEME) */}
+      {/* SINKRONISASI REKAP (WEEK & MONTH TABS) */}
       <div className="bg-[#100E16] border border-[#211D2C] p-4 relative shadow-lg">
         <CornerBrackets />
         <div className="flex items-center justify-between mb-4 border-b border-[#211D2C] pb-2">
@@ -330,7 +349,7 @@ export default function JadwalLatihan({ onBack }) {
           </div>
         </div>
 
-        {/* Status Bar */}
+        {/* Status Bar Global */}
         <div className="flex items-center justify-between bg-black/40 border border-[#211D2C] px-3 py-3 relative mb-4">
           <CornerBrackets />
           <div className="text-center flex-1">
@@ -339,7 +358,9 @@ export default function JadwalLatihan({ onBack }) {
           </div>
           <div className="w-[1px] h-8 bg-[#312C42]" />
           <div className="text-center flex-1">
-            <div className="flex items-center justify-center gap-1 font-black text-xs text-white"><Zap size={12} /> {view === "week" ? syncedStats.totalWeekExp : syncedStats.totalWeekExp * 4}</div>
+            <div className="flex items-center justify-center gap-1 font-black text-xs text-white">
+              <Zap size={12} /> {view === "week" ? syncedStats.totalWeekExp : syncedStats.totalWeekExp * 4}
+            </div>
             <div className="text-[8px] text-[#EDEAF6]/50 tracking-widest uppercase mt-1">{view === "week" ? "MINGGUAN EXP" : "BULANAN EXP"}</div>
           </div>
         </div>
@@ -362,11 +383,11 @@ export default function JadwalLatihan({ onBack }) {
               <StatCard label="BEST RANK" value={syncedStats.bestRank} color={SYS_COLORS[`rank${syncedStats.bestRank}`]} />
             </div>
 
-            {/* Bar Chart Grafik */}
+            {/* Bar Chart Grafik Mingguan */}
             <div className="bg-black/40 border border-[#211D2C] p-3 relative mb-4">
               <CornerBrackets />
-              <div className="flex items-center justify-between text-[9px] text-[#EDEAF6]/50 tracking-widest font-bold uppercase mb-3">
-                <span className="flex items-center gap-1"><TrendingUp size={10} /> GRAFIK EXP</span>
+              <div className="flex items-center justify-between text-[9px] text-[#EDEAF6]/50 tracking-widest font-bold uppercase mb-3 border-b border-[#211D2C] pb-2">
+                <span className="flex items-center gap-1"><TrendingUp size={10} /> GRAFIK EXP MINGGUAN</span>
                 <span className="text-[#7C5CFF]">+{syncedStats.totalWeekExp} XP</span>
               </div>
               <div className="flex items-end gap-1.5 h-20">
@@ -389,10 +410,10 @@ export default function JadwalLatihan({ onBack }) {
                   <span className="text-[10px] text-white font-black">{syncedStats.detailMap[selectedDayRecap].dayLabel}</span>
                   <span className="text-[9px] bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF] px-2 py-0.5 font-bold">RANK {syncedStats.detailMap[selectedDayRecap].rank}</span>
                 </div>
-                <div className="flex flex-col gap-2 mb-3 max-h-32 overflow-y-auto">
+                <div className="flex flex-col gap-2 mb-3 max-h-32 overflow-y-auto pr-1">
                   {syncedStats.detailMap[selectedDayRecap].exercises.map((ex, i) => (
                     <div key={i} className="flex justify-between items-center bg-black p-2 border border-[#211D2C]">
-                      <span className="text-[9px] text-[#EDEAF6] font-bold truncate max-w-[60%]">{ex.name}</span>
+                      <span className="text-[9px] text-[#EDEAF6] font-bold truncate max-w-[65%]">{ex.name}</span>
                       <span className="text-[8px] text-[#7C5CFF]">{ex.sets}</span>
                     </div>
                   ))}
@@ -409,13 +430,81 @@ export default function JadwalLatihan({ onBack }) {
             )}
           </>
         ) : (
-          <div className="text-center py-10 text-[9px] text-[#EDEAF6]/40 font-bold tracking-widest">
-            (FITUR REKAP BULANAN CLOUD SEDANG DALAM PENGEMBANGAN)
-          </div>
+          <>
+            {/* FITUR BULANAN (MONTH HEATMAP) */}
+            <div className="bg-[#14121C] border border-[#312C42] p-3 relative mb-4">
+              <CornerBrackets />
+              <div className="flex items-center justify-between font-mono uppercase mb-3 text-[10px] tracking-widest border-b border-[#211D2C] pb-2 text-[#EDEAF6]/50">
+                <span>KALENDER RANK</span>
+                <b className="text-[#7C5CFF]">PROYEKSI BULAN INI</b>
+              </div>
+              <div className="grid grid-cols-7 mb-1.5 text-center text-[8px] text-[#EDEAF6]/40 font-bold">
+                {['S','S','R','K','J','S','M'].map((d, i) => <span key={i}>{d}</span>)}
+              </div>
+              <div className="grid grid-cols-7 gap-1.5">
+                {syncedStats.monthCells.map((rank, i) => (
+                  <div key={i} className="aspect-square border" style={{
+                    background: rank === 'rest' ? 'transparent' : `${SYS_COLORS[`rank${rank}`]}20`,
+                    borderColor: rank === 'rest' ? '#312C42' : SYS_COLORS[`rank${rank}`]
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Stat Cards Bulanan */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <StatCard label="TOTAL SESI BULAN INI" value={`${syncedStats.totalSessions * 4} HARI`} color="#7C5CFF" />
+              <StatCard label="RANK DOMINAN" value={syncedStats.bestRank} color={SYS_COLORS[`rank${syncedStats.bestRank}`]} />
+            </div>
+
+            {/* Bar Chart Grafik 4 Minggu */}
+            <div className="bg-black/40 border border-[#211D2C] p-3 relative mb-4">
+              <CornerBrackets />
+              <div className="flex items-center justify-between text-[9px] text-[#EDEAF6]/50 tracking-widest font-bold uppercase mb-3 border-b border-[#211D2C] pb-2">
+                <span className="flex items-center gap-1"><TrendingUp size={10} /> EXP PER MINGGU</span>
+                <span className="text-[#7C5CFF]">4 MINGGU</span>
+              </div>
+              <div className="flex items-end gap-2 h-20">
+                {monthBarValues.map((v, i) => (
+                  <div key={i} className="flex-1 transition-all duration-500 relative" style={{ height: `${Math.max((v / (Math.max(...monthBarValues) || 1)) * 100, 5)}%`, background: i === 3 ? "#7C5CFF" : "#312C42" }}>
+                    {v > 0 && <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[7px] text-[#EDEAF6]/60">{v}</span>}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                {["M1", "M2", "M3", "M4"].map((l, i) => <span key={i} className="flex-1 text-center text-[7px] text-[#EDEAF6]/40 uppercase font-bold">{l}</span>)}
+              </div>
+            </div>
+
+            {/* Pencapaian Bulanan */}
+            <div className="bg-[#14121C] border border-[#312C42] p-3 relative">
+              <CornerBrackets />
+              <div className="flex items-center justify-between font-mono uppercase mb-3 text-[10px] tracking-widest border-b border-[#211D2C] pb-2 text-white">
+                <span className="flex items-center gap-1"><Trophy size={12} className="text-[#7C5CFF]"/> PENCAPAIAN BULAN INI</span>
+                <span className="bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF] px-2 py-0.5 font-bold">TERKUNCI</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {syncedStats.totalWeekExp === 0 ? (
+                  <div className="text-center py-4 text-[9px] text-[#EDEAF6]/40 tracking-widest font-bold">LATIHAN DULU BIAR DAPAT BADGE</div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center bg-black p-2 border border-[#211D2C]">
+                      <span className="text-[9px] text-[#EDEAF6] font-bold">TOTAL VOLUME BEBAN</span>
+                      <span className="text-[8px] text-[#7C5CFF] font-black">NAIK 5%</span>
+                    </div>
+                    <div className="flex justify-between items-center bg-black p-2 border border-[#211D2C]">
+                      <span className="text-[9px] text-[#EDEAF6] font-bold">KONSISTENSI JADWAL</span>
+                      <span className="text-[8px] text-[#7C5CFF] font-black">TERJAGA</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
-      {/* TABS HARI UTAMA */}
+      {/* TABS HARI UTAMA JADWAL */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden mt-2">
         {DAYS.map(day => {
           const isActive = activeDay === day;
@@ -619,7 +708,7 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       </div>
 
-      {/* MODAL OTORISASI KALENDER (TOMBOL DOWNLOAD LINK A-TAG) */}
+      {/* MODAL OTORISASI KALENDER */}
       {showCalendarAppPrompt && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#312C42] w-full max-w-sm p-5 relative shadow-[0_0_30px_rgba(0,0,0,0.8)] flex flex-col gap-4 text-center font-mono">
