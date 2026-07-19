@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft, Plus, Trash2, ChevronDown, BookOpen, X, 
-  DownloadCloud, Target, Shield, HardDrive, Flame, Zap, Trophy, TrendingUp, Dumbbell 
+  DownloadCloud, Target, HardDrive, Flame, Zap, Trophy, TrendingUp, Dumbbell 
 } from 'lucide-react';
 
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -28,188 +28,16 @@ const ANATOMY_AREAS = [
   { id: 'Core', name: 'PERUT / CORE', img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=400&q=80' }
 ];
 
-// ---- DESIGN TOKENS CLAUDE RECAP ----
-const C = {
-  bg: "#08060F",
-  panel: "#15121F",
-  panel2: "#1B1729",
-  border: "#332C52",
-  border2: "#241F3A",
-  violet: "#8B7EF0",
-  violetSoft: "#5D53A8",
-  teal: "#3FE6C4",
-  text: "#EFEDFA",
-  dim: "#7E7AA0",
-  dim2: "#4E4A70",
+// --- MANHWA UI TOKENS (Menggantikan Token Claude) ---
+const SYS_COLORS = {
   rankS: "#9B8CFF",
   rankA: "#3FE6C4",
   rankB: "#EFEDFA",
   rankC: "#9C99B8",
   rankD: "#6E6B8F",
+  rest: "#312C42",
 };
 
-const RANK_COLOR = {
-  S: C.rankS,
-  A: C.rankA,
-  B: C.rankB,
-  C: C.rankC,
-  D: C.rankD,
-  rest: C.dim2,
-};
-
-const DEFAULT_WEEK = [
-  { label: "Sen", rank: "rest", exp: 0 },
-  { label: "Sel", rank: "B", exp: 60 },
-  { label: "Rab", rank: "S", exp: 95 },
-  { label: "Kam", rank: "rest", exp: 0 },
-  { label: "Jum", rank: "A", exp: 80 },
-  { label: "Sab", rank: "S", exp: 105 },
-  { label: "Min", rank: "rest", exp: 0 },
-];
-
-const DEFAULT_WEEK_DETAIL = {
-  2: {
-    dayLabel: "Rabu · Day #24",
-    category: "Push",
-    rank: "S",
-    durationMin: 58,
-    exp: 95,
-    exercises: [
-      { name: "Bench Press", sets: "4×8 @70kg", pr: true },
-      { name: "Overhead Press", sets: "3×10 @40kg", pr: false },
-      { name: "Incline DB Press", sets: "3×12 @24kg", pr: false },
-      { name: "Triceps Pushdown", sets: "3×15 @35kg", pr: false },
-    ],
-  },
-};
-
-const DEFAULT_MONTH_CELLS = [
-  "rest", "B", "S", "rest", "A", "A", "rest",
-  "B", "A", "S", "rest", "B", "S", "rest",
-  "rest", "A", "B", "B", "A", "S", "rest",
-  "B", "A", "", "rest", "", "", "",
-  "future", "future", "future",
-];
-
-const RANK_DIST = { S: 15, A: 1, B: 1, C: 1, D: 3 };
-
-// ---- CLAUDE UI HELPERS ----
-function BracketFrame({ children, style }) {
-  const corner = { position: "absolute", width: 14, height: 14 };
-  return (
-    <div style={{ position: "relative", ...style }}>
-      <div style={{ ...corner, top: 0, left: 0, borderTop: `2px solid ${C.violet}`, borderLeft: `2px solid ${C.violet}`, opacity: 0.8 }} />
-      <div style={{ ...corner, top: 0, right: 0, borderTop: `2px solid ${C.teal}`, borderRight: `2px solid ${C.teal}`, opacity: 0.8 }} />
-      <div style={{ ...corner, bottom: 0, left: 0, borderBottom: `2px solid ${C.teal}`, borderLeft: `2px solid ${C.teal}`, opacity: 0.8 }} />
-      <div style={{ ...corner, bottom: 0, right: 0, borderBottom: `2px solid ${C.violet}`, borderRight: `2px solid ${C.violet}`, opacity: 0.8 }} />
-      {children}
-    </div>
-  );
-}
-
-function StatCard({ label, value, color }) {
-  return (
-    <div className="rounded-xl p-3" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
-      <div className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: "0.08em", color: C.dim }}>{label}</div>
-      <div className="font-mono font-bold mt-1" style={{ fontSize: 19, color: color || C.text }}>{value}</div>
-    </div>
-  );
-}
-
-function RankBadge({ rank, size = 26 }) {
-  const color = RANK_COLOR[rank] || C.dim2;
-  const isRest = rank === "rest" || !rank;
-  return (
-    <div className="flex items-center justify-center rounded-md font-mono font-extrabold" style={{ width: size, height: size, fontSize: size * 0.44, color: isRest ? C.dim2 : color, background: isRest ? "transparent" : `${color}26`, border: isRest ? `1px dashed ${C.dim2}` : `1px solid ${color}` }}>
-      {isRest ? "–" : rank}
-    </div>
-  );
-}
-
-function RankDistribution({ dist }) {
-  return (
-    <div className="flex justify-between rounded-xl p-3" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
-      {Object.entries(dist).map(([rank, count]) => (
-        <div key={rank} className="text-center flex-1">
-          <div className="font-mono font-bold" style={{ fontSize: 12, color: RANK_COLOR[rank] }}>{rank}</div>
-          <div className="font-mono mt-1" style={{ fontSize: 13, color: C.text }}>{count}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function BarChart({ values, labels, peakIndex }) {
-  const max = Math.max(...values, 1);
-  return (
-    <div>
-      <div className="flex items-end gap-2" style={{ height: 88 }}>
-        {values.map((v, i) => (
-          <div key={i} className="flex-1 rounded-t" style={{ height: `${Math.max((v / max) * 100, 4)}%`, background: i === peakIndex ? `linear-gradient(180deg, ${C.teal}, #1F8F7C)` : `linear-gradient(180deg, ${C.violet}, ${C.violetSoft})` }} />
-        ))}
-      </div>
-      <div className="flex gap-2 mt-1.5">
-        {labels.map((l, i) => (
-          <span key={i} className="flex-1 text-center font-mono" style={{ fontSize: 8, color: C.dim }}>{l}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DailyDetail({ detail }) {
-  if (!detail) {
-    return (
-      <div className="rounded-2xl p-4 text-center font-mono" style={{ background: C.panel2, border: `1px solid ${C.border}`, fontSize: 11, color: C.dim }}>
-        Belum ada sesi di hari ini.
-      </div>
-    );
-  }
-  return (
-    <BracketFrame style={{ background: C.panel2, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 14px 14px" }}>
-      <div className="flex items-center justify-between mb-2.5">
-        <h3 className="font-mono m-0" style={{ fontSize: 16, color: C.text }}>{detail.dayLabel}</h3>
-        <span className="font-mono uppercase font-bold rounded-full" style={{ fontSize: 9, padding: "3px 8px", background: C.teal, color: C.bg }}>Rank {detail.rank}</span>
-      </div>
-      <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
-        {detail.exercises.map((ex, i) => (
-          <li key={i} className="flex items-center justify-between rounded-lg px-2.5 py-2" style={{ background: C.panel, border: `1px solid ${C.border2}` }}>
-            <span className="font-semibold" style={{ fontSize: 11.5, color: C.text }}>{ex.name}</span>
-            <span className="font-mono" style={{ fontSize: 10.5, color: C.dim }}>{ex.sets}{ex.pr && <span className="font-mono ml-1.5" style={{ fontSize: 9, color: C.teal }}>PR</span>}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="flex justify-between mt-3 pt-2.5 font-mono" style={{ borderTop: `1px dashed ${C.border2}`, fontSize: 9.5, color: C.dim }}>
-        <div>Durasi <b style={{ color: C.text, fontSize: 12.5 }}>{detail.durationMin} mnt</b></div>
-        <div>EXP <b style={{ color: C.text, fontSize: 12.5 }}>+{detail.exp}</b></div>
-        <div>Kategori <b style={{ color: C.text, fontSize: 12.5 }}>{detail.category}</b></div>
-      </div>
-    </BracketFrame>
-  );
-}
-
-function MonthHeatmap({ cells }) {
-  const weekdays = ["S", "S", "R", "K", "J", "S", "M"];
-  return (
-    <BracketFrame style={{ background: "linear-gradient(180deg, rgba(139,126,240,0.05), transparent)", borderRadius: 12, padding: "16px 14px 14px" }}>
-      <div className="flex items-center justify-between font-mono uppercase mb-3" style={{ fontSize: 10.5, letterSpacing: "0.1em", color: C.dim }}>
-        <span>Kalender Rank</span><b style={{ color: C.teal, fontWeight: 600 }}>Bulan Ini</b>
-      </div>
-      <div className="grid grid-cols-7 mb-1.5">
-        {weekdays.map((d, i) => <span key={i} className="text-center font-mono" style={{ fontSize: 8, color: C.dim }}>{d}</span>)}
-      </div>
-      <div className="grid grid-cols-7 gap-1.5">
-        {cells.map((rank, i) => {
-          if (rank === "future") return <div key={i} style={{ aspectRatio: "1", borderRadius: 5, border: `1px dashed #221E38` }} />;
-          if (rank === "rest" || rank === "") return <div key={i} style={{ aspectRatio: "1", borderRadius: 5, border: rank === "rest" ? `1px dashed ${C.dim2}` : "none", background: rank === "" ? "#1C1830" : "transparent" }} />;
-          return <div key={i} style={{ aspectRatio: "1", borderRadius: 5, background: RANK_COLOR[rank] }} />;
-        })}
-      </div>
-    </BracketFrame>
-  );
-}
-
-// ---- CUSTOM MANHWA CORNERS UNTUK ELEMEN LAIN ----
 const CornerBrackets = () => (
   <>
     <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-[#7C5CFF] pointer-events-none z-10" />
@@ -219,8 +47,28 @@ const CornerBrackets = () => (
   </>
 );
 
+function RankBadge({ rank, size = 26 }) {
+  const color = SYS_COLORS[`rank${rank}`] || SYS_COLORS.rest;
+  const isRest = rank === "rest" || !rank;
+  return (
+    <div className="flex items-center justify-center font-mono font-black border" style={{ width: size, height: size, fontSize: size * 0.44, color: isRest ? "#7E7AA0" : color, background: isRest ? "transparent" : `${color}20`, borderColor: isRest ? '#312C42' : color }}>
+      {isRest ? "-" : rank}
+    </div>
+  );
+}
+
+function StatCard({ label, value, color }) {
+  return (
+    <div className="p-3 bg-black/40 border border-[#211D2C] relative">
+      <CornerBrackets />
+      <div className="font-mono uppercase text-[#EDEAF6]/50 tracking-widest text-[9px]">{label}</div>
+      <div className="font-mono font-black mt-1 text-lg" style={{ color: color || "#EDEAF6" }}>{value}</div>
+    </div>
+  );
+}
+
 // ==========================================
-// MAIN COMPONENT EXPORT
+// MAIN COMPONENT
 // ==========================================
 export default function JadwalLatihan({ onBack }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -230,9 +78,9 @@ export default function JadwalLatihan({ onBack }) {
   const [showCalendarAppPrompt, setShowCalendarAppPrompt] = useState(false);
   const [customAlert, setCustomAlert] = useState({ isOpen: false, message: '' });
 
-  // Recap & Schedule States
+  // States
   const [view, setView] = useState("week"); // "week" | "month"
-  const [selectedDayRecap, setSelectedDayRecap] = useState(2);
+  const [selectedDayRecap, setSelectedDayRecap] = useState(0); 
   
   const [schedule, setSchedule] = useState(() => {
     return DAYS.reduce((acc, day) => ({ 
@@ -264,37 +112,89 @@ export default function JadwalLatihan({ onBack }) {
           }
         });
         setSchedule(normalized);
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
     }
     const timer = setTimeout(() => setIsLoading(false), 400);
 
-    const handlePopState = (e) => {
-      e.preventDefault();
-      onBack();
-    };
-    
+    const handlePopState = (e) => { e.preventDefault(); onBack(); };
     window.history.pushState(null, null, window.location.pathname);
     window.addEventListener('popstate', handlePopState);
 
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('popstate', handlePopState);
-    };
+    return () => { clearTimeout(timer); window.removeEventListener('popstate', handlePopState); };
   }, [onBack]);
 
   useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem('dg_workout_schedule', JSON.stringify(schedule));
-    }
+    if (!isLoading) localStorage.setItem('dg_workout_schedule', JSON.stringify(schedule));
   }, [schedule, isLoading]);
 
+  // ==========================================
+  // PROFESSOR GYM LOGIC: DYNAMIC RECAP SYNC
+  // ==========================================
+  const syncedStats = useMemo(() => {
+    const weekMap = [];
+    const detailMap = {};
+    const rankDist = { S: 0, A: 0, B: 0, C: 0, D: 0 };
+    let totalWeekExp = 0;
+    let totalSessions = 0;
+    let bestRank = 'D';
+
+    const rankOrder = { 'S': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1, 'rest': 0 };
+
+    DAYS.forEach((day, index) => {
+      const dayData = schedule[day] || { items: [], focus: 'Chest' };
+      const items = dayData.items || [];
+      let dailyVolume = 0;
+      const parsedExercises = [];
+
+      // Parse volume dari text: "Nama [ 40 KG X 12 REPS ]"
+      items.forEach((item) => {
+        const match = item.text.match(/(.+) \[\s*(\d+)\s*KG\s*X\s*(\d+)\s*REPS\s*\]/i);
+        if (match) {
+          const name = match[1].trim();
+          const kg = parseInt(match[2], 10);
+          const reps = parseInt(match[3], 10);
+          dailyVolume += (kg * reps);
+          parsedExercises.push({ name, sets: `${reps} Reps @${kg}kg` });
+        } else {
+          parsedExercises.push({ name: item.text, sets: "Auto" });
+        }
+      });
+
+      // Rumus EXP: 15 EXP per gerakan + 1 EXP per 25 Volume
+      const dailyExp = items.length > 0 ? Math.floor((items.length * 15) + (dailyVolume / 25)) : 0;
+      totalWeekExp += dailyExp;
+      if (dailyExp > 0) totalSessions++;
+
+      let rank = 'rest';
+      if (dailyExp > 0) {
+        if (dailyExp < 50) rank = 'D';
+        else if (dailyExp < 120) rank = 'C';
+        else if (dailyExp < 200) rank = 'B';
+        else if (dailyExp < 280) rank = 'A';
+        else rank = 'S';
+        
+        rankDist[rank]++;
+        if (rankOrder[rank] > rankOrder[bestRank]) bestRank = rank;
+      }
+
+      weekMap.push({ label: day.substring(0, 3), rank, exp: dailyExp });
+      
+      detailMap[index] = items.length > 0 ? {
+        dayLabel: `${day.toUpperCase()} LOG`,
+        category: dayData.focus.toUpperCase(),
+        rank: rank,
+        durationMin: items.length * 10, 
+        exp: dailyExp,
+        exercises: parsedExercises
+      } : null;
+    });
+
+    return { weekMap, detailMap, totalWeekExp, totalSessions, bestRank: bestRank === 'rest' ? '-' : bestRank, rankDist };
+  }, [schedule]);
+
+
   const handleSetData = (type, id) => {
-    setSchedule(prev => ({
-      ...prev,
-      [activeDay]: { ...prev[activeDay], [type]: id }
-    }));
+    setSchedule(prev => ({ ...prev, [activeDay]: { ...prev[activeDay], [type]: id } }));
   };
 
   const handleAddItem = (e) => {
@@ -327,9 +227,7 @@ export default function JadwalLatihan({ onBack }) {
 
   const executeCloudRouting = (mode) => {
     setShowCalendarAppPrompt(false);
-
-    let title = '';
-    let details = '';
+    let title = ''; let details = '';
 
     if (mode === 'daily') {
       const dayData = schedule[activeDay];
@@ -343,7 +241,6 @@ export default function JadwalLatihan({ onBack }) {
     else if (mode === 'weekly') {
       title = encodeURIComponent(`[GRIND LOG] JADWAL 1 MINGGU FULL`);
       let fullDetails = [];
-      
       DAYS.forEach(day => {
         const dayItems = schedule[day].items;
         if (dayItems.length > 0) {
@@ -352,7 +249,6 @@ export default function JadwalLatihan({ onBack }) {
           fullDetails.push(''); 
         }
       });
-
       if (fullDetails.length === 0) {
         setCustomAlert({ isOpen: true, message: 'SELURUH JADWAL MINGGUAN KOSONG! ISI MINIMAL 1 HARI SEBELUM SINKRONISASI.' });
         return;
@@ -367,27 +263,20 @@ export default function JadwalLatihan({ onBack }) {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 mt-2 mx-4 animate-pulse">
-        <div className="bg-[#100E16] border border-[#211D2C] p-4 h-16 rounded-none" />
-        <div className="bg-[#100E16] border border-[#211D2C] p-4 h-24 rounded-none" />
+        <div className="bg-[#100E16] border border-[#211D2C] p-4 h-16" />
+        <div className="bg-[#100E16] border border-[#211D2C] p-4 h-24" />
       </div>
     );
   }
 
   const currentDayData = schedule[activeDay] || { focus: 'Chest', items: [] };
-  
-  // Data for Claude's Recap
-  const weekBarValues = DEFAULT_WEEK.map((d) => d.exp);
+  const weekBarValues = syncedStats.weekMap.map((d) => d.exp);
   const weekPeak = weekBarValues.indexOf(Math.max(...weekBarValues));
-  const streak = 19;
-  const weekExp = 340;
-  const totalExp = 1670;
-  const level = 12;
-  const dayNumber = 24;
 
   return (
     <div className="flex flex-col gap-5 font-mono animate-in fade-in duration-200 mt-2 mx-2 sm:mx-4 select-none pb-32" onContextMenu={(e) => e.preventDefault()}>
       
-      {/* 1. HEADER NAVIGASI SYSTEM */}
+      {/* HEADER NAVIGASI SYSTEM */}
       <div className="flex items-center justify-between bg-[#100E16] border border-[#211D2C] p-3 shadow-lg relative">
         <CornerBrackets />
         <div className="flex items-center gap-3">
@@ -412,162 +301,121 @@ export default function JadwalLatihan({ onBack }) {
         </button>
       </div>
 
-      {/* 2. CLOUD ALARM CONTROL CARD */}
+      {/* CLOUD ALARM CONTROL CARD */}
       <div className="bg-[#100E16] border border-[#211D2C] p-4 shadow-lg relative flex flex-col gap-2">
         <CornerBrackets />
-        <span className="text-[10px] text-white font-bold uppercase tracking-wider flex items-center gap-1">
-          [INTEGRASI ALARM KALENDER HP]
+        <span className="text-[10px] text-white font-black uppercase tracking-wider flex items-center gap-1">
+          [INTEGRASI ALARM KALENDER]
         </span>
-        <p className="text-[9px] text-[#EDEAF6]/50 uppercase leading-relaxed tracking-wide">
-          Atur jadwal alarm olahraga Anda. Pilih untuk sinkronisasi per hari atau kirim seluruh jadwal mingguan sekaligus.
-        </p>
         <button
           type="button"
           onClick={() => setShowCalendarAppPrompt(true)}
           className="w-full mt-1 py-3 bg-[#211D2C] text-[#7C5CFF] font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 relative border border-[#312C42]"
         >
           <CornerBrackets />
-          <HardDrive size={13} /> HUBUNGKAN KE KALENDER
+          <HardDrive size={13} /> HUBUNGKAN KE KALENDER CLOUD
         </button>
       </div>
 
-      {/* 3. CLAUDE RECAP SYSTEM (MENGGANTIKAN ARSENAL) */}
-      <div className="w-full mx-auto rounded-3xl overflow-hidden font-sans pb-4" style={{ background: C.bg, border: "1px solid #211D33", boxShadow: "0 30px 70px -20px rgba(0,0,0,0.8)" }}>
-        <div className="px-4 pt-4">
-          <div className="flex items-center gap-1.5 font-mono uppercase" style={{ fontSize: 10, letterSpacing: "0.16em", color: C.teal }}>
-            <Target size={12} />
-            Modul Rekap
+      {/* SINKRONISASI REKAP (MENGGANTIKAN CLAUDE UI, FULL MANHWA THEME) */}
+      <div className="bg-[#100E16] border border-[#211D2C] p-4 relative shadow-lg">
+        <CornerBrackets />
+        <div className="flex items-center justify-between mb-4 border-b border-[#211D2C] pb-2">
+          <span className="font-black text-[#7C5CFF] text-[10px] tracking-widest uppercase flex items-center gap-1.5">
+            <Target size={12} /> [MODUL REKAP ANALITIK]
+          </span>
+          <div className="flex gap-1.5">
+            <button onClick={() => setView("week")} className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider border ${view === "week" ? "bg-[#7C5CFF] text-[#100E16] border-[#7C5CFF]" : "bg-transparent text-[#EDEAF6]/40 border-[#312C42]"}`}>MINGGU INI</button>
+            <button onClick={() => setView("month")} className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider border ${view === "month" ? "bg-[#7C5CFF] text-[#100E16] border-[#7C5CFF]" : "bg-transparent text-[#EDEAF6]/40 border-[#312C42]"}`}>BULAN INI</button>
           </div>
-          <h2 className="font-mono m-0 mt-1" style={{ fontSize: 19, color: C.text }}>
-            {view === "week" ? "Rekap Mingguan" : "Rekap Bulanan"}
-          </h2>
         </div>
 
-        <div className="flex gap-1.5 px-4 mt-3">
-          {["week", "month"].map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className="font-mono rounded-lg px-2.5 py-1.5"
-              style={{
-                fontSize: 9.5, letterSpacing: "0.04em",
-                border: `1px solid ${view === v ? C.violet : C.border}`,
-                background: view === v ? C.violet : "transparent",
-                color: view === v ? C.bg : C.dim,
-                fontWeight: view === v ? 700 : 400,
-              }}
-            >
-              {v === "week" ? "Minggu Ini" : "Bulan Ini"}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between mx-4 mt-3.5 rounded-2xl px-3.5 py-3" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-black/40 border border-[#211D2C] px-3 py-3 relative mb-4">
+          <CornerBrackets />
           <div className="text-center flex-1">
-            <div className="flex items-center justify-center gap-1 font-mono font-bold" style={{ fontSize: 15, color: "#FF9A4D" }}>
-              <Flame size={14} />
-              {view === "week" ? streak : `${Math.round(streak / 7)}mgu`}
-            </div>
-            <div className="font-mono uppercase mt-0.5" style={{ fontSize: 8, color: C.dim, letterSpacing: "0.08em" }}>Streak</div>
+            <div className="flex items-center justify-center gap-1 font-black text-xs text-[#7C5CFF]"><Flame size={12} /> SYNC</div>
+            <div className="text-[8px] text-[#EDEAF6]/50 tracking-widest uppercase mt-1">STATUS</div>
           </div>
-          <div style={{ width: 1, height: 26, background: C.border }} />
+          <div className="w-[1px] h-8 bg-[#312C42]" />
           <div className="text-center flex-1">
-            <div className="flex items-center justify-center gap-1 font-mono font-bold" style={{ fontSize: 15, color: C.teal }}>
-              <Zap size={14} />
-              {view === "week" ? weekExp : totalExp}
-            </div>
-            <div className="font-mono uppercase mt-0.5" style={{ fontSize: 8, color: C.dim, letterSpacing: "0.08em" }}>{view === "week" ? "EXP Minggu Ini" : "Total EXP"}</div>
-          </div>
-          <div style={{ width: 1, height: 26, background: C.border }} />
-          <div className="text-center flex-1">
-            <div className="font-mono font-bold" style={{ fontSize: 15, color: C.text }}>
-              {view === "week" ? `#${dayNumber}` : `LVL ${level}`}
-            </div>
-            <div className="font-mono uppercase mt-0.5" style={{ fontSize: 8, color: C.dim, letterSpacing: "0.08em" }}>{view === "week" ? "Day" : "Level"}</div>
+            <div className="flex items-center justify-center gap-1 font-black text-xs text-white"><Zap size={12} /> {view === "week" ? syncedStats.totalWeekExp : syncedStats.totalWeekExp * 4}</div>
+            <div className="text-[8px] text-[#EDEAF6]/50 tracking-widest uppercase mt-1">{view === "week" ? "MINGGUAN EXP" : "BULANAN EXP"}</div>
           </div>
         </div>
 
         {view === "week" ? (
           <>
-            <div className="flex justify-between gap-1.5 mx-4 mt-3 mb-1">
-              {DEFAULT_WEEK.map((d, i) => (
-                <button key={i} onClick={() => setSelectedDayRecap(i)} className="flex-1 flex flex-col items-center gap-1.5 rounded-lg py-2" style={{ background: selectedDayRecap === i ? "rgba(139,126,240,0.12)" : "transparent" }}>
-                  <RankBadge rank={d.rank} />
-                  <span className="font-mono uppercase" style={{ fontSize: 9, color: selectedDayRecap === i ? C.violet : C.dim }}>{d.label}</span>
+            {/* Rank Strip 7 Hari */}
+            <div className="flex justify-between gap-1 mb-4">
+              {syncedStats.weekMap.map((d, i) => (
+                <button key={i} onClick={() => setSelectedDayRecap(i)} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-colors border ${selectedDayRecap === i ? "bg-[#211D2C] border-[#7C5CFF]" : "bg-transparent border-transparent"}`}>
+                  <RankBadge rank={d.rank} size={22} />
+                  <span className={`text-[8px] font-bold tracking-widest uppercase ${selectedDayRecap === i ? "text-[#7C5CFF]" : "text-[#EDEAF6]/50"}`}>{d.label}</span>
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-2.5 mx-4 mt-2">
-              <StatCard label="Sessions" value={DEFAULT_WEEK.filter((d) => d.rank !== "rest").length} color={C.violet} />
-              <StatCard label="Total EXP" value={weekExp} color={C.teal} />
-              <StatCard label="Best Rank" value="S" color={C.rankS} />
-              <StatCard label="Top Category" value="Push" />
+
+            {/* Stat Cards */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <StatCard label="SESI AKTIF" value={`${syncedStats.totalSessions} HARI`} color="#7C5CFF" />
+              <StatCard label="BEST RANK" value={syncedStats.bestRank} color={SYS_COLORS[`rank${syncedStats.bestRank}`]} />
             </div>
-            <div className="mx-4 mt-2.5">
-              <RankDistribution dist={RANK_DIST} />
+
+            {/* Bar Chart Grafik */}
+            <div className="bg-black/40 border border-[#211D2C] p-3 relative mb-4">
+              <CornerBrackets />
+              <div className="flex items-center justify-between text-[9px] text-[#EDEAF6]/50 tracking-widest font-bold uppercase mb-3">
+                <span className="flex items-center gap-1"><TrendingUp size={10} /> GRAFIK EXP</span>
+                <span className="text-[#7C5CFF]">+{syncedStats.totalWeekExp} XP</span>
+              </div>
+              <div className="flex items-end gap-1.5 h-20">
+                {weekBarValues.map((v, i) => (
+                  <div key={i} className="flex-1 transition-all duration-500 relative" style={{ height: `${Math.max((v / (Math.max(...weekBarValues) || 1)) * 100, 5)}%`, background: i === weekPeak ? "#7C5CFF" : "#312C42" }}>
+                    {v > 0 && <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[7px] text-[#EDEAF6]/60">{v}</span>}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-1.5 mt-2">
+                {syncedStats.weekMap.map((d, i) => <span key={i} className="flex-1 text-center text-[7px] text-[#EDEAF6]/40 uppercase">{d.label[0]}</span>)}
+              </div>
             </div>
-            <div className="mx-4 mt-3.5">
-              <BracketFrame style={{ borderRadius: 12, padding: "16px 14px 14px", background: "linear-gradient(180deg, rgba(139,126,240,0.05), transparent)" }}>
-                <div className="flex items-center justify-between font-mono uppercase mb-3" style={{ fontSize: 10.5, letterSpacing: "0.1em", color: C.dim }}>
-                  <span className="flex items-center gap-1.5"><TrendingUp size={12} />Grafik EXP Harian</span>
-                  <b style={{ color: C.teal, fontWeight: 600 }}>+{weekExp} XP</b>
+
+            {/* Detail Harian Sesuai Pilihan Dropdown */}
+            {syncedStats.detailMap[selectedDayRecap] ? (
+              <div className="bg-[#14121C] border border-[#312C42] p-3 relative">
+                <CornerBrackets />
+                <div className="flex justify-between items-center mb-3 border-b border-[#211D2C] pb-2">
+                  <span className="text-[10px] text-white font-black">{syncedStats.detailMap[selectedDayRecap].dayLabel}</span>
+                  <span className="text-[9px] bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF] px-2 py-0.5 font-bold">RANK {syncedStats.detailMap[selectedDayRecap].rank}</span>
                 </div>
-                <BarChart values={weekBarValues} labels={DEFAULT_WEEK.map((d) => d.label[0])} peakIndex={weekPeak} />
-              </BracketFrame>
-            </div>
-            <div className="mx-4 mt-3.5">
-              <DailyDetail detail={DEFAULT_WEEK_DETAIL[selectedDayRecap]} />
-            </div>
+                <div className="flex flex-col gap-2 mb-3 max-h-32 overflow-y-auto">
+                  {syncedStats.detailMap[selectedDayRecap].exercises.map((ex, i) => (
+                    <div key={i} className="flex justify-between items-center bg-black p-2 border border-[#211D2C]">
+                      <span className="text-[9px] text-[#EDEAF6] font-bold truncate max-w-[60%]">{ex.name}</span>
+                      <span className="text-[8px] text-[#7C5CFF]">{ex.sets}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between text-[8px] text-[#EDEAF6]/50 tracking-widest pt-2 border-t border-[#211D2C]">
+                  <span>EXP: <b className="text-[#7C5CFF]">+{syncedStats.detailMap[selectedDayRecap].exp}</b></span>
+                  <span>DURASI: <b className="text-white">{syncedStats.detailMap[selectedDayRecap].durationMin}M</b></span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#14121C] border border-[#211D2C] p-4 text-center text-[9px] text-[#EDEAF6]/30 uppercase tracking-widest font-bold">
+                TIDAK ADA DATA LATIHAN DI HARI INI
+              </div>
+            )}
           </>
         ) : (
-          <>
-            <div className="mx-4 mt-3.5">
-              <MonthHeatmap cells={DEFAULT_MONTH_CELLS} />
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 mx-4 mt-3.5">
-              <StatCard label="Total Sessions" value={18} color={C.violet} />
-              <StatCard label="Total EXP" value={totalExp} color={C.teal} />
-              <StatCard label="Best Rank" value="S" color={C.rankS} />
-              <StatCard label="Top Category" value="Push" />
-            </div>
-            <div className="mx-4 mt-2.5">
-              <RankDistribution dist={RANK_DIST} />
-            </div>
-            <div className="mx-4 mt-3.5">
-              <BracketFrame style={{ borderRadius: 12, padding: "16px 14px 14px", background: "linear-gradient(180deg, rgba(139,126,240,0.05), transparent)" }}>
-                <div className="flex items-center justify-between font-mono uppercase mb-3" style={{ fontSize: 10.5, letterSpacing: "0.1em", color: C.dim }}>
-                  <span className="flex items-center gap-1.5"><TrendingUp size={12} />EXP per Minggu</span>
-                  <b style={{ color: C.teal, fontWeight: 600 }}>4 minggu</b>
-                </div>
-                <BarChart values={[55, 75, 100, 40]} labels={["Mgu 1", "Mgu 2", "Mgu 3", "Mgu 4"]} peakIndex={2} />
-              </BracketFrame>
-            </div>
-            <div className="mx-4 mt-3.5 mb-1">
-              <BracketFrame style={{ background: C.panel2, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 14px 14px" }}>
-                <div className="flex items-center justify-between mb-2.5">
-                  <h3 className="font-mono m-0 flex items-center gap-1.5" style={{ fontSize: 16, color: C.text }}><Trophy size={14} style={{ color: C.teal }} />Pencapaian Bulan Ini</h3>
-                  <span className="font-mono uppercase font-bold rounded-full" style={{ fontSize: 9, padding: "3px 8px", background: C.teal, color: C.bg }}>4/10 Badge</span>
-                </div>
-                <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
-                  {[
-                    { name: "Squat 1RM", sets: "90 → 100kg", pr: true },
-                    { name: "Deadlift 1RM", sets: "120 → 130kg", pr: true },
-                    { name: "Sesi terpanjang", sets: "1j 24mnt", pr: false },
-                    { name: "Title unlocked", sets: "Legendary Performer", pr: false },
-                  ].map((ex, i) => (
-                    <li key={i} className="flex items-center justify-between rounded-lg px-2.5 py-2" style={{ background: C.panel, border: `1px solid ${C.border2}` }}>
-                      <span className="font-semibold" style={{ fontSize: 11.5, color: C.text }}>{ex.name}</span>
-                      <span className="font-mono" style={{ fontSize: 10.5, color: C.dim }}>{ex.sets}{ex.pr && <span className="font-mono ml-1.5" style={{ fontSize: 9, color: C.teal }}>PR</span>}</span>
-                    </li>
-                  ))}
-                </ul>
-              </BracketFrame>
-            </div>
-          </>
+          <div className="text-center py-10 text-[9px] text-[#EDEAF6]/40 font-bold tracking-widest">
+            (FITUR REKAP BULANAN CLOUD SEDANG DALAM PENGEMBANGAN)
+          </div>
         )}
       </div>
 
-      {/* 4. TABS HARI */}
+      {/* TABS HARI UTAMA */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden mt-2">
         {DAYS.map(day => {
           const isActive = activeDay === day;
@@ -590,8 +438,8 @@ export default function JadwalLatihan({ onBack }) {
         })}
       </div>
 
-      {/* 5. MATRIKS KATEGORI ANATOMI OTOT SAJA (ARSENAL DIHAPUS) */}
-      <div className="flex flex-col gap-2 bg-[#100E16] border border-[#211D2C] p-3 relative">
+      {/* MATRIKS ANATOMI (TANPA ARSENAL PERALATAN GYM) */}
+      <div className="flex flex-col gap-2 bg-[#100E16] border border-[#211D2C] p-3 relative shadow-lg">
         <CornerBrackets />
         <span className="text-[9px] uppercase font-bold text-[#7C5CFF] tracking-widest flex items-center gap-1 border-b border-[#211D2C] pb-2">
           <Target size={10} /> [TARGET ANATOMI OTOT]
@@ -618,7 +466,7 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       </div>
 
-      {/* 6. PANEL DAFTAR AKTIVITAS (Form & List) */}
+      {/* PANEL DAFTAR AKTIVITAS (FORM INPUT) */}
       <div className="bg-[#100E16] border border-[#211D2C] flex flex-col relative shadow-md min-h-[220px]">
         <CornerBrackets />
         <div className="bg-[#14121C] border-b border-[#211D2C] p-3 flex justify-between items-center relative z-10">
@@ -751,10 +599,10 @@ export default function JadwalLatihan({ onBack }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-2 relative z-10">
-                <button type="button" onClick={() => { setIsAdding(false); setOpenDropdown(null); }} className="py-3 bg-transparent border border-[#312C42] text-xs font-black text-[#EDEAF6]/70 hover:text-white uppercase">
+                <button type="button" onClick={() => { setIsAdding(false); setOpenDropdown(null); }} className="py-3 bg-transparent border border-[#312C42] text-[10px] font-black text-[#EDEAF6]/70 hover:text-white uppercase tracking-widest">
                   BATAL
                 </button>
-                <button type="submit" className="py-3 bg-[#211D2C] text-[#7C5CFF] text-xs font-black uppercase relative border border-[#312C42]">
+                <button type="submit" className="py-3 bg-[#211D2C] text-[#7C5CFF] text-[10px] font-black uppercase tracking-widest relative border border-[#312C42]">
                   <CornerBrackets /> SIMPAN
                 </button>
               </div>
@@ -771,7 +619,7 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       </div>
 
-      {/* 7. MODAL OTORISASI KALENDER (TOMBOL DOWNLOAD DIUBAH KE LINK A-TAG) */}
+      {/* MODAL OTORISASI KALENDER (TOMBOL DOWNLOAD LINK A-TAG) */}
       {showCalendarAppPrompt && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#312C42] w-full max-w-sm p-5 relative shadow-[0_0_30px_rgba(0,0,0,0.8)] flex flex-col gap-4 text-center font-mono">
@@ -814,16 +662,16 @@ export default function JadwalLatihan({ onBack }) {
                 href="https://play.google.com/store/apps/details?id=com.google.android.calendar" 
                 target="_blank" 
                 rel="noreferrer"
-                className="w-full py-3 mt-1 bg-[#7C5CFF] text-white font-black text-xs uppercase flex items-center justify-center gap-2 shadow-lg relative active:scale-95 transition-transform"
+                className="w-full py-3 mt-1 bg-[#7C5CFF] text-white font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg relative active:scale-95 transition-transform"
               >
-                <DownloadCloud size={16} />
+                <DownloadCloud size={14} />
                 DOWNLOAD DI PLAYSTORE
               </a>
 
               <button 
                 type="button" 
                 onClick={() => setShowCalendarAppPrompt(false)} 
-                className="w-full py-3 text-[#EDEAF6]/40 text-xs font-bold uppercase mt-1 hover:text-white"
+                className="w-full py-3 text-[#EDEAF6]/40 text-[10px] font-bold uppercase mt-1 hover:text-white"
               >
                 BATAL
               </button>
@@ -832,7 +680,7 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       )}
 
-      {/* 8. ALERT DIALOG CUSTOM */}
+      {/* ALERT DIALOG CUSTOM */}
       {customAlert.isOpen && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[300] flex items-center justify-center p-4 animate-in fade-in duration-150">
           <div className="bg-[#100E16] border border-red-900/50 w-full max-w-xs p-5 relative text-center font-mono flex flex-col gap-4 shadow-2xl">
@@ -850,14 +698,14 @@ export default function JadwalLatihan({ onBack }) {
         </div>
       )}
 
-      {/* 9. MODAL PANDUAN DOKUMEN SISTEM */}
+      {/* MODAL PANDUAN DOKUMEN SISTEM */}
       {showGuideModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-[#100E16] border border-[#312C42] w-full max-w-md relative flex flex-col max-h-[85vh]">
             <CornerBrackets />
             <div className="bg-[#14121C] border-b border-[#211D2C] p-4 flex justify-between items-center relative z-10">
               <span className="text-white font-display font-black text-xs uppercase tracking-widest">[DOKUMEN PANDUAN]</span>
-              <button onClick={() => setShowGuideModal(false)} className="text-gray-500 hover:text-white"><X size={16} /></button>
+              <button onClick={() => setShowGuideModal(false)} className="text-[#EDEAF6]/50 hover:text-white"><X size={16} /></button>
             </div>
 
             <div className="grid grid-cols-4 border-b border-[#211D2C] bg-black/20 text-[9px] font-black uppercase tracking-wider text-center">
@@ -920,7 +768,7 @@ export default function JadwalLatihan({ onBack }) {
             </div>
 
             <div className="p-4 bg-black/40 border-t border-[#211D2C] relative z-10">
-              <button onClick={() => setShowGuideModal(false)} className="w-full py-3 bg-[#211D2C] text-xs font-black text-white uppercase active:scale-95 relative border border-[#312C42]">
+              <button onClick={() => setShowGuideModal(false)} className="w-full py-3 bg-[#211D2C] text-[10px] font-black text-white tracking-widest uppercase active:scale-95 relative border border-[#312C42]">
                 <CornerBrackets /> TUTUP DOKUMEN
               </button>
             </div>
