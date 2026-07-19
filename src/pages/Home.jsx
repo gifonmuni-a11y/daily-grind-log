@@ -487,9 +487,10 @@ export default function Home({ session }) {
         </div>
 
         {/* Skeleton Fixed Menu Dock */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 border border-[#211D2C] px-5 py-2.5 flex items-center gap-5 rounded-2xl max-w-[90%] w-max">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 border border-[#211D2C] px-5 py-2.5 flex items-center gap-4 rounded-2xl max-w-[90%] w-max">
           <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
-          <div className="w-14 h-14 rounded-2xl bg-[#211D2C]" />
+          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
+          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
           <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
         </div>
       </div>
@@ -645,7 +646,7 @@ export default function Home({ session }) {
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-4 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[95%] w-max">
         
-        {/* 🎯 TOMBOL BARU DI DOCK: SWORDS (JADWAL LATIHAN) */}
+        {/* 🎯 TOMBOL 1: SWORDS (JADWAL LATIHAN) */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'battle' ? 'grind' : 'battle')} 
@@ -656,6 +657,7 @@ export default function Home({ session }) {
           <Swords size={22} className={activeTab === 'battle' ? 'animate-pulse' : ''} />
         </button>
 
+        {/* 🎯 TOMBOL 2: TAMBAH LOG (+) */}
         <button 
           type="button" 
           onClick={handleNewLog} 
@@ -664,18 +666,20 @@ export default function Home({ session }) {
           <Plus size={22} />
         </button>
 
+        {/* 🎯 TOMBOL 3: MAP / RADAR */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'radar' ? 'grind' : 'radar')} 
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
             activeTab === 'radar' 
-              ? 'bg-[#7C5CFF] text-white shadow-[0_0_20px_rgba(124,92,255,0.6)] border border-[#a28eff]' 
-              : 'bg-[#1A1625] text-[#7C5CFF] border border-[#2B243C] hover:bg-[#7C5CFF]/10'
+              ? 'bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]' 
+              : 'bg-[#211D2C] text-white border border-[#312C42] hover:bg-[#7C5CFF]/20'
           }`}
         >
-          <Map size={24} className={activeTab === 'radar' ? 'animate-pulse' : ''} />
+          <Map size={22} className={activeTab === 'radar' ? 'animate-pulse' : ''} />
         </button>
 
+        {/* 🎯 TOMBOL 4: COMPANION AI */}
         <button 
           type="button" 
           onClick={() => setShowCompanion(true)} 
