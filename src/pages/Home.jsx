@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map, AlertTriangle, Swords } from 'lucide-react'
+import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map, AlertTriangle, Swords, User } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
 import { calcLevel, getRankTier, getEffectiveTotalExp } from '../lib/expSystem'
@@ -31,6 +31,7 @@ import AchievementUnlockModal from '../components/AchievementUnlockModal'
 import FitnessFoodMap from '../components/FitnessFoodMap'
 import AdminPanel from '../components/AdminPanel'
 import JadwalLatihan from '../components/JadwalLatihan'
+import StatusWindow from '../components/StatusWindow'
 import { requestNotificationPermission, sendSystemNotification } from '../lib/notificationSystem'
 
 // 🎯 DIRECT SUPABASE STORAGE AUDIO URL MAPPER
@@ -129,14 +130,16 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
+  // 🎯 ACTIVE TAB STATE
   const [activeTab, setActiveTab] = useState('grind') 
+  
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showBackConfirm, setShowBackConfirm] = useState(false) 
   const [deleteTargetId, setDeleteTargetId] = useState(null)
 
   const prevLevelRef = useRef(null)
   const prevUnlockedIdsRef = useRef(null)
-  // 🎯 SECURITY BY NAVIGATION: Mengunci sistem trap back ketika player memilih keluar mutlak
+  
   const isExitingRef = useRef(false)
 
   const [showLevelUp, setShowLevelUp] = useState(false)
@@ -146,7 +149,7 @@ export default function Home({ session }) {
 
   const [showWelcomeCover, setShowWelcomeCover] = useState(true)
   const [dismissWarnPopup, setDismissWarnPopup] = useState(false)
-  // 🎯 STATE MANHWA CUSTOM POPUP: Mengaktifkan modal box kustom pelacak streak hancur
+  
   const [showStreakBreakModal, setShowStreakBreakModal] = useState(false)
 
   const [showAdminModal, setShowAdminModal] = useState(false)
@@ -156,7 +159,6 @@ export default function Home({ session }) {
     window.history.pushState(null, null, window.location.pathname);
     
     const handlePopState = (e) => {
-      // 🛠️ FIX EMERGENCY EXIT: Jika status keluar aktif, biarkan sistem melompat keluar secara natural
       if (isExitingRef.current) return;
       e.preventDefault();
       setShowBackConfirm(true);
@@ -389,7 +391,7 @@ export default function Home({ session }) {
     setDismissWarnPopup(true)
   }
 
-  // 1️⃣ OPTIMASI TIMING PERDANA: Splash Screen Cover harus jadi rajanya, tampil pertama tanpa diblokir skeleton
+  // OPTIMASI TIMING PERDANA: Splash Screen Cover
   if (showWelcomeCover) {
     return (
       <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
@@ -423,12 +425,11 @@ export default function Home({ session }) {
     )
   }
 
-  // 2️⃣ KONDISI SKELETON: Hanya muncul setelah "MASUK SYSTEM" dan JIKA koneksi user lemot (loading masih true)
+  // KONDISI SKELETON LOADING
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-between select-none animate-pulse">
         <div className="max-w-lg mx-auto pb-32 w-full flex-1">
-          {/* Skeleton Top Navbar */}
           <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
             <div className="flex items-center gap-3 h-full">
               <div className="w-14 h-full bg-[#100E16]" />
@@ -440,7 +441,6 @@ export default function Home({ session }) {
             </div>
           </div>
 
-          {/* Skeleton ProfileHeader */}
           <div className="p-4 bg-[#0A0A0E] space-y-4" style={{ borderBottom: '1px solid #211D2C' }}>
             <div className="w-full h-28 bg-[#100E16] border border-[#211D2C]" />
             <div className="flex items-center gap-4">
@@ -452,7 +452,6 @@ export default function Home({ session }) {
             </div>
           </div>
 
-          {/* Skeleton Daily Quest Container */}
           <div className="mx-4 mt-4 mb-4" style={{ border: '1px solid #211D2C' }}>
             <div className="px-4 py-3 bg-[#0A0A0E]" style={{ borderBottom: '1px solid #211D2C' }}>
               <div className="w-24 h-3 bg-[#211D2C]" />
@@ -473,7 +472,6 @@ export default function Home({ session }) {
             </div>
           </div>
 
-          {/* Skeleton Achievements Container */}
           <div className="mx-4 mb-4" style={{ border: '1px solid #211D2C' }}>
             <div className="px-4 py-3 bg-[#0A0A0E]" style={{ borderBottom: '1px solid #211D2C' }}>
               <div className="w-36 h-3 bg-[#211D2C]" />
@@ -486,12 +484,13 @@ export default function Home({ session }) {
           </div>
         </div>
 
-        {/* Skeleton Fixed Menu Dock */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 border border-[#211D2C] px-5 py-2.5 flex items-center gap-4 rounded-2xl max-w-[90%] w-max">
-          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
-          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
-          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
-          <div className="w-12 h-12 rounded-xl bg-[#211D2C]" />
+        {/* Skeleton Fixed Menu Dock (5 Buttons) */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 border border-[#211D2C] px-4 py-2.5 flex items-center gap-2 sm:gap-3 rounded-2xl max-w-[95%] w-max">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#211D2C]" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#211D2C]" />
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#211D2C]" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#211D2C]" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#211D2C]" />
         </div>
       </div>
     )
@@ -636,56 +635,74 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* 🎯 TAB BARU: JADWAL LATIHAN */}
+        {/* 🎯 TAB MENU SISTEM BARU */}
         {activeTab === 'battle' && (
           <JadwalLatihan onBack={() => setActiveTab('grind')} />
         )}
 
-        {activeTab === 'radar' && <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />}
+        {activeTab === 'radar' && (
+          <FitnessFoodMap onBackToHome={() => setActiveTab('grind')} />
+        )}
+
+        {activeTab === 'status' && (
+          <StatusWindow onBack={() => setActiveTab('grind')} />
+        )}
       </div>
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-5 py-2.5 flex items-center gap-4 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[95%] w-max">
+      {/* 🎯 DOCK NAVIGATION BOTTOM FIXED (5 TOMBOL PRECISI MOBILE) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-4 py-2.5 flex items-center gap-2 sm:gap-3 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[95%] w-max">
         
-        {/* 🎯 TOMBOL 1: SWORDS (JADWAL LATIHAN) */}
+        {/* TOMBOL 1: STATUS WINDOW (KIRI) */}
+        <button 
+          type="button" 
+          onClick={() => setActiveTab(activeTab === 'status' ? 'grind' : 'status')} 
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
+            activeTab === 'status' ? 'bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]' : 'bg-[#211D2C] text-white border border-[#312C42] hover:bg-[#7C5CFF]/20'
+          }`}
+        >
+          <User size={20} className={activeTab === 'status' ? 'animate-pulse' : ''} />
+        </button>
+
+        {/* TOMBOL 2: BATTLE / JADWAL LATIHAN */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'battle' ? 'grind' : 'battle')} 
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
             activeTab === 'battle' ? 'bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]' : 'bg-[#211D2C] text-white border border-[#312C42] hover:bg-[#7C5CFF]/20'
           }`}
         >
-          <Swords size={22} className={activeTab === 'battle' ? 'animate-pulse' : ''} />
+          <Swords size={20} className={activeTab === 'battle' ? 'animate-pulse' : ''} />
         </button>
 
-        {/* 🎯 TOMBOL 2: TAMBAH LOG (+) */}
+        {/* TOMBOL 3: TAMBAH LOG (+) (TENGAH, PALING MENCOLOK) */}
         <button 
           type="button" 
           onClick={handleNewLog} 
-          className="w-12 h-12 rounded-xl bg-[#211D2C] border border-[#312C42] hover:bg-[#7C5CFF]/20 flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#7C5CFF] border border-[#a28eff] hover:bg-[#6b52e0] shadow-[0_0_15px_rgba(124,92,255,0.4)] flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
         >
-          <Plus size={22} />
+          <Plus size={24} />
         </button>
 
-        {/* 🎯 TOMBOL 3: MAP / RADAR */}
+        {/* TOMBOL 4: MAP / RADAR */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'radar' ? 'grind' : 'radar')} 
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0 ${
             activeTab === 'radar' 
               ? 'bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF]' 
               : 'bg-[#211D2C] text-white border border-[#312C42] hover:bg-[#7C5CFF]/20'
           }`}
         >
-          <Map size={22} className={activeTab === 'radar' ? 'animate-pulse' : ''} />
+          <Map size={20} className={activeTab === 'radar' ? 'animate-pulse' : ''} />
         </button>
 
-        {/* 🎯 TOMBOL 4: COMPANION AI */}
+        {/* TOMBOL 5: COMPANION AI */}
         <button 
           type="button" 
           onClick={() => setShowCompanion(true)} 
-          className="w-12 h-12 rounded-xl bg-[#211D2C] border border-[#312C42] hover:bg-[#7C5CFF]/20 flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
+          className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#211D2C] border border-[#312C42] hover:bg-[#7C5CFF]/20 flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
         >
-          <Bot size={22} />
+          <Bot size={20} />
         </button>
       </div>
 
