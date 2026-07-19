@@ -120,7 +120,10 @@ export default function JadwalLatihan({ onBack }) {
   }, [onBack]);
 
   useEffect(() => {
-    if (!isLoading) localStorage.setItem('dg_workout_schedule', JSON.stringify(schedule));
+    if (!isLoading) {
+      localStorage.setItem('dg_workout_schedule', JSON.stringify(schedule));
+      window.dispatchEvent(new Event('dg-schedule-updated')); // trigger sync ke StatusWindow
+    }
   }, [schedule, isLoading]);
 
   // ==========================================

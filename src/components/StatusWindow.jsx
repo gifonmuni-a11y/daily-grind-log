@@ -1,27 +1,130 @@
-import React, { useState, useEffect } from 'react'
-import { Camera, User, Activity, Zap, Shield, Brain, Eye, ChevronLeft, Upload } from 'lucide-react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { Camera, User, Activity, Zap, Shield, Brain, Eye, ChevronLeft } from 'lucide-react'
+
+const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+
+const AREA_STAT_MAP = {
+  Chest: 'str', Back: 'str', Shoulders: 'str',
+  Arms: 'agi', Core: 'agi',
+  Legs: 'vit'
+}
+
+const JOB_MAP = {
+  Chest: 'STRIKER', Back: 'STRIKER', Shoulders: 'STRIKER',
+  Arms: 'BRAWLER', Core: 'ASSASSIN', Legs: 'TANK'
+}
+
+const TITLE_MAP = { S: 'MONARCH', A: 'AWAKENED', B: 'HUNTER', C: 'NOVICE', D: 'E-RANK', '-': 'UNRANKED' }
+
+const BASE_STATS = { str: 15, agi: 12, vit: 14, int: 10, per: 11 }
+const RANK_ORDER = { S: 5, A: 4, B: 3, C: 2, D: 1, rest: 0 }
+
+function computePlayerProgress(schedule) {
+  const bonus = { str: 0, agi: 0, vit: 0, int: 0, per: 0 }
+  const uniqueExercises = new Set()
+  const focusCount = {}
+  let totalExp = 0
+  let totalSessions = 0
+  let bestRank = 'D'
+  let hasAnyData = false
+
+  DAYS.forEach(day => {
+    const dayData = schedule[day] || { items: [], focus: 'Chest' }
+    const items = dayData.items || []
+    let dailyVolume = 0
+
+    items.forEach(item => {
+      const match = item.text.match(/(.+) \[\s*(\d+)\s*KG\s*X\s*(\d+)\s*REPS\s*\]/i)
+      if (match) {
+        uniqueExercises.add(match[1].trim())
+        dailyVolume += parseInt(match[2], 10) * parseInt(match[3], 10)
+      } else {
+        uniqueExercises.add(item.text)
+      }
+    })
+
+    const dailyExp = items.length > 0 ? Math.floor(items.length * 15 + dailyVolume / 25) : 0
+    totalExp += dailyExp
+
+    if (dailyExp > 0) {
+      hasAnyData = true
+      totalSessions++
+      focusCount[dayData.focus] = (focusCount[dayData.focus] || 0) + 1
+
+      const statKey = AREA_STAT_MAP[dayData.focus] || 'str'
+      bonus[statKey] += Math.floor(dailyVolume / 200)
+
+      let rank = 'D'
+      if (dailyExp >= 280) rank = 'S'
+      else if (dailyExp >= 200) rank = 'A'
+      else if (dailyExp >= 120) rank = 'B'
+      else if (dailyExp >= 50) rank = 'C'
+      if (RANK_ORDER[rank] > RANK_ORDER[bestRank]) bestRank = rank
+    }
+  })
+
+  bonus.int = totalSessions
+  bonus.per = uniqueExercises.size
+
+  let dominantFocus = 'Chest'
+  let maxCount = 0
+  Object.entries(focusCount).forEach(([focus, count]) => {
+    if (count > maxCount) { maxCount = count; dominantFocus = focus }
+  })
+
+  const level = 1 + Math.floor(totalExp / 500)
+  const currentLevelExp = totalExp % 500
+
+  return {
+    level,
+    str: BASE_STATS.str + bonus.str,
+    agi: BASE_STATS.agi + bonus.agi,
+    vit: BASE_STATS.vit + bonus.vit,
+    int: BASE_STATS.int + bonus.int,
+    per: BASE_STATS.per + bonus.per,
+    exp: currentLevelExp,
+    nextExp: 500,
+    job: hasAnyData ? JOB_MAP[dominantFocus] : 'NONE',
+    title: hasAnyData ? (TITLE_MAP[bestRank] || 'AWAKENED') : 'AWAKENED'
+  }
+}
+
+function loadSchedule() {
+  try {
+    const saved = localStorage.getItem('dg_workout_schedule')
+    if (!saved) return null
+    return JSON.parse(saved)
+  } catch (e) {
+    return null
+  }
+}
 
 export default function StatusWindow({ onBack }) {
   const [avatar, setAvatar] = useState(null)
-  const [stats, setStats] = useState({
-    level: 1,
-    str: 15,
-    agi: 12,
-    vit: 14,
-    int: 10,
-    per: 11,
-    exp: 450,
-    nextExp: 1000,
-    job: 'NONE',
-    title: 'AWAKENED'
-  })
+  const [schedule, setSchedule] = useState(() => loadSchedule() || {})
 
   useEffect(() => {
     const savedAvatar = localStorage.getItem('dg_status_avatar')
-    if (savedAvatar) {
-      setAvatar(savedAvatar)
+    if (savedAvatar) setAvatar(savedAvatar)
+
+    // Sinkron ulang setiap kali StatusWindow dibuka
+    const fresh = loadSchedule()
+    if (fresh) setSchedule(fresh)
+
+    // Dengarkan update live dari JadwalLatihan (kalau kedua komponen aktif bersamaan)
+    const handleSync = () => {
+      const updated = loadSchedule()
+      if (updated) setSchedule(updated)
+    }
+    window.addEventListener('dg-schedule-updated', handleSync)
+    window.addEventListener('storage', handleSync)
+    return () => {
+      window.removeEventListener('dg-schedule-updated', handleSync)
+      window.removeEventListener('storage', handleSync)
     }
   }, [])
+
+  const stats = useMemo(() => computePlayerProgress(schedule), [schedule])
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0]
@@ -36,11 +139,13 @@ export default function StatusWindow({ onBack }) {
     }
   }
 
+  const expPercent = Math.min((stats.exp / stats.nextExp) * 100, 100)
+
   return (
     <div className="w-full h-full bg-[#0A0A0E] text-white font-mono p-4 pb-32 animate-in fade-in duration-300">
-      
+
       <div className="flex items-center gap-3 mb-6 border-b border-[#211D2C] pb-4">
-        <button 
+        <button
           onClick={onBack}
           className="p-2 bg-[#100E16] border border-[#211D2C] hover:bg-[#7C5CFF]/20 text-white transition-all active:scale-95"
         >
@@ -49,6 +154,9 @@ export default function StatusWindow({ onBack }) {
         <h1 className="text-lg font-black tracking-widest text-[#7C5CFF] uppercase">
           STATUS WINDOW
         </h1>
+        <span className="ml-auto text-[8px] text-[#7C5CFF]/70 border border-[#7C5CFF]/40 px-2 py-1 tracking-widest uppercase">
+          SYNCED
+        </span>
       </div>
 
       <div className="relative bg-[#100E16] border border-[#211D2C] p-5 shadow-[0_0_30px_rgba(124,92,255,0.1)] mb-6">
@@ -58,7 +166,7 @@ export default function StatusWindow({ onBack }) {
         <div className="absolute -bottom-[2px] -right-[2px] w-4 h-4 border-b-2 border-r-2 border-[#7C5CFF]" />
 
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-          
+
           <div className="relative group flex-shrink-0">
             <div className="w-32 h-32 md:w-40 md:h-40 border-2 border-[#312C42] bg-[#0A0A0E] overflow-hidden relative shadow-[0_0_15px_rgba(0,0,0,0.5)]">
               {avatar ? (
@@ -69,19 +177,19 @@ export default function StatusWindow({ onBack }) {
                   <span className="text-[10px] tracking-widest uppercase">NO IMAGE</span>
                 </div>
               )}
-              
+
               <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200">
                 <Camera size={24} className="text-[#7C5CFF] mb-1" />
                 <span className="text-[10px] text-white tracking-wider uppercase font-bold">Upload</span>
-                <input 
-                  type="file" 
-                  accept="image/jpeg, image/png, image/webp" 
-                  onChange={handlePhotoUpload} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  accept="image/jpeg, image/png, image/webp"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
                 />
               </label>
             </div>
-            
+
             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#7C5CFF] text-white text-[10px] font-black px-3 py-1 tracking-widest uppercase shadow-[0_0_10px_rgba(124,92,255,0.4)] whitespace-nowrap">
               LV. {stats.level}
             </div>
@@ -109,9 +217,9 @@ export default function StatusWindow({ onBack }) {
                 <p className="text-[10px] text-gray-400 font-mono">{stats.exp} / {stats.nextExp}</p>
               </div>
               <div className="w-full h-2 bg-[#211D2C] overflow-hidden">
-                <div 
-                  className="h-full bg-[#7C5CFF] shadow-[0_0_10px_rgba(124,92,255,0.6)]" 
-                  style={{ width: '45%' }}
+                <div
+                  className="h-full bg-[#7C5CFF] shadow-[0_0_10px_rgba(124,92,255,0.6)] transition-all duration-500"
+                  style={{ width: `${expPercent}%` }}
                 />
               </div>
             </div>
@@ -120,13 +228,13 @@ export default function StatusWindow({ onBack }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
+
         <div className="bg-[#100E16] border border-[#211D2C] p-4 relative">
           <h2 className="text-xs font-black text-[#7C5CFF] tracking-widest uppercase mb-4 flex items-center gap-2">
             <Activity size={14} />
             Physical Stats
           </h2>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
@@ -165,7 +273,7 @@ export default function StatusWindow({ onBack }) {
             <Brain size={14} />
             Mental Stats
           </h2>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
