@@ -167,8 +167,8 @@ export default function StatusWindow({ onBack }) {
             <span className="text-[#7C5CFF] font-bold text-[10px] tracking-widest uppercase flex items-center gap-1">
               [INFORMASI PEMAIN]
             </span>
-            <span className="font-display font-black text-sm text-white uppercase tracking-widest">
-              STATUS WINDOW
+            <span className="font-display font-black text-sm text-white uppercase tracking-widest text-green-400">
+              STATUS WINDOW (VERSI BARU)
             </span>
           </div>
         </div>
@@ -188,6 +188,7 @@ export default function StatusWindow({ onBack }) {
             </div>
           )}
           
+          {/* TOMBOL KAMERA PERMANENNYA DI SINI */}
           <label className="absolute -bottom-3 -right-3 bg-[#7C5CFF] border border-[#211D2C] p-2 cursor-pointer z-20 flex items-center justify-center shadow-[0_0_10px_rgba(124,92,255,0.5)] active:scale-95 transition-all">
             <Camera size={16} className="text-white" />
             <input 
