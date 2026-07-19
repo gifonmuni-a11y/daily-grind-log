@@ -23,7 +23,7 @@ const CornerBrackets = () => (
 );
 
 function ProgressBar({ label, value, max, color, icon: Icon }) {
-  const percentage = Math.min((value / max) * 100, 100);
+  const percentage = Math.min(value / (max / 100), 100);
   return (
     <div className="mb-4 relative">
       <div className="flex justify-between items-end mb-1">
@@ -67,18 +67,18 @@ export default function StatusWindow({ onBack }) {
           if (day.items && Array.isArray(day.items)) {
             let dailyVolume = 0;
             day.items.forEach(item => {
-              const match = item.text.match(/(.+) \[\s*(\d+)\s*KG\s*X\s*(\d+)\s*REPS\s*\]/i);
+              const match = item.text.match(/(.+) \[\s{0,}(\d+)\s{0,}KG\s{0,}X\s{0,}(\d+)\s{0,}REPS\s{0,}\]/i);
               if (match) {
-                dailyVolume += (parseInt(match[2], 10) * parseInt(match[3], 10));
+                dailyVolume += Math.imul(parseInt(match[2], 10), parseInt(match[3], 10));
               }
             });
-            totalExpCalc += day.items.length > 0 ? Math.floor((day.items.length * 15) + (dailyVolume / 25)) : 0;
+            totalExpCalc += day.items.length > 0 ? Math.floor(Math.imul(day.items.length, 15) + (dailyVolume / 25)) : 0;
           }
         });
       } catch (e) { console.error(e); }
     }
     
-    setSyncedExp(totalExpCalc * 4);
+    setSyncedExp(Math.imul(totalExpCalc, 4));
 
     const savedStats = localStorage.getItem('dg_player_status');
     if (savedStats) {
@@ -142,7 +142,7 @@ export default function StatusWindow({ onBack }) {
     if (playerData.bodyWeight > 0) {
       vitBonus = 5; 
     }
-    const vit = 10 + Math.floor(level * 1.5) + vitBonus;
+    const vit = 10 + Math.floor(level + (level / 2)) + vitBonus;
 
     let jobClass = "KANDIDAT PEMULA";
     if (level >= 15) jobClass = "MONARCH OF IRON";
@@ -177,7 +177,7 @@ export default function StatusWindow({ onBack }) {
       <div className="bg-[#100E16] border border-[#211D2C] p-5 shadow-lg relative flex flex-col items-center justify-center text-center">
         <CornerBrackets />
         
-        <div className="w-24 h-24 border-2 border-[#7C5CFF] bg-[#14121C] mb-3 relative shadow-[0_0_15px_rgba(124,92,255,0.3)] group overflow-hidden cursor-pointer">
+        <div className="w-24 h-24 border-2 border-[#7C5CFF] bg-[#14121C] mb-3 relative shadow-[0_0_15px_rgba(124,92,255,0.3)]">
           <CornerBrackets />
           {avatar ? (
             <img src={avatar} alt="Player Avatar" className="w-full h-full object-cover" />
@@ -188,9 +188,8 @@ export default function StatusWindow({ onBack }) {
             </div>
           )}
           
-          <label className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 cursor-pointer">
-            <Camera size={24} className="text-[#7C5CFF] mb-1" />
-            <span className="text-[10px] text-white tracking-wider uppercase font-bold">UPLOAD</span>
+          <label className="absolute -bottom-3 -right-3 bg-[#7C5CFF] border border-[#211D2C] p-2 cursor-pointer z-20 flex items-center justify-center shadow-[0_0_10px_rgba(124,92,255,0.5)] active:scale-95 transition-all">
+            <Camera size={16} className="text-white" />
             <input 
               type="file" 
               accept="image/jpeg, image/png, image/webp" 
@@ -213,7 +212,7 @@ export default function StatusWindow({ onBack }) {
           <div className="h-1.5 w-full bg-black border border-[#211D2C] overflow-hidden">
             <div 
               className="h-full bg-[#7C5CFF] transition-all duration-1000"
-              style={{ width: `${(stats.currentLevelExp / 500) * 100}%` }}
+              style={{ width: `${stats.currentLevelExp / 5}%` }}
             />
           </div>
         </div>
