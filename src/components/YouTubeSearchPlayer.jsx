@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, X, Loader2, AlertTriangle, SkipForward, SkipBack, PictureInPicture2, ListMusic } from 'lucide-react'
+import { Search, X, Loader2, AlertTriangle, Play } from 'lucide-react'
 
-// v2 — nambah: queue, next/prev manual, auto-advance pas lagu abis,
-// dan Picture-in-Picture (kalau browser-nya support documentPictureInPicture).
+// v3 — Clean version: No custom queue, No PiP manual, full Native YouTube Player features
+// Ditambah trik Dummy Audio biar tembus Background Play di HP.
 
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
@@ -17,31 +17,20 @@ function loadYouTubeIframeApi() {
   return ytApiPromise
 }
 
+// URL audio kosong (silent mp3) berdurasi 0.1 detik untuk menipu OS HP
+const SILENT_MP3 = "data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/zD/"
+
 export default function YouTubeSearchPlayer() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [queue, setQueue] = useState([])
-  const [currentIndex, setCurrentIndex] = useState(-1)
-  const [pipSupported, setPipSupported] = useState(false)
-  const [pipActive, setPipActive] = useState(false)
+  const [nowPlaying, setNowPlaying] = useState(null)
 
   const debounceRef = useRef(null)
   const playerContainerRef = useRef(null)
   const playerRef = useRef(null)
-  const pipWindowRef = useRef(null)
-  const queueRef = useRef(queue)
-  const currentIndexRef = useRef(currentIndex)
-
-  queueRef.current = queue
-  currentIndexRef.current = currentIndex
-
-  const nowPlaying = currentIndex >= 0 ? queue[currentIndex] : null
-
-  useEffect(() => {
-    setPipSupported(typeof window !== 'undefined' && 'documentPictureInPicture' in window)
-  }, [])
+  const audioRef = useRef(null) // Ref untuk audio dummy
 
   const runSearch = useCallback(async (q) => {
     if (!q.trim()) { setResults([]); setError(''); return }
@@ -66,54 +55,66 @@ export default function YouTubeSearchPlayer() {
     return () => clearTimeout(debounceRef.current)
   }, [query, runSearch])
 
-  function goToIndex(index) {
-    const q = queueRef.current
-    if (index < 0 || index >= q.length) return
-    setCurrentIndex(index)
-    const track = q[index]
+  // Fungsi Play Track Baru (Dipanggil pas user klik hasil search)
+  function playVideo(track) {
+    setNowPlaying(track)
+    
+    // Pancing audio dummy untuk minta izin background play ke OS
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.log('Audio dummy pancingan gagal:', e))
+    }
+
     if (playerRef.current && playerRef.current.loadVideoById) {
       playerRef.current.loadVideoById(track.videoId)
     }
+
+    // Update info di Lock Screen HP
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.channel,
+        artwork: [{ src: track.thumb, sizes: '512x512', type: 'image/jpeg' }]
+      })
+
+      // Sambungkan tombol play/pause di lock screen HP ke Iframe YouTube
+      navigator.mediaSession.setActionHandler('play', () => {
+        playerRef.current?.playVideo()
+      })
+      navigator.mediaSession.setActionHandler('pause', () => {
+        playerRef.current?.pauseVideo()
+      })
+    }
   }
 
-  function handleNext() {
-    goToIndex(currentIndexRef.current + 1)
-  }
-
-  function handlePrev() {
-    goToIndex(currentIndexRef.current - 1)
-  }
-
-  function playNow(track) {
-    setQueue(q => {
-      const exists = q.findIndex(t => t.videoId === track.videoId)
-      if (exists !== -1) {
-        setCurrentIndex(exists)
-        return q
-      }
-      const newQueue = [...q, track]
-      setCurrentIndex(newQueue.length - 1)
-      return newQueue
-    })
-  }
-
-  function addToQueue(track) {
-    setQueue(q => (q.find(t => t.videoId === track.videoId) ? q : [...q, track]))
-  }
-
-  // Inisialisasi YT Player sekali, dipasang ke div kontainer.
+  // Inisialisasi YouTube Player
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
       if (cancelled || !playerContainerRef.current || playerRef.current) return
+      
       playerRef.current = new YT.Player(playerContainerRef.current, {
         height: '100%',
         width: '100%',
-        playerVars: { autoplay: 1, playsinline: 1 },
+        // playerVars dibiarkan standar agar tombol next/rekomendasi bawaan YT muncul
+        playerVars: { 
+          autoplay: 1, 
+          playsinline: 1, 
+          enablejsapi: 1,
+          rel: 1, // Penting: Biarkan rekomendasi video muncul saat video selesai
+          controls: 1 // Munculkan kontrol bawaan YT
+        },
         events: {
           onStateChange: (event) => {
-            if (event.data === YT.PlayerState.ENDED) {
-              handleNext()
+            // SINKRONISASI STATUS YOUTUBE DENGAN OS HP LU
+            if (event.data === YT.PlayerState.PLAYING) {
+               // Putar audio dummy agar HP tidak mematikan PWA di background
+               if (audioRef.current) audioRef.current.play().catch(() => {})
+               if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing"
+            } 
+            else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+               // Pause audio dummy
+               if (audioRef.current) audioRef.current.pause()
+               if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused"
             }
           },
         },
@@ -122,48 +123,13 @@ export default function YouTubeSearchPlayer() {
     return () => { cancelled = true }
   }, [])
 
-  // Load video baru pas currentIndex berubah (misal dari klik hasil search).
-  useEffect(() => {
-    if (!nowPlaying || !playerRef.current || !playerRef.current.loadVideoById) return
-    playerRef.current.loadVideoById(nowPlaying.videoId)
-  }, [currentIndex])
-
-  async function togglePip() {
-    if (!pipSupported) return
-    try {
-      if (pipActive && pipWindowRef.current) {
-        pipWindowRef.current.close()
-        return
-      }
-      const pipWin = await window.documentPictureInPicture.requestWindow({
-        width: 320,
-        height: 220,
-      })
-      pipWindowRef.current = pipWin
-      setPipActive(true)
-
-      const holder = document.createElement('div')
-      holder.style.cssText = 'width:100%;height:100%;background:#000;'
-      pipWin.document.body.style.margin = '0'
-      pipWin.document.body.appendChild(holder)
-      const playerEl = document.getElementById(playerRef.current.getIframe().id)
-      holder.appendChild(playerEl)
-
-      pipWin.addEventListener('pagehide', () => {
-        if (playerContainerRef.current) {
-          playerContainerRef.current.appendChild(playerEl)
-        }
-        setPipActive(false)
-        pipWindowRef.current = null
-      })
-    } catch (err) {
-      console.log('PIP error:', err)
-    }
-  }
-
   return (
     <div>
-      <div className="relative mb-2">
+      {/* 🎯 AUDIO DUMMY: Kunci utama trik background play */}
+      <audio ref={audioRef} src={SILENT_MP3} loop playsInline style={{ display: 'none' }} />
+
+      {/* SEARCH BAR */}
+      <div className="relative mb-3">
         <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim" />
         <input
           value={query}
@@ -184,6 +150,7 @@ export default function YouTubeSearchPlayer() {
         )}
       </div>
 
+      {/* ERROR MESSAGE */}
       {error && (
         <div className="flex items-center gap-1.5 px-2.5 py-2 mb-2" style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}>
           <AlertTriangle size={12} className="text-red-400 flex-shrink-0" />
@@ -191,97 +158,51 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
+      {/* SEARCH RESULTS */}
       {results.length > 0 && (
-        <div className="flex flex-col gap-1.5 max-h-52 overflow-y-auto mb-2">
+        <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {results.map(track => (
-            <div
+            <button
               key={track.videoId}
-              className="flex items-center gap-2 p-1.5"
+              onClick={() => playVideo(track)}
+              className="flex items-center gap-2 p-1.5 text-left transition-colors hover:border-accent"
               style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}
             >
-              <button onClick={() => playNow(track)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
-                <img src={track.thumb} alt="" className="w-10 h-8 object-cover flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-body text-xs truncate" style={{ color: '#EDEAF6' }}>{track.title}</p>
-                  <p className="font-mono text-[10px] text-text-dim truncate">{track.channel}</p>
-                </div>
-              </button>
-              <button
-                onClick={() => addToQueue(track)}
-                className="shrink-0 w-7 h-7 flex items-center justify-center text-text-dim hover:text-accent transition-colors"
-                title="Tambah ke antrian"
-              >
-                <ListMusic size={14} />
-              </button>
-            </div>
+              <img src={track.thumb} alt="" className="w-12 h-9 object-cover flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="font-body text-[11px] truncate" style={{ color: '#EDEAF6' }}>{track.title}</p>
+                <p className="font-mono text-[9px] text-text-dim truncate mt-0.5">{track.channel}</p>
+              </div>
+              <Play size={12} className="text-text-dim mr-2 shrink-0" />
+            </button>
           ))}
         </div>
       )}
 
+      {/* YOUTUBE PLAYER CONTAINER */}
       <div style={{ display: nowPlaying ? 'block' : 'none' }}>
         <div style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}>
           <div className="flex items-center gap-2 px-2 py-1.5" style={{ borderBottom: '1px solid #211D2C' }}>
-            <p className="font-body text-[11px] truncate flex-1" style={{ color: '#EDEAF6' }}>
-              {nowPlaying?.title}
+            <p className="font-body text-[11px] truncate flex-1" style={{ color: '#7C5CFF' }}>
+              Memutar: <span style={{ color: '#EDEAF6' }}>{nowPlaying?.title}</span>
             </p>
-            {pipSupported && (
-              <button onClick={togglePip} className="shrink-0 text-text-dim hover:text-accent transition-colors" title="Picture-in-Picture">
-                <PictureInPicture2 size={14} />
-              </button>
-            )}
           </div>
+          {/* Iframe YT akan dirender di dalam div ini */}
           <div className="aspect-video w-full">
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
-          <div className="flex items-center justify-center gap-6 py-2" style={{ borderTop: '1px solid #211D2C' }}>
-            <button
-              onClick={handlePrev}
-              disabled={currentIndex <= 0}
-              className="text-text-dim disabled:opacity-30 hover:text-accent transition-colors"
-            >
-              <SkipBack size={16} />
-            </button>
-            <span className="font-mono text-[10px] text-text-dim">
-              {currentIndex + 1} / {queue.length}
-            </span>
-            <button
-              onClick={handleNext}
-              disabled={currentIndex >= queue.length - 1}
-              className="text-text-dim disabled:opacity-30 hover:text-accent transition-colors"
-            >
-              <SkipForward size={16} />
-            </button>
-          </div>
         </div>
+        
+        {/* Catatan Info */}
+        <p className="font-mono text-[9px] text-text-dim mt-2 text-center">
+          *Klik rekomendasi di dalam video untuk lanjut memutar.
+        </p>
       </div>
 
-      {!pipSupported && nowPlaying && (
-        <p className="font-mono text-[9px] text-text-dim text-center mt-1.5 uppercase tracking-widest">
-          PIP gak didukung browser ini — coba Chrome versi terbaru
-        </p>
-      )}
-
-      {queue.length > 1 && (
-        <div className="mt-3">
-          <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-1.5">Antrian</p>
-          <div className="flex flex-col gap-1">
-            {queue.map((t, i) => (
-              <button
-                key={t.videoId}
-                onClick={() => goToIndex(i)}
-                className="font-mono text-[10px] truncate px-1 text-left"
-                style={{ color: i === currentIndex ? '#7C5CFF' : '#6B706A' }}
-              >
-                {i === currentIndex ? '▶ ' : '· '}{t.title}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
+      {/* EMPTY STATE */}
       {!query && !nowPlaying && (
-        <p className="font-mono text-[10px] text-text-dim text-center py-3 uppercase tracking-widest">
-          Ketik buat cari lagu
+        <p className="font-mono text-[10px] text-text-dim text-center py-4 uppercase tracking-widest">
+          Ketik untuk mencari musik
         </p>
       )}
     </div>
