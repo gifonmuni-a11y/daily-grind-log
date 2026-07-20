@@ -43,11 +43,13 @@ export function addBonusExp(userId, amount) {
   localStorage.setItem(bonusExpKey(userId), String(current + amount))
 }
 
-// 🎯 FIX SINKRONISASI TOTAL EXP: Menggabungkan kalkulasi log entries lama + nilai database profile.exp
+// ✅ FIX SINKRONISASI TOTAL EXP: EXP dari quest (profileDbExp) sekarang DITAMBAHKAN
+// ke EXP dari log latihan (localLogExp), bukan dibandingkan dengan Math.max.
+// Sebelumnya pakai Math.max() yang bikin EXP quest hilang kalau localLogExp
+// sudah lebih besar dari profileDbExp — jadi EXP quest kelihatan tidak pernah nambah.
 export function getEffectiveTotalExp(entries, userId, profileDbExp = 0) {
-  // Jika nilai profileDbExp lebih besar dari total kalkulasi log biasa, gunakan nilai profileDbExp agar bonus quest tidak hilang
   const localLogExp = getTotalExp(entries)
-  return Math.max(localLogExp, profileDbExp)
+  return localLogExp + profileDbExp
 }
 
 export function getRankLabel(level) {
