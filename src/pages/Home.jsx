@@ -34,7 +34,7 @@ import JadwalLatihan from '../components/JadwalLatihan'
 import StatusWindow from '../components/StatusWindow'
 import { requestNotificationPermission, sendSystemNotification } from '../lib/notificationSystem'
 
-// 🎯 DIRECT SUPABASE STORAGE AUDIO URL MAPPER
+// DIRECT SUPABASE STORAGE AUDIO URL MAPPER
 const AUDIO_URLS = {
   tiers: {
     'ELITE TRAINER': 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Mp3/Tier/elitetrainer.mp3',
@@ -130,7 +130,6 @@ export default function Home({ session }) {
   const [claimingId, setClaimingId] = useState(null)
   const [equippedTitleId, setEquippedTitleId] = useState(() => getEquippedTitle(userId))
 
-  // 🎯 ACTIVE TAB STATE
   const [activeTab, setActiveTab] = useState('grind') 
   
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -186,14 +185,14 @@ export default function Home({ session }) {
   const fetchProfile = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('*')
+      .select()
       .eq('id', userId)
       .single()
     if (!data) {
       await supabase.from('profiles').upsert({ id: userId, name: 'Trainer', exp: 0 })
       const { data: created } = await supabase
         .from('profiles')
-        .select('*')
+        .select()
         .eq('id', userId)
         .single()
       setProfile(created)
@@ -205,7 +204,7 @@ export default function Home({ session }) {
   const fetchEntries = useCallback(async () => {
     const { data, error } = await supabase
       .from('entries')
-      .select('*')
+      .select()
       .eq('user_id', userId)
       .order('entry_date', { ascending: false })
     if (!error) setEntries(data || [])
@@ -273,6 +272,48 @@ export default function Home({ session }) {
   const userStats = { totalDays: entries.length, streak, totalExp, level }
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
+
+  // SAKLAR OTOMATIS TIER DAN ACHIEVEMENT ADA DI SINI
+  useEffect(() => {
+    if (loading) return;
+
+    if (prevLevelRef.current !== null && level > prevLevelRef.current) {
+      const oldTier = getRankTier(prevLevelRef.current);
+      const newTier = getRankTier(level);
+      
+      if (oldTier !== newTier) {
+        setLevelUpData({ oldTier, newTier, newLevel: level });
+        setShowLevelUp(true);
+        
+        const tierSoundUrl = AUDIO_URLS.tiers[newTier];
+        if (tierSoundUrl) {
+          const audio = new Audio(tierSoundUrl);
+          audio.play().catch(e => console.log("Audio Error:", e));
+        }
+      }
+    }
+    prevLevelRef.current = level;
+
+    const currentUnlockedIds = unlockedAchievements.map(a => a.id);
+    if (prevUnlockedIdsRef.current !== null) {
+      const newAchievements = currentUnlockedIds.filter(id => !prevUnlockedIdsRef.current.includes(id));
+      if (newAchievements.length > 0) {
+        const newlyUnlockedId = newAchievements[0];
+        const newlyUnlocked = ACHIEVEMENTS.find(a => a.id === newlyUnlockedId);
+        if (newlyUnlocked) {
+          setActiveUnlockAchievement(newlyUnlocked);
+          setShowAchievementUnlock(true);
+          
+          const achSoundUrl = AUDIO_URLS.achievements[newlyUnlocked.title];
+          if (achSoundUrl) {
+            const audio = new Audio(achSoundUrl);
+            audio.play().catch(e => console.log("Audio Error:", e));
+          }
+        }
+      }
+    }
+    prevUnlockedIdsRef.current = currentUnlockedIds;
+  }, [level, unlockedAchievements, loading]);
 
   const handleWelcomeInitialization = async () => {
     try {
@@ -391,7 +432,6 @@ export default function Home({ session }) {
     setDismissWarnPopup(true)
   }
 
-  // OPTIMASI TIMING PERDANA: Splash Screen Cover
   if (showWelcomeCover) {
     return (
       <div className="fixed inset-0 z-[100] bg-[#0A0A0E] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
@@ -425,7 +465,6 @@ export default function Home({ session }) {
     )
   }
 
-  // KONDISI SKELETON LOADING
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-between select-none animate-pulse">
@@ -484,7 +523,6 @@ export default function Home({ session }) {
           </div>
         </div>
 
-        {/* Skeleton Fixed Menu Dock (5 Buttons) */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 border border-[#211D2C] px-4 py-2.5 flex items-center gap-2 sm:gap-3 rounded-2xl max-w-[95%] w-max">
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#211D2C]" />
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#211D2C]" />
@@ -635,7 +673,6 @@ export default function Home({ session }) {
           </>
         )}
 
-        {/* 🎯 TAB MENU SISTEM BARU */}
         {activeTab === 'battle' && (
           <JadwalLatihan onBack={() => setActiveTab('grind')} />
         )}
@@ -649,10 +686,8 @@ export default function Home({ session }) {
         )}
       </div>
 
-      {/* 🎯 DOCK NAVIGATION BOTTOM FIXED (5 TOMBOL PRECISI MOBILE) */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#100E16]/95 backdrop-blur-md border border-[#211D2C] px-4 py-2.5 flex items-center gap-2 sm:gap-3 z-40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] max-w-[95%] w-max">
         
-        {/* TOMBOL 1: STATUS WINDOW (KIRI) */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'status' ? 'grind' : 'status')} 
@@ -663,7 +698,6 @@ export default function Home({ session }) {
           <User size={20} className={activeTab === 'status' ? 'animate-pulse' : ''} />
         </button>
 
-        {/* TOMBOL 2: BATTLE / JADWAL LATIHAN */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'battle' ? 'grind' : 'battle')} 
@@ -674,16 +708,14 @@ export default function Home({ session }) {
           <Swords size={20} className={activeTab === 'battle' ? 'animate-pulse' : ''} />
         </button>
 
-        {/* TOMBOL 3: TAMBAH LOG (+) (TENGAH, PALING MENCOLOK) */}
         <button 
           type="button" 
           onClick={handleNewLog} 
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#7C5CFF] border border-[#a28eff] hover:bg-[#6b52e0] shadow-[0_0_15px_rgba(124,92,255,0.4)] flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#7C5CFF] border border-[#a28eff] hover:bg-[#6b52e0] flex items-center justify-center text-white transition-all active:scale-95 flex-shrink-0"
         >
           <Plus size={24} />
         </button>
 
-        {/* TOMBOL 4: MAP / RADAR */}
         <button 
           type="button" 
           onClick={() => setActiveTab(activeTab === 'radar' ? 'grind' : 'radar')} 
@@ -696,7 +728,6 @@ export default function Home({ session }) {
           <Map size={20} className={activeTab === 'radar' ? 'animate-pulse' : ''} />
         </button>
 
-        {/* TOMBOL 5: COMPANION AI */}
         <button 
           type="button" 
           onClick={() => setShowCompanion(true)} 
@@ -708,7 +739,7 @@ export default function Home({ session }) {
 
       {deleteTargetId && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-150">
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
@@ -726,7 +757,7 @@ export default function Home({ session }) {
             </p>
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
               <button type="button" onClick={() => setDeleteTargetId(null)} className="py-2.5 border border-[#211D2C] text-[#EDEAF6]/60 font-bold uppercase transition-all active:scale-95">BATAL</button>
-              <button type="button" onClick={confirmDeleteSesi} className="py-2.5 bg-[#7C5CFF] text-white font-black uppercase transition-all active:scale-95 shadow-[0_0_10px_rgba(124,92,255,0.4)]">HAPUS</button>
+              <button type="button" onClick={confirmDeleteSesi} className="py-2.5 bg-[#7C5CFF] text-white font-black uppercase transition-all active:scale-95">HAPUS</button>
             </div>
           </div>
         </div>
@@ -734,7 +765,7 @@ export default function Home({ session }) {
 
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-lg flex flex-col gap-4">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative flex flex-col gap-4">
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
@@ -752,7 +783,7 @@ export default function Home({ session }) {
             </p>
             <div className="grid grid-cols-2 gap-3 font-mono text-[11px] mt-1">
               <button type="button" onClick={() => setShowLogoutConfirm(false)} className="py-2.5 border border-[#211D2C] text-white uppercase transition-all active:scale-95">BATAL</button>
-              <button type="button" onClick={handleSignOut} className="py-2.5 bg-[#7C5CFF] text-white font-black uppercase transition-all active:scale-95 shadow-[0_0_10px_rgba(124,92,255,0.4)]">SETUJU</button>
+              <button type="button" onClick={handleSignOut} className="py-2.5 bg-[#7C5CFF] text-white font-black uppercase transition-all active:scale-95">SETUJU</button>
             </div>
           </div>
         </div>
@@ -760,7 +791,7 @@ export default function Home({ session }) {
 
       {showBackConfirm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[300] flex items-center justify-center p-4 animate-in fade-in duration-150 select-none">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_15px_50px_rgba(0,0,0,0.8)] flex flex-col gap-4 font-mono text-center">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative flex flex-col gap-4 font-mono text-center">
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
@@ -796,7 +827,7 @@ export default function Home({ session }) {
                   window.close();
                   window.history.go(-window.history.length || -10);
                 }} 
-                className="py-2.5 bg-[#7C5CFF] text-white uppercase tracking-wider transition-all active:scale-95 font-black shadow-[0_0_12px_rgba(124,92,255,0.4)]"
+                className="py-2.5 bg-[#7C5CFF] text-white uppercase tracking-wider transition-all active:scale-95 font-black"
               >
                 Keluar
               </button>
@@ -807,7 +838,7 @@ export default function Home({ session }) {
 
       {profile?.status === 'warned' && !dismissWarnPopup && !isWarningExpired && !isWarningDismissedOnce && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-2xl flex flex-col gap-4 text-center font-mono">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative flex flex-col gap-4 text-center font-mono">
             
             <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-[3px] border-l-[3px] border-[#7C5CFF] z-50" />
             <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-[3px] border-r-[3px] border-[#7C5CFF] z-50" />
@@ -837,7 +868,7 @@ export default function Home({ session }) {
               <button 
                 type="button" 
                 onClick={handleDismissWarning}
-                className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block shadow-[0_0_12px_rgba(124,92,255,0.3)]"
+                className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block"
               >
                 IYA
               </button>
@@ -848,7 +879,7 @@ export default function Home({ session }) {
 
       {showStreakBreakModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[300] flex items-center justify-center p-4 select-none animate-in fade-in zoom-in-95 duration-150">
-          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative shadow-[0_12px_40px_rgba(0,0,0,0.7)] flex flex-col gap-4 font-mono text-center">
+          <div className="bg-[#100E16] border border-[#211D2C] w-full max-w-xs p-5 rounded-none relative flex flex-col gap-4 font-mono text-center">
             <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF] z-50" />
             <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF] z-50" />
             <div className="absolute -bottom-[2px] -left-[2px] w-4 h-4 border-b-2 border-l-2 border-[#7C5CFF] z-50" />
@@ -874,7 +905,7 @@ export default function Home({ session }) {
               <button 
                 type="button" 
                 onClick={() => setShowStreakBreakModal(false)}
-                className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block shadow-[0_0_12px_rgba(124,92,255,0.3)]"
+                className="w-full py-2.5 bg-transparent text-white font-black uppercase tracking-wider text-[11px] rounded-none outline-none transition-all active:scale-95 text-center block"
               >
                 OKE
               </button>
