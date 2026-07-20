@@ -1,4 +1,4 @@
-import { X, Zap, Flame, TrendingUp, RefreshCw, Target, Award, Bot, Lock, CheckCircle2 } from 'lucide-react'
+import { X, Zap, Flame, TrendingUp, RefreshCw, Target, Award, Bot, Lock, CheckCircle2, User, Swords, Map, FileText, ShieldCheck, Mail } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { getRankColor } from '../lib/rankColors'
 import { ACHIEVEMENTS, getUnlockedAchievements } from '../lib/achievements'
@@ -35,6 +35,7 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
         </div>
 
         <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-6 scrollbar-thin">
+          
           <section>
             <p className="font-body text-sm text-gray-300 leading-relaxed">
               Daily Grind Log adalah jurnal latihan dengan sistem RPG: setiap sesi yang kamu catat
@@ -94,7 +95,6 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               <div>• <span style={{ color: '#7C5CFF' }}>MASTER</span> : Level 30+</div>
               <div>• <span style={{ color: '#E14CE3' }}>GRAND MASTER</span> : Level 45+</div>
               <div>• <span style={{ color: '#FF5C7A' }}>MYTHICAL</span> : Level 60+</div>
-              {/* FIX: Mengubah warna teks panduan OVERLORD menjadi Emas-Ungu gradasi neon berkilau */}
               <div className="font-bold flex items-center gap-1">
                 • <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-fuchsia-500 to-purple-500 font-black animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]">OVERLORD</span> : Level 80+
               </div>
@@ -125,6 +125,36 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
           </section>
 
           <section>
+            <div className="flex items-center gap-2 mb-2">
+              <User size={16} className="text-[#3FE6C4]" />
+              <h3 className="font-display font-bold text-base text-text-high">Status Window</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed">
+              Pantau atribut fisik RPG kamu di Status Window. STR (Strength) meningkat dari rekor angkat beban maksimal, AGI (Agility) dari durasi kardio terlama, dan VIT (Vitality) dihitung dari level dan berat badan. Kamu juga bisa memperbarui foto avatar di menu ini.
+            </p>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <Swords size={16} className="text-danger" />
+              <h3 className="font-display font-bold text-base text-text-high">Battle (Jadwal Latihan)</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed">
+              Susun dan atur rutinitas latihan harianmu. Catat target beban dan repetisi agar kamu memiliki panduan yang jelas saat melakukan grinding di dunia nyata.
+            </p>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <Map size={16} className="text-[#E14CE3]" />
+              <h3 className="font-display font-bold text-base text-text-high">Radar Lokasi</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed">
+              Gunakan fitur Radar untuk memindai lokasi Gym dan tempat makan sehat terdekat dari lokasimu saat ini. Membantu kamu menjaga asupan dan menemukan tempat latihan baru.
+            </p>
+          </section>
+
+          <section>
             <div className="flex items-center gap-2 mb-3">
               <Award size={16} className="text-accent" />
               <h3 className="font-display font-bold text-base text-text-high">Achievements</h3>
@@ -133,7 +163,6 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               Badge kebuka otomatis begitu syaratnya kepenuhi. Ketuk badge yang udah kebuka di
               halaman utama untuk dijadikan title profil kamu.
             </p>
-            {/* FIX: max-h dan overflow dicopot dari div list ini agar achievement mengalir penuh & TIDAK KEPOTONG lagi */}
             <div className="flex flex-col gap-3 shrink-0">
               {ACHIEVEMENTS.map(ach => {
                 const isUnlocked = unlockedIds.has(ach.id)
@@ -197,7 +226,7 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
           <section>
             <div className="flex items-center gap-2 mb-2">
               <Bot size={16} className="text-accent" />
-              <h3 className="font-display font-bold text-base text-text-high">Seolha (AI Companion)</h3>
+              <h3 className="font-display font-bold text-base text-text-high">Seolha (AI Mentor)</h3>
             </div>
             <p className="font-body text-xs text-gray-400 leading-relaxed">
               Seolha adalah pendamping AI yang tau progress asli kamu (level, streak, total EXP) dan
@@ -221,6 +250,42 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
               browser kamu.
             </p>
           </section>
+
+          <div className="h-[1px] w-full bg-[#211D2C] my-2"></div>
+
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <FileText size={16} className="text-[#9CA3AF]" />
+              <h3 className="font-display font-bold text-base text-text-high">Syarat & Ketentuan (Terms of Use)</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed mb-2">
+              Dengan menggunakan Daily Grind Log, kamu setuju untuk mencatat progres secara jujur. Eksploitasi bug, manipulasi EXP, atau penggunaan kata-kata kasar terhadap AI Companion dilarang keras. Admin berhak memberikan teguran atau membekukan (banned) akun secara permanen jika ditemukan pelanggaran.
+            </p>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck size={16} className="text-[#9CA3AF]" />
+              <h3 className="font-display font-bold text-base text-text-high">Kebijakan Privasi</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed mb-2">
+              Kami menghargai privasimu. Data sesi latihan, foto avatar, dan informasi profil disimpan dengan aman di database. Kami tidak akan menjual atau membagikan data pribadimu kepada pihak ketiga. Cache lokal digunakan semata-mata untuk mempercepat kinerja aplikasi (PWA).
+            </p>
+          </section>
+
+          <section className="pb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Mail size={16} className="text-[#9CA3AF]" />
+              <h3 className="font-display font-bold text-base text-text-high">Hubungi Kami</h3>
+            </div>
+            <p className="font-body text-xs text-gray-400 leading-relaxed">
+              Menemukan kendala teknis, bug sistem, atau ingin mengajukan banding atas status akun? Silakan hubungi tim dukungan kami melalui email di bawah ini:
+            </p>
+            <a href="mailto:admingrind@gmail.com" className="font-mono text-sm font-bold text-accent mt-2 inline-block hover:text-[#9A80FF] transition-colors">
+              admingrind@gmail.com
+            </a>
+          </section>
+
         </div>
       </SystemFrame>
     </div>
