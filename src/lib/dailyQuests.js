@@ -139,23 +139,17 @@ export async function claimQuest(userId, questId, expAwarded) {
     return false
   }
 
-  // 🎯 SINKRONISASI MUTLAK: Memperbaiki & memperkuat alur pengiriman EXP ke database user_stats
-  try {
-    const { data: stats } = await supabase
-      .from('user_stats')
-      .select('total_exp')
-      .eq('user_id', userId)
-      .single()
-      
-    const currentExp = stats?.total_exp || 0
-    const newExp = currentExp + expAwarded
-    
-    await supabase
-      .from('user_stats')
-      .update({ total_exp: newExp })
-      .eq('user_id', userId)
-  } catch (e) {
-    console.error('Gagal update database EXP:', e.message)
+  // ✅ FIX: EXP disimpan di tabel `profiles` (kolom `exp`), bukan `user_stats`
+  // (tabel `user_stats` tidak pernah ada di database, makanya EXP tidak pernah nambah).
+  // Pakai RPC atomik `increment_exp` biar aman dari race condition kalau ada
+  // beberapa quest yang diklaim hampir bersamaan.
+  const { error: expError } = await supabase.rpc('increment_exp', {
+    p_user_id: userId,
+    p_amount: expAwarded,
+  })
+
+  if (expError) {
+    console.error('Gagal update EXP:', expError.message)
   }
 
   return true
