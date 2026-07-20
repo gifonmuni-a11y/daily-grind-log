@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, X, Loader2, AlertTriangle, Play } from 'lucide-react'
 
-// v3 — Clean version: No custom queue, No PiP manual, full Native YouTube Player features
-// Ditambah trik Dummy Audio biar tembus Background Play di HP.
-
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT)
@@ -17,7 +14,7 @@ function loadYouTubeIframeApi() {
   return ytApiPromise
 }
 
-// URL audio kosong (silent mp3) berdurasi 0.1 detik untuk menipu OS HP
+// Audio kosong untuk memancing Media Session HP
 const SILENT_MP3 = "data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq/zD/"
 
 export default function YouTubeSearchPlayer() {
@@ -30,7 +27,7 @@ export default function YouTubeSearchPlayer() {
   const debounceRef = useRef(null)
   const playerContainerRef = useRef(null)
   const playerRef = useRef(null)
-  const audioRef = useRef(null) // Ref untuk audio dummy
+  const audioRef = useRef(null)
 
   const runSearch = useCallback(async (q) => {
     if (!q.trim()) { setResults([]); setError(''); return }
@@ -55,20 +52,17 @@ export default function YouTubeSearchPlayer() {
     return () => clearTimeout(debounceRef.current)
   }, [query, runSearch])
 
-  // Fungsi Play Track Baru (Dipanggil pas user klik hasil search)
   function playVideo(track) {
     setNowPlaying(track)
     
-    // Pancing audio dummy untuk minta izin background play ke OS
     if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log('Audio dummy pancingan gagal:', e))
+      audioRef.current.play().catch(() => {})
     }
 
     if (playerRef.current && playerRef.current.loadVideoById) {
       playerRef.current.loadVideoById(track.videoId)
     }
 
-    // Update info di Lock Screen HP
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
@@ -76,7 +70,6 @@ export default function YouTubeSearchPlayer() {
         artwork: [{ src: track.thumb, sizes: '512x512', type: 'image/jpeg' }]
       })
 
-      // Sambungkan tombol play/pause di lock screen HP ke Iframe YouTube
       navigator.mediaSession.setActionHandler('play', () => {
         playerRef.current?.playVideo()
       })
@@ -86,33 +79,33 @@ export default function YouTubeSearchPlayer() {
     }
   }
 
-  // Inisialisasi YouTube Player
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
       if (cancelled || !playerContainerRef.current || playerRef.current) return
       
+      const currentOrigin = window.location.origin
+      
       playerRef.current = new YT.Player(playerContainerRef.current, {
         height: '100%',
         width: '100%',
-        // playerVars dibiarkan standar agar tombol next/rekomendasi bawaan YT muncul
         playerVars: { 
           autoplay: 1, 
           playsinline: 1, 
           enablejsapi: 1,
-          rel: 1, // Penting: Biarkan rekomendasi video muncul saat video selesai
-          controls: 1 // Munculkan kontrol bawaan YT
+          rel: 1,
+          controls: 1,
+          // 🎯 FIX REKOMENDASI: Wajib inject origin dan referrer biar YT gak ngeblokir klik dari dalam iframe
+          origin: currentOrigin,
+          widget_referrer: currentOrigin
         },
         events: {
           onStateChange: (event) => {
-            // SINKRONISASI STATUS YOUTUBE DENGAN OS HP LU
             if (event.data === YT.PlayerState.PLAYING) {
-               // Putar audio dummy agar HP tidak mematikan PWA di background
                if (audioRef.current) audioRef.current.play().catch(() => {})
                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing"
             } 
             else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-               // Pause audio dummy
                if (audioRef.current) audioRef.current.pause()
                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused"
             }
@@ -125,10 +118,8 @@ export default function YouTubeSearchPlayer() {
 
   return (
     <div>
-      {/* 🎯 AUDIO DUMMY: Kunci utama trik background play */}
       <audio ref={audioRef} src={SILENT_MP3} loop playsInline style={{ display: 'none' }} />
 
-      {/* SEARCH BAR */}
       <div className="relative mb-3">
         <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim" />
         <input
@@ -150,7 +141,6 @@ export default function YouTubeSearchPlayer() {
         )}
       </div>
 
-      {/* ERROR MESSAGE */}
       {error && (
         <div className="flex items-center gap-1.5 px-2.5 py-2 mb-2" style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}>
           <AlertTriangle size={12} className="text-red-400 flex-shrink-0" />
@@ -158,7 +148,6 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* SEARCH RESULTS */}
       {results.length > 0 && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {results.map(track => (
@@ -179,7 +168,6 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* YOUTUBE PLAYER CONTAINER */}
       <div style={{ display: nowPlaying ? 'block' : 'none' }}>
         <div style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}>
           <div className="flex items-center gap-2 px-2 py-1.5" style={{ borderBottom: '1px solid #211D2C' }}>
@@ -187,19 +175,12 @@ export default function YouTubeSearchPlayer() {
               Memutar: <span style={{ color: '#EDEAF6' }}>{nowPlaying?.title}</span>
             </p>
           </div>
-          {/* Iframe YT akan dirender di dalam div ini */}
           <div className="aspect-video w-full">
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
         </div>
-        
-        {/* Catatan Info */}
-        <p className="font-mono text-[9px] text-text-dim mt-2 text-center">
-          *Klik rekomendasi di dalam video untuk lanjut memutar.
-        </p>
       </div>
 
-      {/* EMPTY STATE */}
       {!query && !nowPlaying && (
         <p className="font-mono text-[10px] text-text-dim text-center py-4 uppercase tracking-widest">
           Ketik untuk mencari musik
