@@ -45,15 +45,54 @@ export default function YouTubeSearchPlayer() {
 
   const nowPlaying = currentIndex >= 0 ? queue[currentIndex] : null
 
+  // --- Cache pencarian di localStorage, biar nempel walau PWA ditutup-buka lagi ---
+  const CACHE_PREFIX = 'yt_search_cache:'
+  const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 hari, hasil lama basi (thumbnail/judul bisa berubah)
+
+  function getCachedResults(key) {
+    try {
+      const raw = localStorage.getItem(CACHE_PREFIX + key)
+      if (!raw) return null
+      const parsed = JSON.parse(raw)
+      if (!parsed || Date.now() - parsed.savedAt > CACHE_TTL_MS) {
+        localStorage.removeItem(CACHE_PREFIX + key)
+        return null
+      }
+      return parsed.items
+    } catch {
+      return null // localStorage bisa gagal (private mode, storage penuh, dll) — anggap cache miss aja
+    }
+  }
+
+  function setCachedResults(key, items) {
+    try {
+      localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ items, savedAt: Date.now() }))
+    } catch {
+      // storage penuh atau diblokir — nggak fatal, cuma berarti nggak ke-cache
+    }
+  }
+
   const runSearch = useCallback(async (q) => {
-    if (!q.trim()) { setResults([]); setError(''); return }
+    const key = q.trim().toLowerCase()
+    if (!key) { setResults([]); setError(''); return }
+
+    // Query yang sama pernah dicari (sesi ini ATAU sebelumnya) → pakai cache, jangan tembak API lagi
+    const cached = getCachedResults(key)
+    if (cached) {
+      setResults(cached)
+      setError('')
+      return
+    }
+
     setLoading(true)
     setError('')
     try {
       const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(q)}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Gagal mencari lagu.')
-      setResults((data.items || []).slice(0, 6))
+      const items = (data.items || []).slice(0, 6)
+      setCachedResults(key, items)
+      setResults(items)
     } catch (err) {
       setError(err.message)
       setResults([])
@@ -62,11 +101,13 @@ export default function YouTubeSearchPlayer() {
     }
   }, [])
 
-  useEffect(() => {
+  // Search HANYA dipicu saat submit (Enter / tombol cari), bukan tiap ketikan.
+  // Ini yang paling hemat quota — sebelumnya tiap jeda ngetik = 1 API call.
+  function handleSearchSubmit(e) {
+    e.preventDefault()
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => runSearch(query), 450)
-    return () => clearTimeout(debounceRef.current)
-  }, [query, runSearch])
+    runSearch(query)
+  }
 
   // Init YT player once
   useEffect(() => {
@@ -217,24 +258,20 @@ export default function YouTubeSearchPlayer() {
 
   return (
     <div>
-      <div className="relative mb-3">
+      <form onSubmit={handleSearchSubmit} className="relative mb-3">
         <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim" />
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Cari lagu di YouTube..."
-          className="w-full font-body text-xs py-2 pl-8 pr-16 outline-none transition-colors"
+          placeholder="Cari lagu di YouTube... (tekan Enter)"
+          enterKeyHint="search"
+          className="w-full font-body text-xs py-2 pl-8 pr-20 outline-none transition-colors"
           style={{ background: '#0A0A0E', border: '1px solid #211D2C', color: '#EDEAF6' }}
           onFocus={e => e.target.style.borderColor = '#7C5CFF'}
           onBlur={e => e.target.style.borderColor = '#211D2C'}
         />
-        {query && (
-          <button onClick={() => setQuery('')} className="absolute right-8 top-1/2 -translate-y-1/2 text-text-dim">
-            <X size={13} />
-          </button>
-        )}
-        {loading && (
-          <span className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+        {loading ? (
+          <span className="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
             {[0, 1, 2].map(i => (
               <span
                 key={i}
@@ -246,15 +283,27 @@ export default function YouTubeSearchPlayer() {
               />
             ))}
           </span>
+        ) : query && (
+          <button type="button" onClick={() => setQuery('')} className="absolute right-14 top-1/2 -translate-y-1/2 text-text-dim">
+            <X size={13} />
+          </button>
         )}
         <button
+          type="submit"
+          className="absolute right-8 top-1/2 -translate-y-1/2 text-text-dim active:text-[#7C5CFF] active:scale-90 transition-transform"
+          title="Cari"
+        >
+          <Search size={13} />
+        </button>
+        <button
+          type="button"
           onClick={() => setShowQueue(s => !s)}
           className="absolute right-2.5 top-1/2 -translate-y-1/2"
           style={{ color: showQueue ? '#7C5CFF' : '#6B6580' }}
         >
           <ListMusic size={14} />
         </button>
-      </div>
+      </form>
 
       {error && (
         <div className="flex items-center gap-1.5 px-2.5 py-2 mb-2" style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}>
