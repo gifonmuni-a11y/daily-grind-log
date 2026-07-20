@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, X, Loader2, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2 } from 'lucide-react'
+import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2 } from 'lucide-react'
+
+// Bersihin HTML entity (&quot; &amp; &#39; dll) dari judul video hasil API
+function decodeHtmlEntities(str) {
+  if (!str) return ''
+  const entities = {
+    '&quot;': '"', '&amp;': '&', '&#39;': "'", '&apos;': "'",
+    '&lt;': '<', '&gt;': '>', '&nbsp;': ' ', '&#x27;': "'", '&#x2F;': '/'
+  }
+  return str.replace(/&#?\w+;/g, m => entities[m] ?? m)
+}
 
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
@@ -24,6 +34,9 @@ export default function YouTubeSearchPlayer() {
   const [queue, setQueue] = useState([])
   const [currentIndex, setCurrentIndex] = useState(-1)
   const [showQueue, setShowQueue] = useState(false)
+  const [addedId, setAddedId] = useState(null)
+  const [toast, setToast] = useState('')
+  const toastTimerRef = useRef(null)
 
   const debounceRef = useRef(null)
   const playerContainerRef = useRef(null)
@@ -165,10 +178,19 @@ export default function YouTubeSearchPlayer() {
   }
 
   function addToQueue(track) {
+    let alreadyIn = false
     setQueue(prev => {
-      if (prev.some(t => t.videoId === track.videoId)) return prev
+      if (prev.some(t => t.videoId === track.videoId)) { alreadyIn = true; return prev }
       return [...prev, track]
     })
+
+    // Feedback visual: tombol berkedip ungu + toast kecil muncul
+    setAddedId(track.videoId)
+    setTimeout(() => setAddedId(id => (id === track.videoId ? null : id)), 600)
+
+    setToast(alreadyIn ? 'Sudah ada di antrean' : 'Ditambahkan ke antrean')
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToast(''), 1500)
   }
 
   function removeFromQueue(idx) {
@@ -212,7 +234,18 @@ export default function YouTubeSearchPlayer() {
           </button>
         )}
         {loading && (
-          <Loader2 size={13} className="absolute right-8 top-1/2 -translate-y-1/2 text-accent animate-spin" />
+          <span className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+            {[0, 1, 2].map(i => (
+              <span
+                key={i}
+                className="rounded-full animate-bounce"
+                style={{
+                  width: 3, height: 3, background: '#7C5CFF',
+                  animationDelay: `${i * 0.15}s`, animationDuration: '0.9s'
+                }}
+              />
+            ))}
+          </span>
         )}
         <button
           onClick={() => setShowQueue(s => !s)}
@@ -230,6 +263,21 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
+      {/* Skeleton loading (bukan spinner) */}
+      {!showQueue && loading && results.length === 0 && (
+        <div className="flex flex-col gap-1.5 mb-3">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="flex items-center gap-2 p-1.5" style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}>
+              <div className="w-12 h-9 flex-shrink-0 animate-pulse" style={{ background: '#211D2C' }} />
+              <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                <div className="h-2.5 rounded-sm animate-pulse" style={{ background: '#211D2C', width: `${70 - i * 10}%` }} />
+                <div className="h-2 rounded-sm animate-pulse" style={{ background: '#211D2C', width: '40%' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Search results */}
       {!showQueue && results.length > 0 && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
@@ -242,18 +290,37 @@ export default function YouTubeSearchPlayer() {
               <button onClick={() => playTrackNow(track)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
                 <img src={track.thumb} alt="" className="w-12 h-9 object-cover flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-body text-[11px] truncate" style={{ color: '#EDEAF6' }}>{track.title}</p>
-                  <p className="font-mono text-[9px] text-text-dim truncate mt-0.5">{track.channel}</p>
+                  <p className="font-body text-[11px] truncate" style={{ color: '#EDEAF6' }}>{decodeHtmlEntities(track.title)}</p>
+                  <p className="font-mono text-[9px] text-text-dim truncate mt-0.5">{decodeHtmlEntities(track.channel)}</p>
                 </div>
               </button>
-              <button onClick={() => addToQueue(track)} className="text-text-dim px-1 shrink-0" title="Tambah ke antrean">
+              <button
+                onClick={() => addToQueue(track)}
+                className="px-1 shrink-0 transition-all duration-300 active:scale-90"
+                style={{
+                  color: addedId === track.videoId ? '#7C5CFF' : '#6B6580',
+                  transform: addedId === track.videoId ? 'scale(1.3)' : 'scale(1)',
+                  filter: addedId === track.videoId ? 'drop-shadow(0 0 4px #7C5CFF)' : 'none'
+                }}
+                title="Tambah ke antrean"
+              >
                 <ListMusic size={13} />
               </button>
-              <button onClick={() => playTrackNow(track)} className="text-text-dim px-1 shrink-0">
+              <button onClick={() => playTrackNow(track)} className="text-text-dim px-1 shrink-0 transition-transform active:scale-90 active:text-[#7C5CFF]">
                 <Play size={13} />
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Toast kecil pas nambah ke antrean */}
+      {toast && (
+        <div
+          className="mb-3 text-center font-body text-[10px] py-1.5 px-3 transition-opacity"
+          style={{ background: 'rgba(124,92,255,0.12)', border: '1px solid #7C5CFF', color: '#7C5CFF' }}
+        >
+          {toast}
         </div>
       )}
 
@@ -275,7 +342,7 @@ export default function YouTubeSearchPlayer() {
               <button onClick={() => playIndex(idx)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
                 <img src={track.thumb} alt="" className="w-10 h-8 object-cover flex-shrink-0" />
                 <p className="font-body text-[11px] truncate" style={{ color: idx === currentIndex ? '#7C5CFF' : '#EDEAF6' }}>
-                  {track.title}
+                  {decodeHtmlEntities(track.title)}
                 </p>
               </button>
               <button onClick={() => removeFromQueue(idx)} className="text-text-dim px-1 shrink-0">
@@ -289,19 +356,50 @@ export default function YouTubeSearchPlayer() {
       {/* Player */}
       <div style={{ display: nowPlaying ? 'block' : 'none' }}>
         <div style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}>
-          <div className="flex items-center gap-2 px-2 py-1.5" style={{ borderBottom: '1px solid #211D2C' }}>
-            <p className="font-body text-[11px] truncate flex-1" style={{ color: '#7C5CFF' }}>
-              Memutar: <span style={{ color: '#EDEAF6' }}>{nowPlaying?.title}</span>
+          <div className="flex items-start gap-2 px-2 py-1.5" style={{ borderBottom: '1px solid #211D2C' }}>
+            <p className="font-body text-[11px] flex-1" style={{ color: '#7C5CFF' }}>
+              Memutar:{' '}
+              <span
+                style={{
+                  color: '#EDEAF6',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}
+              >
+                {decodeHtmlEntities(nowPlaying?.title)}
+              </span>
             </p>
           </div>
           <div className="aspect-video w-full">
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
           <div className="flex items-center justify-center gap-4 py-2" style={{ borderTop: '1px solid #211D2C' }}>
-            <button onClick={playPrev} disabled={!hasPrev} className="disabled:opacity-30" style={{ color: '#EDEAF6' }}>
+            <button
+              onClick={playPrev}
+              disabled={!hasPrev}
+              className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90"
+              style={{ color: '#EDEAF6' }}
+              onMouseDown={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
+              onMouseUp={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
+              onTouchStart={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
+              onTouchEnd={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
+            >
               <SkipBack size={16} />
             </button>
-            <button onClick={playNext} disabled={!hasNext} className="disabled:opacity-30" style={{ color: '#EDEAF6' }}>
+            <button
+              onClick={playNext}
+              disabled={!hasNext}
+              className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90"
+              style={{ color: '#EDEAF6' }}
+              onMouseDown={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
+              onMouseUp={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
+              onTouchStart={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
+              onTouchEnd={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
+            >
               <SkipForward size={16} />
             </button>
           </div>
