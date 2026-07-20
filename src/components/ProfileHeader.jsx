@@ -221,8 +221,9 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
             </div>
           </div>
 
-          {musicTab === 'spotify' ? (
-            profile?.spotify_link ? (
+          {/* 🎯 FIX: BUNGKUS SPOTIFY DENGAN DIV CSS HIDDEN/BLOCK */}
+          <div className={musicTab === 'spotify' ? 'block' : 'hidden'}>
+            {profile?.spotify_link ? (
               spotifyEmbedUrl ? (
                 <iframe
                   src={spotifyEmbedUrl}
@@ -230,7 +231,7 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
                   height="80"
                   style={{ borderRadius: 8, border: 'none', background: '#000000' }}
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
+                  /* loading="lazy" dihapus agar aman saat dipindah-pindah tab */
                   title="Music Playlist"
                 />
               ) : (
@@ -250,10 +251,13 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
               <p className="font-mono text-[10px] text-text-dim text-center py-3 uppercase tracking-widest">
                 Belum ada link Spotify. Tambah lewat edit profil.
               </p>
-            )
-          ) : (
+            )}
+          </div>
+
+          {/* 🎯 FIX: BUNGKUS YOUTUBE DENGAN DIV CSS HIDDEN/BLOCK */}
+          <div className={musicTab === 'youtube' ? 'block' : 'hidden'}>
             <YouTubeSearchPlayer />
-          )}
+          </div>
         </div>
       </div>
     </div>
