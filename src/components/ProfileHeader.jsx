@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Edit2, Music, Flame, Zap } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { calcLevel, getEffectiveTotalExp, getRankTier } from '../lib/expSystem'
 import { getRankDetails, getTitleTierColor, getTitleTierGlow } from '../lib/rankColors'
 import { ACHIEVEMENTS, getEquippedTitle } from '../lib/achievements'
+import YouTubeSearchPlayer from './YouTubeSearchPlayer'
 
 function getSpotifyEmbedUrl(link) {
   if (!link) return null
@@ -23,15 +25,17 @@ function getSpotifyEmbedUrl(link) {
 }
 
 export default function ProfileHeader({ profile, entries, streak, userId, onEditClick }) {
+  const [musicTab, setMusicTab] = useState('spotify')
+
   const totalExp = getEffectiveTotalExp(entries, userId, profile?.exp || 0)
   const { level, expIntoLevel, expForNext } = calcLevel(totalExp)
   const expPct = Math.min(100, Math.round((expIntoLevel / expForNext) * 100))
-  
+
   const rank = getRankDetails(level)
   const rankLabel = rank.name
   const rankClasses = rank.color
 
-  const tierName = getRankTier(level) 
+  const tierName = getRankTier(level)
   const currentTierColor = getTitleTierColor(tierName)
   const currentTierGlow = getTitleTierGlow(tierName)
 
@@ -66,8 +70,8 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
         {/* 🎯 FIX BLUR SEAMLESS: Menggunakan multi-stop gradient agar ujung gambar terendam hitam pekat duluan sebelum garis batas bawah */}
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ 
-            background: 'linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.85) 85%, #000000 94%, #000000 100%)' 
+          style={{
+            background: 'linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.85) 85%, #000000 94%, #000000 100%)'
           }}
         />
       </div>
@@ -184,39 +188,73 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
           </div>
         </div>
 
-        {/* SPOTIFY MUSIC PLAYLIST */}
-        {profile?.spotify_link && (
-          <div className="mt-4 pt-3 border-t border-[#211D2C]/40">
-            <div className="flex items-center gap-2 mb-2 font-mono text-xs font-bold text-accent uppercase tracking-wider">
+        {/* MUSIC PLAYLIST — toggle Spotify / Cari YouTube */}
+        <div className="mt-4 pt-3 border-t border-[#211D2C]/40">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <div className="flex items-center gap-2 font-mono text-xs font-bold text-accent uppercase tracking-wider">
               <Music size={13} />
               <span>Music Playlist</span>
             </div>
-            
-            {spotifyEmbedUrl ? (
-              <iframe
-                src={spotifyEmbedUrl}
-                width="100%"
-                height="80"
-                style={{ borderRadius: 8, border: 'none', background: '#000000' }}
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-                title="Music Playlist"
-              />
-            ) : (
-              <div className="bg-[#0A0A0E] border border-[#211D2C] p-2.5 flex flex-col gap-1">
-                <span className="font-mono text-[10px] text-text-dim">LINK TERDETEKSI:</span>
-                <a
-                  href={profile.spotify_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs text-gray-400 hover:text-accent transition-colors underline break-all"
-                >
-                  {profile.spotify_link}
-                </a>
-              </div>
-            )}
+            <div className="flex gap-1">
+              <button
+                onClick={() => setMusicTab('spotify')}
+                className="font-mono text-[10px] uppercase px-2 py-1 transition-colors"
+                style={{
+                  background: musicTab === 'spotify' ? '#7C5CFF' : '#0A0A0E',
+                  color: musicTab === 'spotify' ? '#fff' : '#8B8696',
+                  border: '1px solid ' + (musicTab === 'spotify' ? '#7C5CFF' : '#211D2C'),
+                }}
+              >
+                Spotify
+              </button>
+              <button
+                onClick={() => setMusicTab('youtube')}
+                className="font-mono text-[10px] uppercase px-2 py-1 transition-colors"
+                style={{
+                  background: musicTab === 'youtube' ? '#7C5CFF' : '#0A0A0E',
+                  color: musicTab === 'youtube' ? '#fff' : '#8B8696',
+                  border: '1px solid ' + (musicTab === 'youtube' ? '#7C5CFF' : '#211D2C'),
+                }}
+              >
+                Cari YouTube
+              </button>
+            </div>
           </div>
-        )}
+
+          {musicTab === 'spotify' ? (
+            profile?.spotify_link ? (
+              spotifyEmbedUrl ? (
+                <iframe
+                  src={spotifyEmbedUrl}
+                  width="100%"
+                  height="80"
+                  style={{ borderRadius: 8, border: 'none', background: '#000000' }}
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  title="Music Playlist"
+                />
+              ) : (
+                <div className="bg-[#0A0A0E] border border-[#211D2C] p-2.5 flex flex-col gap-1">
+                  <span className="font-mono text-[10px] text-text-dim">LINK TERDETEKSI:</span>
+                  <a
+                    href={profile.spotify_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs text-gray-400 hover:text-accent transition-colors underline break-all"
+                  >
+                    {profile.spotify_link}
+                  </a>
+                </div>
+              )
+            ) : (
+              <p className="font-mono text-[10px] text-text-dim text-center py-3 uppercase tracking-widest">
+                Belum ada link Spotify. Tambah lewat edit profil.
+              </p>
+            )
+          ) : (
+            <YouTubeSearchPlayer />
+          )}
+        </div>
       </div>
     </div>
   )
