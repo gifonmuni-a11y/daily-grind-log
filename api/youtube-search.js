@@ -1,4 +1,4 @@
-import { Innertube } from 'youtubei.js';
+import { Innertube, UniversalCache } from 'youtubei.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -12,26 +12,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Inisialisasi InnerTube (Langsung nembak ke YouTube tanpa limit!)
-    const youtube = await Innertube.create();
+    // Inisialisasi Innertube khusus untuk serverless Vercel (Tanpa cache lokal & local session)
+    const youtube = await Innertube.create({
+      cache: new UniversalCache(false),
+      generate_session_locally: true,
+    });
     
-    // Cari video
+    // Eksekusi pencarian
     const search = await youtube.search(q, { type: 'video' });
 
-    // Format data disamakan 100% dengan format lama agar frontend tidak error
+    // Format data agar persis seperti yang diminta frontend PWA
     const items = search.results.map((video) => ({
       videoId: video.id,
-      title: video.title.text,
-      channel: video.author.name,
-      thumb: video.thumbnails[video.thumbnails.length - 1]?.url || '',
-      duration: video.duration?.text || 'Unknown',
+      title: video.title?.text || 'Tanpa Judul',
+      channel: video.author?.name || 'Unknown Artist',
+      thumb: video.thumbnails?.[video.thumbnails.length - 1]?.url || video.thumbnails?.[0]?.url || '',
+      duration: video.duration?.text || '',
     })).slice(0, 15);
 
-    // Kembalikan dalam bentuk objek { items } persis seperti Piped API
     return res.status(200).json({ items });
     
   } catch (error) {
-    console.error('Error dari InnerTube:', error);
-    return res.status(500).json({ error: 'Gagal mencari lagu. Server sedang sibuk.' });
+    console.error('InnerTube Vercel Error:', error);
+    return res.status(500).json({ error: 'Gagal memproses pencarian: ' + error.message });
   }
 }
