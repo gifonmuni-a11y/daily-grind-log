@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
-// Bersihin HTML entity (&quot; &amp; &#39; dll) dari judul video
+// Bersihin HTML entity dari judul video
 function decodeHtmlEntities(str) {
   if (!str) return ''
   const entities = {
@@ -11,6 +11,7 @@ function decodeHtmlEntities(str) {
   return str.replace(/&#?\w+;/g, m => entities[m] ?? m)
 }
 
+// Load YouTube Iframe API
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT)
@@ -71,7 +72,7 @@ export default function YouTubeSearchPlayer() {
         if (!res.ok) throw new Error(data.error || 'Gagal mencari lagu.')
         setResults(data.items || [])
       } catch (err) {
-        setError(err.message || 'Server sedang sibuk')
+        setError(err.message || 'Server pencarian sedang sibuk')
         setResults([])
       } finally {
         setLoading(false)
@@ -81,22 +82,21 @@ export default function YouTubeSearchPlayer() {
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query])
 
-  // --- ERROR AUTO-DISMISS DALAM 3 DETIK ---
+  // --- ERROR AUTO-DISMISS ---
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(''), 3000)
+      const timer = setTimeout(() => setError(''), 3500)
       return () => clearTimeout(timer)
     }
   }, [error])
 
-  // --- TOMBOL X UNTUK BERSIHKAN PENCARIAN & HASIL ---
   const handleClearSearch = () => {
     setQuery('')
     setResults([])
     setError('')
   }
 
-  // Init YT player once
+  // Init YT player once untuk Mode Video
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
@@ -129,57 +129,95 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // --- FUNGSI BACKGROUND TINGKAT DEWA (BYPASS VERCEL 100%) ---
+  // ☠️ --- FUNGSI BACKGROUND TINGKAT FBI/NSA (100% CLIENT-SIDE) --- ☠️
   const playHackerAudio = async (track) => {
     setAudioLoading(true)
     setError('')
 
     try {
-      // 1. Array server sakti
-      const instances = [
+      // LAPIS 1: API INVIDIOUS (Server Eropa & Global)
+      const invidiousInstances = [
+        'https://invidious.ggc-project.de',
+        'https://invidiou.site'
+      ]
+      const fetchInvidious = async (domain) => {
+        const controller = new AbortController()
+        const id = setTimeout(() => controller.abort(), 4500)
+        try {
+          const res = await fetch(`${domain}/api/v1/videos/${track.videoId}`, { signal: controller.signal })
+          if (!res.ok) throw new Error('Mati')
+          const data = await res.json()
+          const audio = data.formatStreams?.find(s => s.type.includes('audio/mp4') || s.type.includes('audio/webm'))
+          if (!audio?.url) throw new Error('Kosong')
+          return audio.url
+        } finally { clearTimeout(id) }
+      }
+
+      // LAPIS 2: API COBALT (Scraper God-Tier 2026)
+      const cobaltInstances = [
+        'https://nyc1.coapi.ggtyler.dev/api/json',
+        'https://coapi.kelig.me/api/json'
+      ]
+      const fetchCobalt = async (apiUrl) => {
+        const controller = new AbortController()
+        const id = setTimeout(() => controller.abort(), 4500)
+        try {
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${track.videoId}`, isAudioOnly: true }),
+            signal: controller.signal
+          })
+          if (!res.ok) throw new Error('Mati')
+          const data = await res.json()
+          if (!data?.url) throw new Error('Kosong')
+          return data.url
+        } finally { clearTimeout(id) }
+      }
+
+      // LAPIS 3: API PIPED (Proxy Alternatif)
+      const pipedInstances = [
         'https://pipedapi.kavin.rocks',
         'https://pipedapi.tokhmi.xyz',
-        'https://api.piped.projectsegfau.lt',
-        'https://piped-api.garudalinux.org'
+        'https://api.piped.projectsegfau.lt'
       ]
-
-      // 2. Fungsi nembak dari HP lu langsung (bukan Vercel)
-      const fetchFromPhone = async (url) => {
+      const fetchPiped = async (domain) => {
         const controller = new AbortController()
-        const id = setTimeout(() => controller.abort(), 3500) // Waktu tunggu max 3.5 detik
+        const id = setTimeout(() => controller.abort(), 4500)
         try {
-          const res = await fetch(`${url}/streams/${track.videoId}`, { signal: controller.signal })
+          const res = await fetch(`${domain}/streams/${track.videoId}`, { signal: controller.signal })
           if (!res.ok) throw new Error('Mati')
           const data = await res.json()
           const audio = data.audioStreams?.find(a => a.mimeType?.includes('audio/mp4') || a.mimeType?.includes('audio/webm')) || data.audioStreams?.[0]
           if (!audio?.url) throw new Error('Kosong')
           return audio.url
-        } finally {
-          clearTimeout(id)
-        }
+        } finally { clearTimeout(id) }
       }
 
-      let streamUrl = null;
-
+      // 🏁 BALAPAN MULTI-LAYER SCRAPER (Siapa Cepat Dia Dapat)
+      let streamUrl = null
+      
       try {
-        // BALAPAN: Tembak 4 server sekaligus dari HP! Siapa cepat dia dapat!
-        streamUrl = await Promise.any(instances.map(fetchFromPhone))
-      } catch (clientErr) {
-        // Kalau apes banget 4 server mati, fallback nembak Vercel API lu
-        const res = await fetch(`/api/youtube-stream?id=${track.videoId}`)
-        const data = await res.json()
-        if (!res.ok || !data.url) throw new Error('Server Vercel juga mati')
-        streamUrl = data.url
+        const allScrapers = [
+          ...invidiousInstances.map(fetchInvidious),
+          ...cobaltInstances.map(fetchCobalt),
+          ...pipedInstances.map(fetchPiped)
+        ]
+        
+        // Promise.any mengambil link PERTAMA yang sukses dari 7 server!
+        streamUrl = await Promise.any(allScrapers)
+      } catch (err) {
+        throw new Error('Sistem gagal menembus semua pertahanan.')
       }
 
-      // 3. Putar audionya kalau udah dapet URL-nya
       if (streamUrl && audioRef.current) {
         audioRef.current.src = streamUrl
-        audioRef.current.play().catch(e => console.log('Audio autoplay ke-block browser:', e))
+        audioRef.current.play().catch(e => console.log('Autoplay diblokir browser:', e))
       }
 
     } catch (e) {
-      setError('Semua server background sedang sibuk, coba lagu lain.')
+      // ERROR MESSAGE BARU UNTUK VALIDASI APAKAH KODE INI BERHASIL DI DEPLOY
+      setError('Sistem FBI/NSA gagal mengekstrak audio. Coba lagu lain.')
     } finally {
       setAudioLoading(false)
     }
@@ -206,7 +244,6 @@ export default function YouTubeSearchPlayer() {
         artist: track.channel,
         artwork: [{ src: track.thumb, sizes: '512x512', type: 'image/jpeg' }]
       })
-      
       navigator.mediaSession.setActionHandler('play', () => {
         if (playModeRef.current === 'video') playerRef.current?.playVideo()
         else audioRef.current?.play()
@@ -276,7 +313,6 @@ export default function YouTubeSearchPlayer() {
       if (prev.some(t => t.videoId === track.videoId)) { alreadyIn = true; return prev }
       return [...prev, track]
     })
-
     setAddedId(track.videoId)
     setTimeout(() => setAddedId(id => (id === track.videoId ? null : id)), 600)
     setToast(alreadyIn ? 'Sudah ada di antrean' : 'Ditambahkan ke antrean')
@@ -328,7 +364,7 @@ export default function YouTubeSearchPlayer() {
         </button>
       </div>
 
-      {/* SEARCH BAR LIVE (Tanpa Enter) */}
+      {/* SEARCH BAR */}
       <div className="relative mb-3">
         <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim" />
         <input
@@ -344,15 +380,10 @@ export default function YouTubeSearchPlayer() {
         {loading ? (
           <span className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
             {[0, 1, 2].map(i => (
-              <span
-                key={i}
-                className="rounded-full animate-bounce"
-                style={{ width: 3, height: 3, background: '#7C5CFF', animationDelay: `${i * 0.15}s`, animationDuration: '0.9s' }}
-              />
+              <span key={i} className="rounded-full animate-bounce" style={{ width: 3, height: 3, background: '#7C5CFF', animationDelay: `${i * 0.15}s`, animationDuration: '0.9s' }} />
             ))}
           </span>
         ) : query && (
-          // TOMBOL X: Klik untuk hapus input & hasil pencarian
           <button type="button" onClick={handleClearSearch} className="absolute right-10 top-1/2 -translate-y-1/2 text-text-dim hover:text-white">
             <X size={13} />
           </button>
@@ -363,20 +394,14 @@ export default function YouTubeSearchPlayer() {
           onClick={() => setShowQueue(s => !s)}
           className="absolute right-2.5 top-1/2 -translate-y-1/2"
           style={{ color: showQueue ? '#7C5CFF' : '#6B6580' }}
-          title="Buka Antrean"
         >
           <ListMusic size={14} />
         </button>
       </div>
 
-      {/* ERROR BOX: Otomatis hilang 3 detik atau klik langsung hilang */}
+      {/* ERROR BOX */}
       {error && (
-        <div 
-          onClick={() => setError('')}
-          className="flex items-center justify-center gap-1.5 px-2.5 py-2 mb-3 cursor-pointer transition-opacity rounded-md" 
-          style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}
-          title="Klik untuk menutup"
-        >
+        <div onClick={() => setError('')} className="flex items-center justify-center gap-1.5 px-2.5 py-2 mb-3 cursor-pointer transition-opacity rounded-md" style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}>
           <AlertTriangle size={12} className="text-red-400 flex-shrink-0" />
           <p className="font-mono text-[10px] text-red-400">{error}</p>
         </div>
@@ -401,11 +426,7 @@ export default function YouTubeSearchPlayer() {
       {!showQueue && results.length > 0 && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {results.map(track => (
-            <div
-              key={track.videoId}
-              className="flex items-center gap-2 p-1.5"
-              style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}
-            >
+            <div key={track.videoId} className="flex items-center gap-2 p-1.5" style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}>
               <button onClick={() => playTrackNow(track)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
                 <img src={track.thumb} alt="" className="w-12 h-9 object-cover flex-shrink-0" />
                 <div className="min-w-0 flex-1">
@@ -416,11 +437,7 @@ export default function YouTubeSearchPlayer() {
               <button
                 onClick={() => addToQueue(track)}
                 className="px-1 shrink-0 transition-all duration-300 active:scale-90"
-                style={{
-                  color: addedId === track.videoId ? '#7C5CFF' : '#6B6580',
-                  transform: addedId === track.videoId ? 'scale(1.3)' : 'scale(1)',
-                }}
-                title="Tambah ke antrean"
+                style={{ color: addedId === track.videoId ? '#7C5CFF' : '#6B6580', transform: addedId === track.videoId ? 'scale(1.3)' : 'scale(1)' }}
               >
                 <ListMusic size={13} />
               </button>
@@ -432,14 +449,9 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* TOAST BOX (Notif ungu: Ditambahkan ke antrean) -> Bisa diklik buat ngilang */}
+      {/* TOAST BOX */}
       {toast && (
-        <div
-          onClick={() => setToast('')}
-          className="mb-3 cursor-pointer text-center font-body text-[10px] py-1.5 px-3 transition-opacity rounded-md"
-          style={{ background: 'rgba(124,92,255,0.12)', border: '1px solid #7C5CFF', color: '#7C5CFF' }}
-          title="Klik untuk menutup"
-        >
+        <div onClick={() => setToast('')} className="mb-3 cursor-pointer text-center font-body text-[10px] py-1.5 px-3 transition-opacity rounded-md" style={{ background: 'rgba(124,92,255,0.12)', border: '1px solid #7C5CFF', color: '#7C5CFF' }}>
           {toast}
         </div>
       )}
@@ -447,18 +459,9 @@ export default function YouTubeSearchPlayer() {
       {/* QUEUE PANEL */}
       {showQueue && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
-          {queue.length === 0 && (
-            <p className="font-mono text-[10px] text-text-dim text-center py-3">Antrean kosong</p>
-          )}
+          {queue.length === 0 && <p className="font-mono text-[10px] text-text-dim text-center py-3">Antrean kosong</p>}
           {queue.map((track, idx) => (
-            <div
-              key={track.videoId + idx}
-              className="flex items-center gap-2 p-1.5"
-              style={{
-                background: idx === currentIndex ? 'rgba(124,92,255,0.1)' : '#0A0A0E',
-                border: idx === currentIndex ? '1px solid #7C5CFF' : '1px solid #211D2C'
-              }}
-            >
+            <div key={track.videoId + idx} className="flex items-center gap-2 p-1.5" style={{ background: idx === currentIndex ? 'rgba(124,92,255,0.1)' : '#0A0A0E', border: idx === currentIndex ? '1px solid #7C5CFF' : '1px solid #211D2C' }}>
               <button onClick={() => playIndex(idx)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
                 <img src={track.thumb} alt="" className="w-10 h-8 object-cover flex-shrink-0" />
                 <p className="font-body text-[11px] truncate" style={{ color: idx === currentIndex ? '#7C5CFF' : '#EDEAF6' }}>
@@ -497,8 +500,8 @@ export default function YouTubeSearchPlayer() {
                 className={`w-20 h-20 rounded-full object-cover shadow-[0_0_20px_#2DD4BF] mb-3 ${audioLoading ? 'opacity-50 animate-pulse' : 'animate-[spin_10s_linear_infinite]'}`}
                 alt="cover"
               />
-              <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1">
-                {audioLoading ? 'Memuat Audio Latar...' : 'Latar Belakang Aktif'}
+              <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1 text-center">
+                {audioLoading ? 'Menembus Pertahanan...' : 'Latar Belakang Aktif'}
               </p>
               <p className="font-mono text-[9px] text-gray-500 z-10">Layar aman dimatikan</p>
               
@@ -513,20 +516,10 @@ export default function YouTubeSearchPlayer() {
           )}
 
           <div className="flex items-center justify-center gap-4 py-2" style={{ borderTop: '1px solid #211D2C' }}>
-            <button
-              onClick={playPrev}
-              disabled={!hasPrev}
-              className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90"
-              style={{ color: '#EDEAF6' }}
-            >
+            <button onClick={playPrev} disabled={!hasPrev} className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90" style={{ color: '#EDEAF6' }}>
               <SkipBack size={16} />
             </button>
-            <button
-              onClick={playNext}
-              disabled={!hasNext}
-              className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90"
-              style={{ color: '#EDEAF6' }}
-            >
+            <button onClick={playNext} disabled={!hasNext} className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90" style={{ color: '#EDEAF6' }}>
               <SkipForward size={16} />
             </button>
           </div>
