@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
-// Bersihin HTML entity (&quot; &amp; &#39; dll) dari judul video hasil API
+// Bersihin HTML entity (&quot; &amp; &#39; dll) dari judul video
 function decodeHtmlEntities(str) {
   if (!str) return ''
   const entities = {
@@ -25,7 +25,6 @@ function loadYouTubeIframeApi() {
 }
 
 export default function YouTubeSearchPlayer() {
-  // 🎯 STATE DUAL MODE
   const [playMode, setPlayMode] = useState('video') // 'video' atau 'hacker'
   const playModeRef = useRef(playMode)
   const [audioLoading, setAudioLoading] = useState(false)
@@ -42,99 +41,59 @@ export default function YouTubeSearchPlayer() {
   const [toast, setToast] = useState('')
   const toastTimerRef = useRef(null)
 
-  const debounceRef = useRef(null)
   const playerContainerRef = useRef(null)
   const playerRef = useRef(null)
-  const audioRef = useRef(null) // Ref untuk audio hacker murni
+  const audioRef = useRef(null)
   const ytReadyRef = useRef(false)
+  const searchTimeoutRef = useRef(null)
 
   const nowPlaying = currentIndex >= 0 ? queue[currentIndex] : null
 
-  // Sinkronisasi ref untuk MediaSession
   useEffect(() => { playModeRef.current = playMode }, [playMode])
 
-  // --- Cache pencarian ---
-  const CACHE_PREFIX = 'yt_search_cache:'
-  const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000 
-
-  function getCachedResults(key) {
-    try {
-      const raw = localStorage.getItem(CACHE_PREFIX + key)
-      if (!raw) return null
-      const parsed = JSON.parse(raw)
-      if (!parsed || Date.now() - parsed.savedAt > CACHE_TTL_MS) {
-        localStorage.removeItem(CACHE_PREFIX + key)
-        return null
-      }
-      return parsed.items
-    } catch {
-      return null 
-    }
-  }
-
-  function setCachedResults(key, items) {
-    try {
-      localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ items, savedAt: Date.now() }))
-    } catch {}
-  }
-
-  const runSearch = useCallback(async (q) => {
-    const key = q.trim().toLowerCase()
-    if (!key) { setResults([]); setError(''); return }
-
-    const cached = getCachedResults(key)
-    if (cached) {
-      setResults(cached)
-      setError('')
+  // --- LIVE SEARCH OTOMATIS (Tanpa Enter) ---
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      setLoading(false)
       return
     }
 
     setLoading(true)
     setError('')
-    try {
-      const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(q)}`)
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Gagal mencari lagu.')
-      const items = (data.items || []).slice(0, 6)
-      setCachedResults(key, items)
-      setResults(items)
-    } catch (err) {
-      setError(err.message)
-      setResults([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
-  function handleSearchSubmit(e) {
-    e.preventDefault()
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    runSearch(query)
-  }
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
 
-  // 🎯 FUNGSI HACKER: Tarik Stream Audio Murni
-  const playHackerAudio = async (track) => {
-    setAudioLoading(true)
-    try {
-      // Nembak ke public API Piped buat dapetin direct stream
-      const res = await fetch(`https://pipedapi.kavin.rocks/streams/${track.videoId}`)
-      const data = await res.json()
-      
-      const audioStreams = data.audioStreams || []
-      // Cari format m4a/mp4 audio yang paling stabil buat HP
-      const best = audioStreams.find(s => s.mimeType?.includes('audio/mp4')) || audioStreams[0]
-      
-      if (best && best.url && audioRef.current) {
-        audioRef.current.src = best.url
-        audioRef.current.play().catch(e => console.log('Audio error:', e))
-      } else {
-        setToast('Gagal membobol stream audio')
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Gagal mencari lagu.')
+        setResults(data.items || [])
+      } catch (err) {
+        setError(err.message || 'Server sedang sibuk')
+        setResults([])
+      } finally {
+        setLoading(false)
       }
-    } catch (e) {
-      setToast('Server bypass sedang sibuk, coba lagi')
-    } finally {
-      setAudioLoading(false)
+    }, 400) // Jeda 400ms biar nggak spam request pas ngetik
+
+    return () => clearTimeout(searchTimeoutRef.current)
+  }, [query])
+
+  // --- ERROR AUTO-DISMISS DALAM 3 DETIK ---
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 3000)
+      return () => clearTimeout(timer)
     }
+  }, [error])
+
+  // --- TOMBOL X UNTUK BERSIHKAN PENCARIAN & HASIL ---
+  const handleClearSearch = () => {
+    setQuery('')
+    setResults([])
+    setError('')
   }
 
   // Init YT player once
@@ -170,7 +129,27 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // Fungsi Play Utama (Cek Mode)
+  const playHackerAudio = async (track) => {
+    setAudioLoading(true)
+    try {
+      const res = await fetch(`https://pipedapi.kavin.rocks/streams/${track.videoId}`)
+      const data = await res.json()
+      const audioStreams = data.audioStreams || []
+      const best = audioStreams.find(s => s.mimeType?.includes('audio/mp4')) || audioStreams[0]
+      
+      if (best && best.url && audioRef.current) {
+        audioRef.current.src = best.url
+        audioRef.current.play().catch(e => console.log('Audio error:', e))
+      } else {
+        setToast('Gagal memuat stream audio latar')
+      }
+    } catch (e) {
+      setToast('Server background sedang sibuk')
+    } finally {
+      setAudioLoading(false)
+    }
+  }
+
   function playIndex(idx) {
     if (idx < 0 || idx >= queue.length) return
     const track = queue[idx]
@@ -186,7 +165,6 @@ export default function YouTubeSearchPlayer() {
       playHackerAudio(track)
     }
 
-    // Update Lock Screen HP
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
@@ -207,7 +185,6 @@ export default function YouTubeSearchPlayer() {
     }
   }
 
-  // 🎯 EFEK PERUBAHAN MODE
   useEffect(() => {
     if (currentIndex >= 0 && currentIndex < queue.length) {
       playIndex(currentIndex)
@@ -296,7 +273,7 @@ export default function YouTubeSearchPlayer() {
 
   return (
     <div>
-      {/* 🎯 TOGGLE MODE (Video vs Hacker) */}
+      {/* TOGGLE MODE */}
       <div className="flex bg-[#0A0A0E] rounded-lg p-1 mb-3 border border-[#211D2C]">
         <button
           onClick={() => setPlayMode('video')}
@@ -316,60 +293,61 @@ export default function YouTubeSearchPlayer() {
         </button>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="relative mb-3">
+      {/* SEARCH BAR LIVE (Tanpa Enter) */}
+      <div className="relative mb-3">
         <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim" />
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Cari lagu di YouTube... (tekan Enter)"
-          enterKeyHint="search"
-          className="w-full font-body text-xs py-2 pl-8 pr-20 outline-none transition-colors"
+          placeholder="Cari lagu di YouTube (Live Search)..."
+          className="w-full font-body text-xs py-2 pl-8 pr-16 outline-none transition-colors rounded"
           style={{ background: '#0A0A0E', border: '1px solid #211D2C', color: '#EDEAF6' }}
           onFocus={e => e.target.style.borderColor = '#7C5CFF'}
           onBlur={e => e.target.style.borderColor = '#211D2C'}
         />
+        
         {loading ? (
-          <span className="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+          <span className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
             {[0, 1, 2].map(i => (
               <span
                 key={i}
                 className="rounded-full animate-bounce"
-                style={{
-                  width: 3, height: 3, background: '#7C5CFF',
-                  animationDelay: `${i * 0.15}s`, animationDuration: '0.9s'
-                }}
+                style={{ width: 3, height: 3, background: '#7C5CFF', animationDelay: `${i * 0.15}s`, animationDuration: '0.9s' }}
               />
             ))}
           </span>
         ) : query && (
-          <button type="button" onClick={() => setQuery('')} className="absolute right-14 top-1/2 -translate-y-1/2 text-text-dim">
+          // TOMBOL X: Klik untuk hapus input & hasil pencarian
+          <button type="button" onClick={handleClearSearch} className="absolute right-10 top-1/2 -translate-y-1/2 text-text-dim hover:text-white">
             <X size={13} />
           </button>
         )}
-        <button
-          type="submit"
-          className="absolute right-8 top-1/2 -translate-y-1/2 text-text-dim active:text-[#7C5CFF] active:scale-90 transition-transform"
-          title="Cari"
-        >
-          <Search size={13} />
-        </button>
+
         <button
           type="button"
           onClick={() => setShowQueue(s => !s)}
           className="absolute right-2.5 top-1/2 -translate-y-1/2"
           style={{ color: showQueue ? '#7C5CFF' : '#6B6580' }}
+          title="Buka Antrean"
         >
           <ListMusic size={14} />
         </button>
-      </form>
+      </div>
 
+      {/* ERROR BOX: Otomatis hilang 3 detik atau klik langsung hilang */}
       {error && (
-        <div className="flex items-center gap-1.5 px-2.5 py-2 mb-2" style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}>
+        <div 
+          onClick={() => setError('')}
+          className="flex items-center gap-1.5 px-2.5 py-2 mb-2 cursor-pointer transition-opacity" 
+          style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}
+          title="Klik untuk menutup"
+        >
           <AlertTriangle size={12} className="text-red-400 flex-shrink-0" />
           <p className="font-mono text-[10px] text-red-400">{error}</p>
         </div>
       )}
 
+      {/* SKELETON LOADING */}
       {!showQueue && loading && results.length === 0 && (
         <div className="flex flex-col gap-1.5 mb-3">
           {[0, 1, 2].map(i => (
@@ -384,6 +362,7 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
+      {/* HASIL SEARCH */}
       {!showQueue && results.length > 0 && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {results.map(track => (
@@ -405,7 +384,6 @@ export default function YouTubeSearchPlayer() {
                 style={{
                   color: addedId === track.videoId ? '#7C5CFF' : '#6B6580',
                   transform: addedId === track.videoId ? 'scale(1.3)' : 'scale(1)',
-                  filter: addedId === track.videoId ? 'drop-shadow(0 0 4px #7C5CFF)' : 'none'
                 }}
                 title="Tambah ke antrean"
               >
@@ -421,13 +399,14 @@ export default function YouTubeSearchPlayer() {
 
       {toast && (
         <div
-          className="mb-3 text-center font-body text-[10px] py-1.5 px-3 transition-opacity"
+          className="mb-3 text-center font-body text-[10px] py-1.5 px-3"
           style={{ background: 'rgba(124,92,255,0.12)', border: '1px solid #7C5CFF', color: '#7C5CFF' }}
         >
           {toast}
         </div>
       )}
 
+      {/* QUEUE PANEL */}
       {showQueue && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {queue.length === 0 && (
@@ -456,7 +435,7 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* 🎯 AREA PLAYER DUAL-MODE */}
+      {/* PLAYER UTAMA */}
       <div style={{ display: nowPlaying ? 'block' : 'none' }}>
         <div style={{ background: '#0A0A0E', border: '1px solid #211D2C', borderRadius: '4px', overflow: 'hidden' }}>
           
@@ -469,12 +448,10 @@ export default function YouTubeSearchPlayer() {
             </p>
           </div>
 
-          {/* RENDER MODE VIDEO */}
           <div className="aspect-video w-full" style={{ display: playMode === 'video' ? 'block' : 'none' }}>
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
 
-          {/* RENDER MODE HACKER (AUDIO LATAR) */}
           {playMode === 'hacker' && (
             <div className="aspect-video w-full flex flex-col items-center justify-center relative p-4 bg-[#050508] overflow-hidden">
               <img 
@@ -483,11 +460,10 @@ export default function YouTubeSearchPlayer() {
                 alt="cover"
               />
               <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1">
-                {audioLoading ? 'Mengekstrak Audio...' : 'Latar Belakang Aktif'}
+                {audioLoading ? 'Memuat Audio Latar...' : 'Latar Belakang Aktif'}
               </p>
               <p className="font-mono text-[9px] text-gray-500 z-10">Layar aman dimatikan</p>
               
-              {/* AUDIO NATIVE: Sang kunci bypass background play */}
               <audio 
                 ref={audioRef} 
                 onEnded={() => playNextRef.current()}
@@ -521,7 +497,7 @@ export default function YouTubeSearchPlayer() {
 
       {!query && !nowPlaying && !showQueue && (
         <p className="font-mono text-[10px] text-text-dim text-center py-4 uppercase tracking-widest">
-          Pilih Mode, lalu cari musik
+          Ketik untuk mencari musik secara live
         </p>
       )}
     </div>
