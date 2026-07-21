@@ -25,7 +25,7 @@ function loadYouTubeIframeApi() {
 }
 
 export default function YouTubeSearchPlayer() {
-  const [playMode, setPlayMode] = useState('video') // 'video' atau 'hacker'
+  const [playMode, setPlayMode] = useState('video') 
   const playModeRef = useRef(playMode)
   const [audioLoading, setAudioLoading] = useState(false)
 
@@ -129,23 +129,57 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // --- FUNGSI BACKGROUND AUDIO (Nembak API Baru) ---
+  // --- FUNGSI BACKGROUND TINGKAT DEWA (BYPASS VERCEL 100%) ---
   const playHackerAudio = async (track) => {
     setAudioLoading(true)
+    setError('')
+
     try {
-      const res = await fetch(`/api/youtube-stream?id=${track.videoId}`)
-      const data = await res.json()
-      
-      if (!res.ok) throw new Error(data.error || 'Server error')
-      
-      if (data.url && audioRef.current) {
-        audioRef.current.src = data.url
-        audioRef.current.play().catch(e => console.log('Audio error:', e))
-      } else {
-        throw new Error('Stream URL kosong')
+      // 1. Array server sakti
+      const instances = [
+        'https://pipedapi.kavin.rocks',
+        'https://pipedapi.tokhmi.xyz',
+        'https://api.piped.projectsegfau.lt',
+        'https://piped-api.garudalinux.org'
+      ]
+
+      // 2. Fungsi nembak dari HP lu langsung (bukan Vercel)
+      const fetchFromPhone = async (url) => {
+        const controller = new AbortController()
+        const id = setTimeout(() => controller.abort(), 3500) // Waktu tunggu max 3.5 detik
+        try {
+          const res = await fetch(`${url}/streams/${track.videoId}`, { signal: controller.signal })
+          if (!res.ok) throw new Error('Mati')
+          const data = await res.json()
+          const audio = data.audioStreams?.find(a => a.mimeType?.includes('audio/mp4') || a.mimeType?.includes('audio/webm')) || data.audioStreams?.[0]
+          if (!audio?.url) throw new Error('Kosong')
+          return audio.url
+        } finally {
+          clearTimeout(id)
+        }
       }
+
+      let streamUrl = null;
+
+      try {
+        // BALAPAN: Tembak 4 server sekaligus dari HP! Siapa cepat dia dapat!
+        streamUrl = await Promise.any(instances.map(fetchFromPhone))
+      } catch (clientErr) {
+        // Kalau apes banget 4 server mati, fallback nembak Vercel API lu
+        const res = await fetch(`/api/youtube-stream?id=${track.videoId}`)
+        const data = await res.json()
+        if (!res.ok || !data.url) throw new Error('Server Vercel juga mati')
+        streamUrl = data.url
+      }
+
+      // 3. Putar audionya kalau udah dapet URL-nya
+      if (streamUrl && audioRef.current) {
+        audioRef.current.src = streamUrl
+        audioRef.current.play().catch(e => console.log('Audio autoplay ke-block browser:', e))
+      }
+
     } catch (e) {
-      setError('Server background sedang sibuk, coba lagi')
+      setError('Semua server background sedang sibuk, coba lagu lain.')
     } finally {
       setAudioLoading(false)
     }
