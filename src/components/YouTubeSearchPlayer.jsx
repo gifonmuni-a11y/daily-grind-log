@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
-// Bersihin HTML entity dari judul video
+// Dekode HTML Entity pada judul video
 function decodeHtmlEntities(str) {
   if (!str) return ''
   const entities = {
@@ -11,7 +11,7 @@ function decodeHtmlEntities(str) {
   return str.replace(/&#?\w+;/g, m => entities[m] ?? m)
 }
 
-// Load YouTube Iframe API
+// Load YouTube Iframe API untuk Mode Video
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT)
@@ -52,7 +52,7 @@ export default function YouTubeSearchPlayer() {
 
   useEffect(() => { playModeRef.current = playMode }, [playMode])
 
-  // --- LIVE SEARCH OTOMATIS (Tanpa Enter) ---
+  // Live Search
   useEffect(() => {
     if (!query.trim()) {
       setResults([])
@@ -82,7 +82,7 @@ export default function YouTubeSearchPlayer() {
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query])
 
-  // --- ERROR AUTO-DISMISS ---
+  // Error Auto Dismiss
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(''), 3500)
@@ -96,7 +96,7 @@ export default function YouTubeSearchPlayer() {
     setError('')
   }
 
-  // Init YT player once untuk Mode Video
+  // Init YouTube Iframe Player
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
@@ -129,95 +129,21 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // ☠️ --- FUNGSI BACKGROUND TINGKAT FBI/NSA (100% CLIENT-SIDE) --- ☠️
+  // Play Audio Mode (Proxy Streaming)
   const playHackerAudio = async (track) => {
     setAudioLoading(true)
     setError('')
 
     try {
-      // LAPIS 1: API INVIDIOUS (Server Eropa & Global)
-      const invidiousInstances = [
-        'https://invidious.ggc-project.de',
-        'https://invidiou.site'
-      ]
-      const fetchInvidious = async (domain) => {
-        const controller = new AbortController()
-        const id = setTimeout(() => controller.abort(), 4500)
-        try {
-          const res = await fetch(`${domain}/api/v1/videos/${track.videoId}`, { signal: controller.signal })
-          if (!res.ok) throw new Error('Mati')
-          const data = await res.json()
-          const audio = data.formatStreams?.find(s => s.type.includes('audio/mp4') || s.type.includes('audio/webm'))
-          if (!audio?.url) throw new Error('Kosong')
-          return audio.url
-        } finally { clearTimeout(id) }
+      if (audioRef.current) {
+        // Mengarahkan sumber audio langsung ke endpoint streaming proxy
+        audioRef.current.src = `/api/stream-dark?id=${track.videoId}`
+        await audioRef.current.play()
       }
-
-      // LAPIS 2: API COBALT (Scraper God-Tier 2026)
-      const cobaltInstances = [
-        'https://nyc1.coapi.ggtyler.dev/api/json',
-        'https://coapi.kelig.me/api/json'
-      ]
-      const fetchCobalt = async (apiUrl) => {
-        const controller = new AbortController()
-        const id = setTimeout(() => controller.abort(), 4500)
-        try {
-          const res = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${track.videoId}`, isAudioOnly: true }),
-            signal: controller.signal
-          })
-          if (!res.ok) throw new Error('Mati')
-          const data = await res.json()
-          if (!data?.url) throw new Error('Kosong')
-          return data.url
-        } finally { clearTimeout(id) }
-      }
-
-      // LAPIS 3: API PIPED (Proxy Alternatif)
-      const pipedInstances = [
-        'https://pipedapi.kavin.rocks',
-        'https://pipedapi.tokhmi.xyz',
-        'https://api.piped.projectsegfau.lt'
-      ]
-      const fetchPiped = async (domain) => {
-        const controller = new AbortController()
-        const id = setTimeout(() => controller.abort(), 4500)
-        try {
-          const res = await fetch(`${domain}/streams/${track.videoId}`, { signal: controller.signal })
-          if (!res.ok) throw new Error('Mati')
-          const data = await res.json()
-          const audio = data.audioStreams?.find(a => a.mimeType?.includes('audio/mp4') || a.mimeType?.includes('audio/webm')) || data.audioStreams?.[0]
-          if (!audio?.url) throw new Error('Kosong')
-          return audio.url
-        } finally { clearTimeout(id) }
-      }
-
-      // 🏁 BALAPAN MULTI-LAYER SCRAPER (Siapa Cepat Dia Dapat)
-      let streamUrl = null
-      
-      try {
-        const allScrapers = [
-          ...invidiousInstances.map(fetchInvidious),
-          ...cobaltInstances.map(fetchCobalt),
-          ...pipedInstances.map(fetchPiped)
-        ]
-        
-        // Promise.any mengambil link PERTAMA yang sukses dari 7 server!
-        streamUrl = await Promise.any(allScrapers)
-      } catch (err) {
-        throw new Error('Sistem gagal menembus semua pertahanan.')
-      }
-
-      if (streamUrl && audioRef.current) {
-        audioRef.current.src = streamUrl
-        audioRef.current.play().catch(e => console.log('Autoplay diblokir browser:', e))
-      }
-
     } catch (e) {
-      // ERROR MESSAGE BARU UNTUK VALIDASI APAKAH KODE INI BERHASIL DI DEPLOY
-      setError('Sistem FBI/NSA gagal mengekstrak audio. Coba lagu lain.')
+      if (e.name !== 'NotAllowedError') {
+        setError('Jalur audio sedang sibuk, coba lagu lain.')
+      }
     } finally {
       setAudioLoading(false)
     }
@@ -489,10 +415,12 @@ export default function YouTubeSearchPlayer() {
             </p>
           </div>
 
+          {/* Mode Video */}
           <div className="aspect-video w-full" style={{ display: playMode === 'video' ? 'block' : 'none' }}>
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
 
+          {/* Mode Audio / Background */}
           {playMode === 'hacker' && (
             <div className="aspect-video w-full flex flex-col items-center justify-center relative p-4 bg-[#050508] overflow-hidden">
               <img 
@@ -501,7 +429,7 @@ export default function YouTubeSearchPlayer() {
                 alt="cover"
               />
               <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1 text-center">
-                {audioLoading ? 'Menembus Pertahanan...' : 'Latar Belakang Aktif'}
+                {audioLoading ? 'Menghubungkan Stream...' : 'Latar Belakang Aktif'}
               </p>
               <p className="font-mono text-[9px] text-gray-500 z-10">Layar aman dimatikan</p>
               
@@ -510,11 +438,11 @@ export default function YouTubeSearchPlayer() {
                 onEnded={() => playNextRef.current()}
                 onPlay={() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
                 onPause={() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused' }}
-                autoPlay 
               />
             </div>
           )}
 
+          {/* Control Bar */}
           <div className="flex items-center justify-center gap-4 py-2" style={{ borderTop: '1px solid #211D2C' }}>
             <button onClick={playPrev} disabled={!hasPrev} className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90" style={{ color: '#EDEAF6' }}>
               <SkipBack size={16} />
