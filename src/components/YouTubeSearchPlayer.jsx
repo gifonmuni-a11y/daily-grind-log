@@ -71,6 +71,11 @@ export default function YouTubeSearchPlayer() {
 
   const nowPlaying = currentIndex >= 0 ? queue[currentIndex] : null
 
+  // 🎯 FIX: variabel ini sebelumnya dipakai di tombol Prev/Next tapi belum pernah dibuat,
+  // itu penyebab layar blank (component crash saat render).
+  const hasNext = currentIndex >= 0 && currentIndex < queue.length - 1
+  const hasPrev = currentIndex > 0
+
   const showToast = (msg) => {
     setToast(msg)
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
