@@ -390,7 +390,7 @@ export default function YouTubeSearchPlayer() {
   return (
     <div className="relative">
       <audio ref={audioRef} onEnded={playNext} />
-      <input type="file" accept="audio/mp3, audio/wav, audio/m4a" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+      <input type="file" accept="audio/*,.mp3,.wav,.m4a" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
 
       {/* OFF-SCREEN SHARE CARD */}
       <div className="overflow-hidden absolute top-[-9999px] left-[-9999px]">
