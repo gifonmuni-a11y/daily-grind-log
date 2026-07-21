@@ -76,7 +76,7 @@ export default function YouTubeSearchPlayer() {
       } finally {
         setLoading(false)
       }
-    }, 400) // Jeda 400ms biar nggak spam request pas ngetik
+    }, 400)
 
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query])
@@ -129,22 +129,23 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
+  // --- FUNGSI BACKGROUND AUDIO (Nembak API Baru) ---
   const playHackerAudio = async (track) => {
     setAudioLoading(true)
     try {
-      const res = await fetch(`https://pipedapi.kavin.rocks/streams/${track.videoId}`)
+      const res = await fetch(`/api/youtube-stream?id=${track.videoId}`)
       const data = await res.json()
-      const audioStreams = data.audioStreams || []
-      const best = audioStreams.find(s => s.mimeType?.includes('audio/mp4')) || audioStreams[0]
       
-      if (best && best.url && audioRef.current) {
-        audioRef.current.src = best.url
+      if (!res.ok) throw new Error(data.error || 'Server error')
+      
+      if (data.url && audioRef.current) {
+        audioRef.current.src = data.url
         audioRef.current.play().catch(e => console.log('Audio error:', e))
       } else {
-        setToast('Gagal memuat stream audio latar')
+        throw new Error('Stream URL kosong')
       }
     } catch (e) {
-      setToast('Server background sedang sibuk')
+      setError('Server background sedang sibuk, coba lagi')
     } finally {
       setAudioLoading(false)
     }
@@ -338,7 +339,7 @@ export default function YouTubeSearchPlayer() {
       {error && (
         <div 
           onClick={() => setError('')}
-          className="flex items-center gap-1.5 px-2.5 py-2 mb-2 cursor-pointer transition-opacity" 
+          className="flex items-center justify-center gap-1.5 px-2.5 py-2 mb-3 cursor-pointer transition-opacity rounded-md" 
           style={{ background: '#0A0A0E', border: '1px solid rgba(220,60,60,0.4)' }}
           title="Klik untuk menutup"
         >
@@ -397,10 +398,13 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
+      {/* TOAST BOX (Notif ungu: Ditambahkan ke antrean) -> Bisa diklik buat ngilang */}
       {toast && (
         <div
-          className="mb-3 text-center font-body text-[10px] py-1.5 px-3"
+          onClick={() => setToast('')}
+          className="mb-3 cursor-pointer text-center font-body text-[10px] py-1.5 px-3 transition-opacity rounded-md"
           style={{ background: 'rgba(124,92,255,0.12)', border: '1px solid #7C5CFF', color: '#7C5CFF' }}
+          title="Klik untuk menutup"
         >
           {toast}
         </div>
