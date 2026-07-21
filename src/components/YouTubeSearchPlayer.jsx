@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
-// Dekode HTML Entity pada judul video
+// Bersihin HTML entity dari judul video
 function decodeHtmlEntities(str) {
   if (!str) return ''
   const entities = {
@@ -11,7 +11,7 @@ function decodeHtmlEntities(str) {
   return str.replace(/&#?\w+;/g, m => entities[m] ?? m)
 }
 
-// Load YouTube Iframe API untuk Mode Video
+// Load YouTube Iframe API
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT)
@@ -52,7 +52,7 @@ export default function YouTubeSearchPlayer() {
 
   useEffect(() => { playModeRef.current = playMode }, [playMode])
 
-  // Live Search
+  // --- LIVE SEARCH OTOMATIS (Tanpa Enter) ---
   useEffect(() => {
     if (!query.trim()) {
       setResults([])
@@ -82,7 +82,7 @@ export default function YouTubeSearchPlayer() {
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query])
 
-  // Error Auto Dismiss
+  // --- ERROR AUTO-DISMISS ---
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(''), 3500)
@@ -96,7 +96,7 @@ export default function YouTubeSearchPlayer() {
     setError('')
   }
 
-  // Init YouTube Iframe Player
+  // Init YT player once untuk Mode Video
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
@@ -129,21 +129,34 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // Play Audio Mode (Proxy Streaming)
+  // ☠️ --- FUNGSI BACKGROUND TINGKAT FBI/NSA (MENGHUBUNGI API PROXY) --- ☠️
   const playHackerAudio = async (track) => {
     setAudioLoading(true)
     setError('')
 
     try {
+      // Panggil backend kita sendiri yang akan nyari URL dari satelit gelap
+      const res = await fetch(`/api/stream-dark?id=${track.videoId}`)
+      const data = await res.json()
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Gagal bypass sistem.')
+      }
+
+      // Langsung eksekusi URL yang didapat
       if (audioRef.current) {
-        // Mengarahkan sumber audio langsung ke endpoint streaming proxy
-        audioRef.current.src = `/api/stream-dark?id=${track.videoId}`
-        await audioRef.current.play()
+        audioRef.current.src = data.url
+        
+        // Coba mainkan, tangani jika diblokir auto-play browser
+        try {
+          await audioRef.current.play()
+        } catch (e) {
+          console.log('Autoplay diblokir oleh browser:', e)
+        }
       }
+
     } catch (e) {
-      if (e.name !== 'NotAllowedError') {
-        setError('Jalur audio sedang sibuk, coba lagu lain.')
-      }
+      setError(e.message || 'Jalur audio sedang sibuk, coba lagu lain.')
     } finally {
       setAudioLoading(false)
     }
@@ -415,12 +428,10 @@ export default function YouTubeSearchPlayer() {
             </p>
           </div>
 
-          {/* Mode Video */}
           <div className="aspect-video w-full" style={{ display: playMode === 'video' ? 'block' : 'none' }}>
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
 
-          {/* Mode Audio / Background */}
           {playMode === 'hacker' && (
             <div className="aspect-video w-full flex flex-col items-center justify-center relative p-4 bg-[#050508] overflow-hidden">
               <img 
@@ -429,7 +440,7 @@ export default function YouTubeSearchPlayer() {
                 alt="cover"
               />
               <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1 text-center">
-                {audioLoading ? 'Menghubungkan Stream...' : 'Latar Belakang Aktif'}
+                {audioLoading ? 'Menghubungkan Jaringan...' : 'Latar Belakang Aktif'}
               </p>
               <p className="font-mono text-[9px] text-gray-500 z-10">Layar aman dimatikan</p>
               
@@ -442,7 +453,6 @@ export default function YouTubeSearchPlayer() {
             </div>
           )}
 
-          {/* Control Bar */}
           <div className="flex items-center justify-center gap-4 py-2" style={{ borderTop: '1px solid #211D2C' }}>
             <button onClick={playPrev} disabled={!hasPrev} className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90" style={{ color: '#EDEAF6' }}>
               <SkipBack size={16} />

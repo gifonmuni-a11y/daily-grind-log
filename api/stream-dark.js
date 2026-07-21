@@ -1,53 +1,77 @@
-import { Innertube, UniversalCache } from 'youtubei.js';
-
-let ytInstance = null;
-
 export default async function handler(req, res) {
+  // Hanya izinkan method GET
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   const { id } = req.query;
-  if (!id || typeof id !== 'string') {
-    return res.status(400).json({ error: 'ID video tidak valid' });
+  if (!id) {
+    return res.status(400).json({ error: 'ID video tidak boleh kosong' });
   }
 
+  // Fungsi utilitas untuk membatasi waktu tunggu agar tidak nyangkut (maksimal 4.5 detik)
+  const fetchWithTimeout = async (url, time = 4500) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), time);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  };
+
   try {
-    // Inisialisasi Innertube sebagai client Smart TV untuk menghindari bot detection
-    if (!ytInstance) {
-      ytInstance = await Innertube.create({
-        cache: new UniversalCache(false),
-        generate_session_locally: true,
-        client_type: 'TV'
-      });
-    }
+    // 1. JARINGAN PIPED (Utama & Paling Handal)
+    const pipedInstances = [
+      'https://pipedapi.kavin.rocks',
+      'https://pipedapi.tokhmi.xyz',
+      'https://api.piped.projectsegfau.lt'
+    ];
+    
+    const fetchPiped = async (domain) => {
+      const res = await fetchWithTimeout(`${domain}/streams/${id}`);
+      if (!res.ok) throw new Error(`Piped error dari ${domain}`);
+      const data = await res.json();
+      
+      // Ambil format audio m4a atau webm
+      const audio = data.audioStreams?.find(a => a.mimeType?.includes('audio/mp4') || a.mimeType?.includes('audio/webm')) || data.audioStreams?.[0];
+      if (!audio?.url) throw new Error('Audio stream kosong');
+      return audio.url;
+    };
 
-    // Mengunduh stream audio langsung sebagai Web ReadableStream
-    const stream = await ytInstance.download(id, {
-      type: 'audio',
-      quality: 'best',
-      client: 'TV'
-    });
+    // 2. JARINGAN INVIDIOUS (Cadangan)
+    const invidiousInstances = [
+      'https://invidious.nerdvpn.de',
+      'https://inv.tux.pizza'
+    ];
+    
+    const fetchInvidious = async (domain) => {
+      const res = await fetchWithTimeout(`${domain}/api/v1/videos/${id}`);
+      if (!res.ok) throw new Error(`Invidious error dari ${domain}`);
+      const data = await res.json();
+      
+      const audio = data.formatStreams?.find(s => s.type.includes('audio/mp4') || s.type.includes('audio/webm'));
+      if (!audio?.url) throw new Error('Audio stream kosong');
+      return audio.url;
+    };
 
-    // Set Header HTTP agar browser mengenali response sebagai audio stream
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // 3. BALAPAN SERVER (Promise.any)
+    // Akan mengambil respons PERTAMA yang berhasil mengembalikan link
+    const allScrapers = [
+      ...pipedInstances.map(fetchPiped),
+      ...invidiousInstances.map(fetchInvidious)
+    ];
 
-    // Meneruskan (pipe) chunk data dari Web Stream ke Node.js Response
-    const reader = stream.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      res.write(value);
-    }
+    const streamUrl = await Promise.any(allScrapers);
 
-    return res.end();
+    // Kembalikan URL yang sukses ke Frontend
+    return res.status(200).json({ url: streamUrl });
 
   } catch (err) {
-    console.error('Dark Stream Error:', err.message || err);
-    if (!res.headersSent) {
-      return res.status(500).json({ error: 'Gagal mengambil stream audio.' });
-    }
-    return res.end();
+    console.error('Semua target server gagal atau timeout:', err.message);
+    return res.status(500).json({ error: 'Jalur gelap YouTube sedang sibuk, coba lagu lain.' });
   }
 }
