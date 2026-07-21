@@ -1,4 +1,4 @@
-Import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
 // Bersihin HTML entity dari judul video
