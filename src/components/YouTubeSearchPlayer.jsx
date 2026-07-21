@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, FolderMusic, Upload, Timer, Share2, Disc3, Mic2, FileText } from 'lucide-react'
+import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Library, Upload, Timer, Share2, Disc3, Mic2, FileText } from 'lucide-react'
 import html2canvas from 'html2canvas'
 
 // Bersihkan HTML entity
@@ -55,7 +55,7 @@ export default function YouTubeSearchPlayer() {
   
   const [sleepTimer, setSleepTimer] = useState(null)
 
-  // STATE UNTUK TAHAP 2 (LIRIK & SHARE)
+  // STATE LIRIK & SHARE
   const [lyrics, setLyrics] = useState('')
   const [isLyricsLoading, setIsLyricsLoading] = useState(false)
   const [showLyrics, setShowLyrics] = useState(false)
@@ -67,7 +67,7 @@ export default function YouTubeSearchPlayer() {
   const fileInputRef = useRef(null)
   const searchTimeoutRef = useRef(null)
   const toastTimerRef = useRef(null)
-  const shareCardRef = useRef(null) // Ref untuk capture gambar canvas
+  const shareCardRef = useRef(null)
 
   const nowPlaying = currentIndex >= 0 ? queue[currentIndex] : null
 
@@ -163,17 +163,15 @@ export default function YouTubeSearchPlayer() {
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query, activeTab])
 
-  // --- FETCH LIRIK (TAHAP 2) ---
+  // --- FETCH LIRIK ---
   useEffect(() => {
     if (!nowPlaying) return
-    
     const fetchLyrics = async () => {
       setIsLyricsLoading(true)
       setLyrics('')
       try {
-        // Bersihkan judul dari kata-kata pengganggu untuk akurasi API
         let cleanTitle = decodeHtmlEntities(nowPlaying.title)
-          .replace(/\[.*?\]|\(.*?\)/g, '') // Hapus teks dalam kurung
+          .replace(/\[.*?\]|\(.*?\)/g, '')
           .replace(/official|music|video|lyrics|audio|mv/gi, '') 
           .trim()
         
@@ -184,7 +182,6 @@ export default function YouTubeSearchPlayer() {
         const data = await res.json()
 
         if (data && data.length > 0) {
-          // Ambil plainLyrics (tanpa timestamp) agar enak dibaca
           const bestMatch = data.find(song => song.plainLyrics) || data[0]
           setLyrics(bestMatch.plainLyrics || 'Lirik instrumental / tidak tersedia.')
         } else {
@@ -196,7 +193,6 @@ export default function YouTubeSearchPlayer() {
         setIsLyricsLoading(false)
       }
     }
-
     fetchLyrics()
   }, [nowPlaying])
 
@@ -345,7 +341,7 @@ export default function YouTubeSearchPlayer() {
     else { setSleepTimer(null); showToast('Sleep Timer dimatikan') }
   }
 
-  // --- SHARE KE SOSMED (TAHAP 2) ---
+  // --- SHARE KE SOSMED ---
   const handleShare = async () => {
     if (!shareCardRef.current || !nowPlaying) return
     setIsGeneratingCard(true)
@@ -355,14 +351,13 @@ export default function YouTubeSearchPlayer() {
       const canvas = await html2canvas(shareCardRef.current, {
         useCORS: true, 
         backgroundColor: '#050508',
-        scale: 2 // Resolusi tinggi agar jernih di IG Story
+        scale: 2
       })
       
       canvas.toBlob(async (blob) => {
         if (!blob) throw new Error('Gagal proses blob')
         const file = new File([blob], 'lagi-dengerin.png', { type: 'image/png' })
 
-        // Cek Web Share API (Mobile)
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
@@ -371,7 +366,6 @@ export default function YouTubeSearchPlayer() {
           })
           showToast('Dibagikan!')
         } else {
-          // Fallback: Download langsung ke Galeri (Untuk Desktop / Browser tidak support)
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.href = url
@@ -393,23 +387,20 @@ export default function YouTubeSearchPlayer() {
       <audio ref={audioRef} onEnded={playNext} />
       <input type="file" accept="audio/mp3, audio/wav, audio/m4a" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
 
-      {/* OFF-SCREEN SHARE CARD (Disembunyikan dari UI tapi dirender oleh html2canvas) */}
+      {/* OFF-SCREEN SHARE CARD */}
       <div className="overflow-hidden absolute top-[-9999px] left-[-9999px]">
         {nowPlaying && (
           <div 
             ref={shareCardRef} 
             className="w-[400px] h-[700px] bg-gradient-to-b from-[#1a1433] to-[#050508] p-8 flex flex-col items-center justify-center relative shadow-2xl"
           >
-            {/* Dekorasi Glow */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-[#7C5CFF] rounded-full blur-[120px] opacity-20" />
-            
             <img 
               src={nowPlaying.thumb} 
               alt="cover" 
               className="w-64 h-64 object-cover rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-10 border border-[#211D2C]" 
-              crossOrigin="anonymous" // Penting agar gambar tidak memblokir canvas
+              crossOrigin="anonymous"
             />
-            
             <div className="z-10 mt-10 text-center w-full">
               <p className="text-[12px] font-mono text-[#7C5CFF] uppercase tracking-[0.3em] mb-2 font-bold">Now Playing</p>
               <h1 className="text-2xl font-bold text-white mb-2 leading-snug line-clamp-2">
@@ -419,7 +410,6 @@ export default function YouTubeSearchPlayer() {
                 {nowPlaying.type === 'local' ? 'Local Storage' : decodeHtmlEntities(nowPlaying.channel)}
               </p>
             </div>
-
             {lyrics && showLyrics && !isLyricsLoading && (
                <div className="z-10 mt-6 bg-[#00000040] border border-[#211D2C] p-4 rounded-xl w-full text-center">
                  <p className="text-[#EDEAF6] font-body text-sm italic line-clamp-3">
@@ -427,7 +417,6 @@ export default function YouTubeSearchPlayer() {
                  </p>
                </div>
             )}
-            
             <p className="absolute bottom-6 font-mono text-[10px] text-gray-600 uppercase tracking-widest">
               Shared via VibePlayer
             </p>
@@ -441,7 +430,7 @@ export default function YouTubeSearchPlayer() {
           <MonitorPlay size={14} /> YouTube
         </button>
         <button onClick={() => setActiveTab('local')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${activeTab === 'local' ? 'bg-[#2DD4BF] text-[#000]' : 'text-gray-500 hover:text-white'}`}>
-          <FolderMusic size={14} /> Lokal MP3
+          <Library size={14} /> Lokal MP3
         </button>
       </div>
 
@@ -543,7 +532,6 @@ export default function YouTubeSearchPlayer() {
             </div>
             
             <div className="flex items-center gap-2.5 border-l border-[#211D2C] pl-3">
-              {/* TOMBOL LIRIK TAHAP 2 */}
               <button onClick={() => setShowLyrics(!showLyrics)} className="transition-colors" style={{ color: showLyrics ? '#7C5CFF' : '#6B6580' }}>
                 <Mic2 size={14} />
               </button>
@@ -551,7 +539,6 @@ export default function YouTubeSearchPlayer() {
                 <Timer size={14} />
                 {sleepTimer && <span className="absolute -top-1.5 -right-2 text-[8px] font-bold bg-[#FBBF24] text-black px-1 rounded-full">{sleepTimer}</span>}
               </button>
-              {/* TOMBOL SHARE TAHAP 2 */}
               <button 
                 onClick={handleShare} 
                 disabled={isGeneratingCard}
@@ -564,7 +551,6 @@ export default function YouTubeSearchPlayer() {
           </div>
 
           <div className="aspect-video w-full bg-[#050508] relative flex flex-col items-center justify-center overflow-hidden">
-            
             <div 
               ref={playerContainerRef} 
               className="absolute inset-0 w-full h-full"
