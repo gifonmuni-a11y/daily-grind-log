@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
-// Bersihin HTML entity dari judul video
+// Dekode karakter HTML entity dari API YouTube
 function decodeHtmlEntities(str) {
   if (!str) return ''
   const entities = {
@@ -11,7 +11,7 @@ function decodeHtmlEntities(str) {
   return str.replace(/&#?\w+;/g, m => entities[m] ?? m)
 }
 
-// Load YouTube Iframe API
+// Inisialisasi API Iframe YouTube
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT)
@@ -82,7 +82,7 @@ export default function YouTubeSearchPlayer() {
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query])
 
-  // --- ERROR AUTO-DISMISS ---
+  // --- AUTO DISMISS ERROR ---
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(''), 3500)
@@ -96,7 +96,7 @@ export default function YouTubeSearchPlayer() {
     setError('')
   }
 
-  // Init YT player
+  // Init Player YouTube (Mode Video)
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
@@ -129,7 +129,7 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // ☠️ --- FUNGSI BACKGROUND DENGAN SISTEM AUTO-RETRY --- ☠️
+  // --- PEMUTAR AUDIO BACKGROUND (WITH RETRY FALLBACK) ---
   const playHackerAudio = async (track, retryCount = 0) => {
     setAudioLoading(true)
     if (retryCount === 0) setError('')
@@ -139,25 +139,25 @@ export default function YouTubeSearchPlayer() {
       const data = await res.json()
 
       if (!res.ok || !data.url) {
-        throw new Error(data.error || 'Gagal bypass')
+        throw new Error(data.error || 'Gagal bypass stream')
       }
 
       if (audioRef.current) {
         audioRef.current.src = data.url
-        await audioRef.current.play().catch(e => console.log('Autoplay dicegah browser:', e))
+        await audioRef.current.play().catch(e => {
+          console.warn('Autoplay dicegah browser:', e)
+        })
       }
 
-      setAudioLoading(false) // Sukses memutar
+      setAudioLoading(false)
 
     } catch (e) {
       if (retryCount < 1) {
-        // RETRY SILUMAN: Coba tembak ulang 1 kali tanpa memunculkan error ke user
-        console.warn("Tembakan pertama gagal, mencoba serangan ulang...")
+        console.warn("Retrying stream fetch...")
         return playHackerAudio(track, retryCount + 1)
       }
       
-      // Jika retry masih gagal, baru tampilkan error
-      setError('Sistem pertahanan terlalu kuat, coba lagu lain.')
+      setError(e.message || 'Sistem pertahanan terlalu kuat, coba lagu lain atau gunakan mode Video.')
       setAudioLoading(false)
     }
   }
