@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
 // Bersihin HTML entity dari judul video
@@ -11,7 +11,7 @@ function decodeHtmlEntities(str) {
   return str.replace(/&#?\w+;/g, m => entities[m] ?? m)
 }
 
-// Load YouTube Iframe API
+// Load YouTube Iframe API Resmi
 let ytApiPromise = null
 function loadYouTubeIframeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT)
@@ -26,9 +26,8 @@ function loadYouTubeIframeApi() {
 }
 
 export default function YouTubeSearchPlayer() {
-  const [playMode, setPlayMode] = useState('video') 
+  const [playMode, setPlayMode] = useState('video') // 'video' atau 'background'
   const playModeRef = useRef(playMode)
-  const [audioLoading, setAudioLoading] = useState(false)
 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -44,7 +43,6 @@ export default function YouTubeSearchPlayer() {
 
   const playerContainerRef = useRef(null)
   const playerRef = useRef(null)
-  const audioRef = useRef(null)
   const ytReadyRef = useRef(false)
   const searchTimeoutRef = useRef(null)
 
@@ -52,7 +50,7 @@ export default function YouTubeSearchPlayer() {
 
   useEffect(() => { playModeRef.current = playMode }, [playMode])
 
-  // --- LIVE SEARCH OTOMATIS (Tanpa Enter) ---
+  // --- LIVE SEARCH OTOMATIS (No Limit & Cepat) ---
   useEffect(() => {
     if (!query.trim()) {
       setResults([])
@@ -72,7 +70,7 @@ export default function YouTubeSearchPlayer() {
         if (!res.ok) throw new Error(data.error || 'Gagal mencari lagu.')
         setResults(data.items || [])
       } catch (err) {
-        setError(err.message || 'Server pencarian sedang sibuk')
+        setError('Server pencarian sedang sibuk')
         setResults([])
       } finally {
         setLoading(false)
@@ -85,7 +83,7 @@ export default function YouTubeSearchPlayer() {
   // --- ERROR AUTO-DISMISS ---
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(''), 3500)
+      const timer = setTimeout(() => setError(''), 3000)
       return () => clearTimeout(timer)
     }
   }, [error])
@@ -96,7 +94,7 @@ export default function YouTubeSearchPlayer() {
     setError('')
   }
 
-  // Init YT player once untuk Mode Video
+  // Init YouTube Official Player (Stabil & Anti-Error)
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
@@ -113,11 +111,8 @@ export default function YouTubeSearchPlayer() {
         events: {
           onReady: () => { ytReadyRef.current = true },
           onStateChange: (event) => {
-            if (event.data === YT.PlayerState.ENDED && playModeRef.current === 'video') {
+            if (event.data === YT.PlayerState.ENDED) {
               playNextRef.current()
-            }
-            if ('mediaSession' in navigator && playModeRef.current === 'video') {
-              navigator.mediaSession.playbackState = event.data === YT.PlayerState.PLAYING ? 'playing' : 'paused'
             }
           },
         },
@@ -129,113 +124,14 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // ☠️ --- FUNGSI BACKGROUND TINGKAT FBI/NSA (100% CLIENT-SIDE) --- ☠️
-  const playHackerAudio = async (track) => {
-    setAudioLoading(true)
-    setError('')
-
-    try {
-      // LAPIS 1: API INVIDIOUS (Server Eropa & Global)
-      const invidiousInstances = [
-        'https://invidious.ggc-project.de',
-        'https://invidiou.site'
-      ]
-      const fetchInvidious = async (domain) => {
-        const controller = new AbortController()
-        const id = setTimeout(() => controller.abort(), 4500)
-        try {
-          const res = await fetch(`${domain}/api/v1/videos/${track.videoId}`, { signal: controller.signal })
-          if (!res.ok) throw new Error('Mati')
-          const data = await res.json()
-          const audio = data.formatStreams?.find(s => s.type.includes('audio/mp4') || s.type.includes('audio/webm'))
-          if (!audio?.url) throw new Error('Kosong')
-          return audio.url
-        } finally { clearTimeout(id) }
-      }
-
-      // LAPIS 2: API COBALT (Scraper God-Tier 2026)
-      const cobaltInstances = [
-        'https://nyc1.coapi.ggtyler.dev/api/json',
-        'https://coapi.kelig.me/api/json'
-      ]
-      const fetchCobalt = async (apiUrl) => {
-        const controller = new AbortController()
-        const id = setTimeout(() => controller.abort(), 4500)
-        try {
-          const res = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${track.videoId}`, isAudioOnly: true }),
-            signal: controller.signal
-          })
-          if (!res.ok) throw new Error('Mati')
-          const data = await res.json()
-          if (!data?.url) throw new Error('Kosong')
-          return data.url
-        } finally { clearTimeout(id) }
-      }
-
-      // LAPIS 3: API PIPED (Proxy Alternatif)
-      const pipedInstances = [
-        'https://pipedapi.kavin.rocks',
-        'https://pipedapi.tokhmi.xyz',
-        'https://api.piped.projectsegfau.lt'
-      ]
-      const fetchPiped = async (domain) => {
-        const controller = new AbortController()
-        const id = setTimeout(() => controller.abort(), 4500)
-        try {
-          const res = await fetch(`${domain}/streams/${track.videoId}`, { signal: controller.signal })
-          if (!res.ok) throw new Error('Mati')
-          const data = await res.json()
-          const audio = data.audioStreams?.find(a => a.mimeType?.includes('audio/mp4') || a.mimeType?.includes('audio/webm')) || data.audioStreams?.[0]
-          if (!audio?.url) throw new Error('Kosong')
-          return audio.url
-        } finally { clearTimeout(id) }
-      }
-
-      // 🏁 BALAPAN MULTI-LAYER SCRAPER (Siapa Cepat Dia Dapat)
-      let streamUrl = null
-      
-      try {
-        const allScrapers = [
-          ...invidiousInstances.map(fetchInvidious),
-          ...cobaltInstances.map(fetchCobalt),
-          ...pipedInstances.map(fetchPiped)
-        ]
-        
-        // Promise.any mengambil link PERTAMA yang sukses dari 7 server!
-        streamUrl = await Promise.any(allScrapers)
-      } catch (err) {
-        throw new Error('Sistem gagal menembus semua pertahanan.')
-      }
-
-      if (streamUrl && audioRef.current) {
-        audioRef.current.src = streamUrl
-        audioRef.current.play().catch(e => console.log('Autoplay diblokir browser:', e))
-      }
-
-    } catch (e) {
-      // ERROR MESSAGE BARU UNTUK VALIDASI APAKAH KODE INI BERHASIL DI DEPLOY
-      setError('Sistem FBI/NSA gagal mengekstrak audio. Coba lagu lain.')
-    } finally {
-      setAudioLoading(false)
-    }
-  }
-
+  // --- FUNGSI PUTAR MUSIK (Menggunakan Player Resmi YouTube) ---
   function playIndex(idx) {
     if (idx < 0 || idx >= queue.length) return
     const track = queue[idx]
     setCurrentIndex(idx)
 
-    if (playMode === 'video') {
-      audioRef.current?.pause()
-      if (playerRef.current && playerRef.current.loadVideoById) {
-        playerRef.current.loadVideoById(track.videoId)
-      }
-    } else {
-      playerRef.current?.pauseVideo?.()
-      playHackerAudio(track)
+    if (playerRef.current && playerRef.current.loadVideoById) {
+      playerRef.current.loadVideoById(track.videoId)
     }
 
     if ('mediaSession' in navigator) {
@@ -244,24 +140,12 @@ export default function YouTubeSearchPlayer() {
         artist: track.channel,
         artwork: [{ src: track.thumb, sizes: '512x512', type: 'image/jpeg' }]
       })
-      navigator.mediaSession.setActionHandler('play', () => {
-        if (playModeRef.current === 'video') playerRef.current?.playVideo()
-        else audioRef.current?.play()
-      })
-      navigator.mediaSession.setActionHandler('pause', () => {
-        if (playModeRef.current === 'video') playerRef.current?.pauseVideo()
-        else audioRef.current?.pause()
-      })
+      navigator.mediaSession.setActionHandler('play', () => playerRef.current?.playVideo())
+      navigator.mediaSession.setActionHandler('pause', () => playerRef.current?.pauseVideo())
       navigator.mediaSession.setActionHandler('nexttrack', () => playNextRef.current())
       navigator.mediaSession.setActionHandler('previoustrack', () => playPrevRef.current())
     }
   }
-
-  useEffect(() => {
-    if (currentIndex >= 0 && currentIndex < queue.length) {
-      playIndex(currentIndex)
-    }
-  }, [playMode])
 
   function playNext() {
     setQueue(q => {
@@ -291,8 +175,8 @@ export default function YouTubeSearchPlayer() {
     })
   }
 
-  useEffect(() => { playNextRef.current = playNext }, [queue, currentIndex, playMode])
-  useEffect(() => { playPrevRef.current = playPrev }, [queue, currentIndex, playMode])
+  useEffect(() => { playNextRef.current = playNext }, [queue, currentIndex])
+  useEffect(() => { playPrevRef.current = playPrev }, [queue, currentIndex])
 
   function playTrackNow(track) {
     setQueue(prev => {
@@ -329,7 +213,6 @@ export default function YouTubeSearchPlayer() {
         if (newQueue.length === 0) {
           setCurrentIndex(-1)
           playerRef.current?.stopVideo?.()
-          audioRef.current?.pause()
         } else {
           const nextIdx = Math.min(idx, newQueue.length - 1)
           setTimeout(() => playIndex(nextIdx), 0)
@@ -355,9 +238,9 @@ export default function YouTubeSearchPlayer() {
           <MonitorPlay size={14} /> Video
         </button>
         <button
-          onClick={() => setPlayMode('hacker')}
+          onClick={() => setPlayMode('background')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${
-            playMode === 'hacker' ? 'bg-[#2DD4BF] text-[#000]' : 'text-gray-500 hover:text-white'
+            playMode === 'background' ? 'bg-[#2DD4BF] text-[#000]' : 'text-gray-500 hover:text-white'
           }`}
         >
           <Headphones size={14} /> Background
@@ -489,29 +372,28 @@ export default function YouTubeSearchPlayer() {
             </p>
           </div>
 
+          {/* Mode Video */}
           <div className="aspect-video w-full" style={{ display: playMode === 'video' ? 'block' : 'none' }}>
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
 
-          {playMode === 'hacker' && (
+          {/* Mode Background (Player iframe disembunyikan/dikecilkan agar audionya tetap muter mulus tanpa kena blokir server) */}
+          {playMode === 'background' && (
             <div className="aspect-video w-full flex flex-col items-center justify-center relative p-4 bg-[#050508] overflow-hidden">
+              {/* Wadah player resmi YouTube dikecilkan dan disembunyikan di pojok biar audionya tetap hidup */}
+              <div style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                <div ref={playMode === 'background' ? playerContainerRef : null} />
+              </div>
+
               <img 
                 src={nowPlaying?.thumb} 
-                className={`w-20 h-20 rounded-full object-cover shadow-[0_0_20px_#2DD4BF] mb-3 ${audioLoading ? 'opacity-50 animate-pulse' : 'animate-[spin_10s_linear_infinite]'}`}
+                className="w-20 h-20 rounded-full object-cover shadow-[0_0_20px_#2DD4BF] mb-3 animate-[spin_10s_linear_infinite]"
                 alt="cover"
               />
               <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1 text-center">
-                {audioLoading ? 'Menembus Pertahanan...' : 'Latar Belakang Aktif'}
+                Mode Pemutar Stabil Aktif
               </p>
-              <p className="font-mono text-[9px] text-gray-500 z-10">Layar aman dimatikan</p>
-              
-              <audio 
-                ref={audioRef} 
-                onEnded={() => playNextRef.current()}
-                onPlay={() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
-                onPause={() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused' }}
-                autoPlay 
-              />
+              <p className="font-mono text-[9px] text-gray-500 z-10">Bebas dari gangguan server sibuk</p>
             </div>
           )}
 
