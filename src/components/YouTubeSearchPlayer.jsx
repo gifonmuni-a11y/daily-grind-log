@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2 } from 'lucide-react'
+import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Headphones } from 'lucide-react'
 
 // Bersihin HTML entity (&quot; &amp; &#39; dll) dari judul video hasil API
 function decodeHtmlEntities(str) {
@@ -25,12 +25,16 @@ function loadYouTubeIframeApi() {
 }
 
 export default function YouTubeSearchPlayer() {
+  // 🎯 STATE DUAL MODE
+  const [playMode, setPlayMode] = useState('video') // 'video' atau 'hacker'
+  const playModeRef = useRef(playMode)
+  const [audioLoading, setAudioLoading] = useState(false)
+
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Queue state: array of tracks, currentIndex points into it
   const [queue, setQueue] = useState([])
   const [currentIndex, setCurrentIndex] = useState(-1)
   const [showQueue, setShowQueue] = useState(false)
@@ -41,13 +45,17 @@ export default function YouTubeSearchPlayer() {
   const debounceRef = useRef(null)
   const playerContainerRef = useRef(null)
   const playerRef = useRef(null)
+  const audioRef = useRef(null) // Ref untuk audio hacker murni
   const ytReadyRef = useRef(false)
 
   const nowPlaying = currentIndex >= 0 ? queue[currentIndex] : null
 
-  // --- Cache pencarian di localStorage, biar nempel walau PWA ditutup-buka lagi ---
+  // Sinkronisasi ref untuk MediaSession
+  useEffect(() => { playModeRef.current = playMode }, [playMode])
+
+  // --- Cache pencarian ---
   const CACHE_PREFIX = 'yt_search_cache:'
-  const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 hari, hasil lama basi (thumbnail/judul bisa berubah)
+  const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000 
 
   function getCachedResults(key) {
     try {
@@ -60,23 +68,20 @@ export default function YouTubeSearchPlayer() {
       }
       return parsed.items
     } catch {
-      return null // localStorage bisa gagal (private mode, storage penuh, dll) — anggap cache miss aja
+      return null 
     }
   }
 
   function setCachedResults(key, items) {
     try {
       localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ items, savedAt: Date.now() }))
-    } catch {
-      // storage penuh atau diblokir — nggak fatal, cuma berarti nggak ke-cache
-    }
+    } catch {}
   }
 
   const runSearch = useCallback(async (q) => {
     const key = q.trim().toLowerCase()
     if (!key) { setResults([]); setError(''); return }
 
-    // Query yang sama pernah dicari (sesi ini ATAU sebelumnya) → pakai cache, jangan tembak API lagi
     const cached = getCachedResults(key)
     if (cached) {
       setResults(cached)
@@ -101,12 +106,35 @@ export default function YouTubeSearchPlayer() {
     }
   }, [])
 
-  // Search HANYA dipicu saat submit (Enter / tombol cari), bukan tiap ketikan.
-  // Ini yang paling hemat quota — sebelumnya tiap jeda ngetik = 1 API call.
   function handleSearchSubmit(e) {
     e.preventDefault()
     if (debounceRef.current) clearTimeout(debounceRef.current)
     runSearch(query)
+  }
+
+  // 🎯 FUNGSI HACKER: Tarik Stream Audio Murni
+  const playHackerAudio = async (track) => {
+    setAudioLoading(true)
+    try {
+      // Nembak ke public API Piped buat dapetin direct stream
+      const res = await fetch(`https://pipedapi.kavin.rocks/streams/${track.videoId}`)
+      const data = await res.json()
+      
+      const audioStreams = data.audioStreams || []
+      // Cari format m4a/mp4 audio yang paling stabil buat HP
+      const best = audioStreams.find(s => s.mimeType?.includes('audio/mp4')) || audioStreams[0]
+      
+      if (best && best.url && audioRef.current) {
+        audioRef.current.src = best.url
+        audioRef.current.play().catch(e => console.log('Audio error:', e))
+      } else {
+        setToast('Gagal membobol stream audio')
+      }
+    } catch (e) {
+      setToast('Server bypass sedang sibuk, coba lagi')
+    } finally {
+      setAudioLoading(false)
+    }
   }
 
   // Init YT player once
@@ -120,23 +148,17 @@ export default function YouTubeSearchPlayer() {
         height: '100%',
         width: '100%',
         playerVars: {
-          autoplay: 1,
-          playsinline: 1,
-          enablejsapi: 1,
-          rel: 0,
-          controls: 1,
-          origin: currentOrigin,
-          widget_referrer: currentOrigin
+          autoplay: 1, playsinline: 1, enablejsapi: 1, rel: 0, controls: 1,
+          origin: currentOrigin, widget_referrer: currentOrigin
         },
         events: {
           onReady: () => { ytReadyRef.current = true },
           onStateChange: (event) => {
-            if (event.data === YT.PlayerState.ENDED) {
+            if (event.data === YT.PlayerState.ENDED && playModeRef.current === 'video') {
               playNextRef.current()
             }
-            if ('mediaSession' in navigator) {
-              navigator.mediaSession.playbackState =
-                event.data === YT.PlayerState.PLAYING ? 'playing' : 'paused'
+            if ('mediaSession' in navigator && playModeRef.current === 'video') {
+              navigator.mediaSession.playbackState = event.data === YT.PlayerState.PLAYING ? 'playing' : 'paused'
             }
           },
         },
@@ -145,40 +167,60 @@ export default function YouTubeSearchPlayer() {
     return () => { cancelled = true }
   }, [])
 
-  // Keep a ref to playNext so the onStateChange closure (created once) always
-  // calls the latest version instead of a stale one.
   const playNextRef = useRef(() => {})
+  const playPrevRef = useRef(() => {})
 
+  // Fungsi Play Utama (Cek Mode)
   function playIndex(idx) {
     if (idx < 0 || idx >= queue.length) return
     const track = queue[idx]
     setCurrentIndex(idx)
 
-    if (playerRef.current && playerRef.current.loadVideoById) {
-      playerRef.current.loadVideoById(track.videoId)
+    if (playMode === 'video') {
+      audioRef.current?.pause()
+      if (playerRef.current && playerRef.current.loadVideoById) {
+        playerRef.current.loadVideoById(track.videoId)
+      }
+    } else {
+      playerRef.current?.pauseVideo?.()
+      playHackerAudio(track)
     }
 
+    // Update Lock Screen HP
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
         artist: track.channel,
         artwork: [{ src: track.thumb, sizes: '512x512', type: 'image/jpeg' }]
       })
-      navigator.mediaSession.setActionHandler('play', () => playerRef.current?.playVideo())
-      navigator.mediaSession.setActionHandler('pause', () => playerRef.current?.pauseVideo())
+      
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (playModeRef.current === 'video') playerRef.current?.playVideo()
+        else audioRef.current?.play()
+      })
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (playModeRef.current === 'video') playerRef.current?.pauseVideo()
+        else audioRef.current?.pause()
+      })
       navigator.mediaSession.setActionHandler('nexttrack', () => playNextRef.current())
       navigator.mediaSession.setActionHandler('previoustrack', () => playPrevRef.current())
     }
   }
+
+  // 🎯 EFEK PERUBAHAN MODE
+  useEffect(() => {
+    if (currentIndex >= 0 && currentIndex < queue.length) {
+      playIndex(currentIndex)
+    }
+  }, [playMode])
 
   function playNext() {
     setQueue(q => {
       setCurrentIndex(ci => {
         const nextIdx = ci + 1
         if (nextIdx < q.length) {
-          // defer actual load to next tick so we use fresh queue
           setTimeout(() => playIndex(nextIdx), 0)
-          return ci // will be corrected by playIndex
+          return ci 
         }
         return ci
       })
@@ -200,11 +242,9 @@ export default function YouTubeSearchPlayer() {
     })
   }
 
-  const playPrevRef = useRef(() => {})
-  useEffect(() => { playNextRef.current = playNext }, [queue, currentIndex])
-  useEffect(() => { playPrevRef.current = playPrev }, [queue, currentIndex])
+  useEffect(() => { playNextRef.current = playNext }, [queue, currentIndex, playMode])
+  useEffect(() => { playPrevRef.current = playPrev }, [queue, currentIndex, playMode])
 
-  // Tap a search result: add to queue (if not already) and play it immediately
   function playTrackNow(track) {
     setQueue(prev => {
       const existingIdx = prev.findIndex(t => t.videoId === track.videoId)
@@ -225,10 +265,8 @@ export default function YouTubeSearchPlayer() {
       return [...prev, track]
     })
 
-    // Feedback visual: tombol berkedip ungu + toast kecil muncul
     setAddedId(track.videoId)
     setTimeout(() => setAddedId(id => (id === track.videoId ? null : id)), 600)
-
     setToast(alreadyIn ? 'Sudah ada di antrean' : 'Ditambahkan ke antrean')
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     toastTimerRef.current = setTimeout(() => setToast(''), 1500)
@@ -240,10 +278,10 @@ export default function YouTubeSearchPlayer() {
       if (idx < currentIndex) {
         setCurrentIndex(ci => ci - 1)
       } else if (idx === currentIndex) {
-        // currently playing track removed — stop or move to next
         if (newQueue.length === 0) {
           setCurrentIndex(-1)
           playerRef.current?.stopVideo?.()
+          audioRef.current?.pause()
         } else {
           const nextIdx = Math.min(idx, newQueue.length - 1)
           setTimeout(() => playIndex(nextIdx), 0)
@@ -258,6 +296,26 @@ export default function YouTubeSearchPlayer() {
 
   return (
     <div>
+      {/* 🎯 TOGGLE MODE (Video vs Hacker) */}
+      <div className="flex bg-[#0A0A0E] rounded-lg p-1 mb-3 border border-[#211D2C]">
+        <button
+          onClick={() => setPlayMode('video')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${
+            playMode === 'video' ? 'bg-[#7C5CFF] text-white' : 'text-gray-500 hover:text-white'
+          }`}
+        >
+          <MonitorPlay size={14} /> Video
+        </button>
+        <button
+          onClick={() => setPlayMode('hacker')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${
+            playMode === 'hacker' ? 'bg-[#2DD4BF] text-[#000]' : 'text-gray-500 hover:text-white'
+          }`}
+        >
+          <Headphones size={14} /> Background
+        </button>
+      </div>
+
       <form onSubmit={handleSearchSubmit} className="relative mb-3">
         <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim" />
         <input
@@ -312,7 +370,6 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* Skeleton loading (bukan spinner) */}
       {!showQueue && loading && results.length === 0 && (
         <div className="flex flex-col gap-1.5 mb-3">
           {[0, 1, 2].map(i => (
@@ -327,7 +384,6 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* Search results */}
       {!showQueue && results.length > 0 && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {results.map(track => (
@@ -363,7 +419,6 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* Toast kecil pas nambah ke antrean */}
       {toast && (
         <div
           className="mb-3 text-center font-body text-[10px] py-1.5 px-3 transition-opacity"
@@ -373,7 +428,6 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* Queue panel */}
       {showQueue && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {queue.length === 0 && (
@@ -402,39 +456,54 @@ export default function YouTubeSearchPlayer() {
         </div>
       )}
 
-      {/* Player */}
+      {/* 🎯 AREA PLAYER DUAL-MODE */}
       <div style={{ display: nowPlaying ? 'block' : 'none' }}>
-        <div style={{ background: '#0A0A0E', border: '1px solid #211D2C' }}>
+        <div style={{ background: '#0A0A0E', border: '1px solid #211D2C', borderRadius: '4px', overflow: 'hidden' }}>
+          
           <div className="flex items-start gap-2 px-2 py-1.5" style={{ borderBottom: '1px solid #211D2C' }}>
-            <p className="font-body text-[11px] flex-1" style={{ color: '#7C5CFF' }}>
+            <p className="font-body text-[11px] flex-1" style={{ color: playMode === 'video' ? '#7C5CFF' : '#2DD4BF' }}>
               Memutar:{' '}
-              <span
-                style={{
-                  color: '#EDEAF6',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden'
-                }}
-              >
+              <span style={{ color: '#EDEAF6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                 {decodeHtmlEntities(nowPlaying?.title)}
               </span>
             </p>
           </div>
-          <div className="aspect-video w-full">
+
+          {/* RENDER MODE VIDEO */}
+          <div className="aspect-video w-full" style={{ display: playMode === 'video' ? 'block' : 'none' }}>
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
+
+          {/* RENDER MODE HACKER (AUDIO LATAR) */}
+          {playMode === 'hacker' && (
+            <div className="aspect-video w-full flex flex-col items-center justify-center relative p-4 bg-[#050508] overflow-hidden">
+              <img 
+                src={nowPlaying?.thumb} 
+                className={`w-20 h-20 rounded-full object-cover shadow-[0_0_20px_#2DD4BF] mb-3 ${audioLoading ? 'opacity-50 animate-pulse' : 'animate-[spin_10s_linear_infinite]'}`}
+                alt="cover"
+              />
+              <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1">
+                {audioLoading ? 'Mengekstrak Audio...' : 'Latar Belakang Aktif'}
+              </p>
+              <p className="font-mono text-[9px] text-gray-500 z-10">Layar aman dimatikan</p>
+              
+              {/* AUDIO NATIVE: Sang kunci bypass background play */}
+              <audio 
+                ref={audioRef} 
+                onEnded={() => playNextRef.current()}
+                onPlay={() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing' }}
+                onPause={() => { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused' }}
+                autoPlay 
+              />
+            </div>
+          )}
+
           <div className="flex items-center justify-center gap-4 py-2" style={{ borderTop: '1px solid #211D2C' }}>
             <button
               onClick={playPrev}
               disabled={!hasPrev}
               className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90"
               style={{ color: '#EDEAF6' }}
-              onMouseDown={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
-              onMouseUp={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
-              onTouchStart={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
-              onTouchEnd={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
             >
               <SkipBack size={16} />
             </button>
@@ -443,11 +512,6 @@ export default function YouTubeSearchPlayer() {
               disabled={!hasNext}
               className="disabled:opacity-30 p-2 rounded-full transition-all duration-200 active:scale-90"
               style={{ color: '#EDEAF6' }}
-              onMouseDown={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
-              onMouseUp={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
-              onTouchStart={e => { e.currentTarget.style.background = 'rgba(124,92,255,0.25)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(124,92,255,0.6)' }}
-              onTouchEnd={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none' }}
             >
               <SkipForward size={16} />
             </button>
@@ -457,7 +521,7 @@ export default function YouTubeSearchPlayer() {
 
       {!query && !nowPlaying && !showQueue && (
         <p className="font-mono text-[10px] text-text-dim text-center py-4 uppercase tracking-widest">
-          Ketik untuk mencari musik
+          Pilih Mode, lalu cari musik
         </p>
       )}
     </div>
