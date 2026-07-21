@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, Library, Upload, Timer, Share2, Disc3, Mic2, FileText } from 'lucide-react'
-import html2canvas from 'html2canvas'
+import { Search, X, AlertTriangle, Play, SkipForward, SkipBack, ListMusic, Trash2, MonitorPlay, FolderMusic, Upload, Timer, Share2, Disc3 } from 'lucide-react'
 
 // Bersihkan HTML entity
 function decodeHtmlEntities(str) {
@@ -9,7 +8,7 @@ function decodeHtmlEntities(str) {
   return str.replace(/&#?\w+;/g, m => entities[m] ?? m)
 }
 
-// Inisialisasi Database Lokal (IndexedDB)
+// Inisialisasi Database Lokal (IndexedDB) untuk MP3
 const initDB = () => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('HoarderMusicDB', 1)
@@ -39,7 +38,7 @@ function loadYouTubeIframeApi() {
 }
 
 export default function YouTubeSearchPlayer() {
-  const [activeTab, setActiveTab] = useState('youtube') 
+  const [activeTab, setActiveTab] = useState('youtube') // 'youtube' atau 'local'
   
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -53,13 +52,7 @@ export default function YouTubeSearchPlayer() {
   const [showQueue, setShowQueue] = useState(false)
   const [addedId, setAddedId] = useState(null)
   
-  const [sleepTimer, setSleepTimer] = useState(null)
-
-  // STATE LIRIK & SHARE
-  const [lyrics, setLyrics] = useState('')
-  const [isLyricsLoading, setIsLyricsLoading] = useState(false)
-  const [showLyrics, setShowLyrics] = useState(false)
-  const [isGeneratingCard, setIsGeneratingCard] = useState(false)
+  const [sleepTimer, setSleepTimer] = useState(null) // Dalam menit
 
   const playerContainerRef = useRef(null)
   const playerRef = useRef(null)
@@ -67,22 +60,10 @@ export default function YouTubeSearchPlayer() {
   const fileInputRef = useRef(null)
   const searchTimeoutRef = useRef(null)
   const toastTimerRef = useRef(null)
-  const shareCardRef = useRef(null)
 
   const nowPlaying = currentIndex >= 0 ? queue[currentIndex] : null
 
-  // 🎯 FIX: variabel ini sebelumnya dipakai di tombol Prev/Next tapi belum pernah dibuat,
-  // itu penyebab layar blank (component crash saat render).
-  const hasNext = currentIndex >= 0 && currentIndex < queue.length - 1
-  const hasPrev = currentIndex > 0
-
-  const showToast = (msg) => {
-    setToast(msg)
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = setTimeout(() => setToast(''), 2500)
-  }
-
-  // --- MUAT LAGU LOKAL ---
+  // --- MUAT LAGU LOKAL DARI INDEXED DB ---
   const loadLocalSongs = async () => {
     try {
       const db = await initDB()
@@ -91,7 +72,7 @@ export default function YouTubeSearchPlayer() {
       const request = store.getAll()
       request.onsuccess = () => setLocalSongs(request.result.reverse())
     } catch (err) {
-      console.error(err)
+      console.error('Gagal memuat lagu lokal:', err)
     }
   }
 
@@ -101,34 +82,40 @@ export default function YouTubeSearchPlayer() {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+
+    // Validasi file
     if (!file.type.includes('audio')) {
       setError('Hanya file audio (MP3/WAV) yang didukung.')
       return
     }
+
     try {
       const newSong = {
         id: 'local_' + Date.now(),
         type: 'local',
-        videoId: 'local_' + Date.now(),
-        title: file.name.replace(/\.[^/.]+$/, ""), 
+        videoId: 'local_' + Date.now(), // Fallback ID
+        title: file.name.replace(/\.[^/.]+$/, ""), // Hapus ekstensi .mp3
         channel: 'Lokal Storage',
-        thumb: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop', 
+        thumb: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop', // Cover default estetik
         blob: file
       }
+
       const db = await initDB()
       const tx = db.transaction('local_songs', 'readwrite')
       tx.objectStore('local_songs').add(newSong)
+      
       tx.oncomplete = () => {
-        showToast('Lagu berhasil disimpan ke brankas lokal!')
+        setToast('Lagu berhasil disimpan ke brankas lokal!')
         loadLocalSongs()
         setActiveTab('local')
       }
     } catch (err) {
       setError('Gagal menyimpan lagu.')
     }
-    e.target.value = '' 
+    e.target.value = '' // Reset input
   }
 
+  // --- HAPUS LAGU LOKAL ---
   const deleteLocalSong = async (id, e) => {
     e.stopPropagation()
     try {
@@ -148,14 +135,18 @@ export default function YouTubeSearchPlayer() {
       setLoading(false)
       return
     }
+
     setLoading(true)
     setError('')
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Gagal mencari lagu.')
+        
+        // Tandai sebagai tipe youtube
         const formatted = (data.items || []).map(item => ({ ...item, type: 'youtube' }))
         setResults(formatted)
       } catch (err) {
@@ -165,55 +156,24 @@ export default function YouTubeSearchPlayer() {
         setLoading(false)
       }
     }, 400)
+
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query, activeTab])
 
-  // --- FETCH LIRIK ---
-  useEffect(() => {
-    if (!nowPlaying) return
-    const fetchLyrics = async () => {
-      setIsLyricsLoading(true)
-      setLyrics('')
-      try {
-        let cleanTitle = decodeHtmlEntities(nowPlaying.title)
-          .replace(/\[.*?\]|\(.*?\)/g, '')
-          .replace(/official|music|video|lyrics|audio|mv/gi, '') 
-          .trim()
-        
-        let artist = nowPlaying.type === 'local' ? '' : decodeHtmlEntities(nowPlaying.channel).replace(' - Topic', '')
-        
-        const searchQuery = encodeURIComponent(`${cleanTitle} ${artist}`.trim())
-        const res = await fetch(`https://lrclib.net/api/search?q=${searchQuery}`)
-        const data = await res.json()
-
-        if (data && data.length > 0) {
-          const bestMatch = data.find(song => song.plainLyrics) || data[0]
-          setLyrics(bestMatch.plainLyrics || 'Lirik instrumental / tidak tersedia.')
-        } else {
-          setLyrics('Lirik tidak ditemukan di database global.')
-        }
-      } catch (err) {
-        setLyrics('Gagal menyambung ke server lirik.')
-      } finally {
-        setIsLyricsLoading(false)
-      }
-    }
-    fetchLyrics()
-  }, [nowPlaying])
-
-  // --- SLEEP TIMER ---
+  // --- SLEEP TIMER LOGIC ---
   useEffect(() => {
     if (!sleepTimer) return
     const timerId = setTimeout(() => {
       playerRef.current?.pauseVideo?.()
       audioRef.current?.pause()
       setSleepTimer(null)
-      showToast('Waktu habis. Musik dihentikan otomatis 💤')
+      setToast('Waktu habis. Musik dihentikan otomatis 💤')
     }, sleepTimer * 60 * 1000)
+    
     return () => clearTimeout(timerId)
   }, [sleepTimer])
 
-  // --- ERROR AUTO-DISMISS ---
+  // --- AUTO DISMISS ERROR & TOAST ---
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(''), 3000)
@@ -221,17 +181,28 @@ export default function YouTubeSearchPlayer() {
     }
   }, [error])
 
+  const showToast = (msg) => {
+    setToast(msg)
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToast(''), 2000)
+  }
+
   // --- INIT YOUTUBE PLAYER ---
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
       if (cancelled || !playerContainerRef.current || playerRef.current) return
       const currentOrigin = window.location.origin
+
       playerRef.current = new YT.Player(playerContainerRef.current, {
         height: '100%',
         width: '100%',
         playerVars: { autoplay: 1, playsinline: 1, enablejsapi: 1, rel: 0, controls: 1, origin: currentOrigin },
-        events: { onStateChange: (event) => { if (event.data === YT.PlayerState.ENDED) playNextRef.current() } },
+        events: {
+          onStateChange: (event) => {
+            if (event.data === YT.PlayerState.ENDED) playNextRef.current()
+          },
+        },
       })
     })
     return () => { cancelled = true }
@@ -240,35 +211,43 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // --- FUNGSI PUTAR MUSIK ---
+  // --- FUNGSI PUTAR MUSIK (HYBRID YOUTUBE & LOCAL) ---
   function playIndex(idx) {
     if (idx < 0 || idx >= queue.length) return
     const track = queue[idx]
     setCurrentIndex(idx)
 
+    // Matikan kedua mesin sebelum mengganti lagu
     playerRef.current?.pauseVideo?.()
     audioRef.current?.pause()
 
     if (track.type === 'local' && track.blob) {
+      // Putar via Audio HTML5 Lokal
       const url = URL.createObjectURL(track.blob)
       if (audioRef.current) {
         audioRef.current.src = url
-        audioRef.current.play().catch(e => console.log('Autoplay blocked:', e))
+        audioRef.current.play().catch(e => console.log('Autoplay ke-block:', e))
       }
     } else {
+      // Putar via YouTube Iframe
       if (playerRef.current && playerRef.current.loadVideoById) {
         playerRef.current.loadVideoById(track.videoId)
       }
     }
 
+    // Media Session Update (Lockscreen UI)
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
         artist: track.channel,
         artwork: [{ src: track.thumb, sizes: '512x512', type: 'image/jpeg' }]
       })
-      navigator.mediaSession.setActionHandler('play', () => track.type === 'local' ? audioRef.current?.play() : playerRef.current?.playVideo())
-      navigator.mediaSession.setActionHandler('pause', () => track.type === 'local' ? audioRef.current?.pause() : playerRef.current?.pauseVideo())
+      navigator.mediaSession.setActionHandler('play', () => {
+        track.type === 'local' ? audioRef.current?.play() : playerRef.current?.playVideo()
+      })
+      navigator.mediaSession.setActionHandler('pause', () => {
+        track.type === 'local' ? audioRef.current?.pause() : playerRef.current?.pauseVideo()
+      })
       navigator.mediaSession.setActionHandler('nexttrack', () => playNextRef.current())
       navigator.mediaSession.setActionHandler('previoustrack', () => playPrevRef.current())
     }
@@ -302,7 +281,10 @@ export default function YouTubeSearchPlayer() {
   function playTrackNow(track) {
     setQueue(prev => {
       const existingIdx = prev.findIndex(t => (t.id || t.videoId) === (track.id || track.videoId))
-      if (existingIdx !== -1) { setTimeout(() => playIndex(existingIdx), 0); return prev }
+      if (existingIdx !== -1) {
+        setTimeout(() => playIndex(existingIdx), 0)
+        return prev
+      }
       const newQueue = [...prev, track]
       setTimeout(() => playIndex(newQueue.length - 1), 0)
       return newQueue
@@ -315,6 +297,7 @@ export default function YouTubeSearchPlayer() {
       if (prev.some(t => (t.id || t.videoId) === (track.id || track.videoId))) { alreadyIn = true; return prev }
       return [...prev, track]
     })
+    
     const trackId = track.id || track.videoId
     setAddedId(trackId)
     setTimeout(() => setAddedId(id => (id === trackId ? null : id)), 600)
@@ -346,140 +329,106 @@ export default function YouTubeSearchPlayer() {
     else { setSleepTimer(null); showToast('Sleep Timer dimatikan') }
   }
 
-  // --- SHARE KE SOSMED ---
-  const handleShare = async () => {
-    if (!shareCardRef.current || !nowPlaying) return
-    setIsGeneratingCard(true)
-    showToast('Membuat kartu estetik...')
-
-    try {
-      const canvas = await html2canvas(shareCardRef.current, {
-        useCORS: true, 
-        backgroundColor: '#050508',
-        scale: 2
-      })
-      
-      canvas.toBlob(async (blob) => {
-        if (!blob) throw new Error('Gagal proses blob')
-        const file = new File([blob], 'lagi-dengerin.png', { type: 'image/png' })
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: 'Lagi dengerin ini nih!',
-            text: `Vibing to: ${decodeHtmlEntities(nowPlaying.title)} 🎵`
-          })
-          showToast('Dibagikan!')
-        } else {
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = 'Now-Playing-Card.png'
-          a.click()
-          showToast('Gambar disimpan ke perangkatmu!')
-        }
-      })
-    } catch (err) {
-      console.error(err)
-      showToast('Gagal membuat kartu.')
-    } finally {
-      setIsGeneratingCard(false)
-    }
+  const handleShare = () => {
+    // Placeholder untuk Tahap 2 (Web Share / Canvas Image)
+    showToast('Fitur Share Kartu Estetik segera hadir! 🎨')
   }
 
   return (
-    <div className="relative">
+    <div>
+      {/* HIDDEN AUDIO ELEMENT UNTUK MP3 LOKAL */}
       <audio ref={audioRef} onEnded={playNext} />
-      <input type="file" accept="audio/*,.mp3,.wav,.m4a" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+      <input 
+        type="file" 
+        accept="audio/mp3, audio/wav, audio/m4a" 
+        ref={fileInputRef} 
+        onChange={handleFileUpload} 
+        className="hidden" 
+      />
 
-      {/* OFF-SCREEN SHARE CARD */}
-      <div className="overflow-hidden absolute top-[-9999px] left-[-9999px]">
-        {nowPlaying && (
-          <div 
-            ref={shareCardRef} 
-            className="w-[400px] h-[700px] bg-gradient-to-b from-[#1a1433] to-[#050508] p-8 flex flex-col items-center justify-center relative shadow-2xl"
-          >
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-[#7C5CFF] rounded-full blur-[120px] opacity-20" />
-            <img 
-              src={nowPlaying.thumb} 
-              alt="cover" 
-              className="w-64 h-64 object-cover rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-10 border border-[#211D2C]" 
-              crossOrigin="anonymous"
-            />
-            <div className="z-10 mt-10 text-center w-full">
-              <p className="text-[12px] font-mono text-[#7C5CFF] uppercase tracking-[0.3em] mb-2 font-bold">Now Playing</p>
-              <h1 className="text-2xl font-bold text-white mb-2 leading-snug line-clamp-2">
-                {decodeHtmlEntities(nowPlaying.title)}
-              </h1>
-              <p className="text-[#a09bb3] text-lg font-mono">
-                {nowPlaying.type === 'local' ? 'Local Storage' : decodeHtmlEntities(nowPlaying.channel)}
-              </p>
-            </div>
-            {lyrics && showLyrics && !isLyricsLoading && (
-               <div className="z-10 mt-6 bg-[#00000040] border border-[#211D2C] p-4 rounded-xl w-full text-center">
-                 <p className="text-[#EDEAF6] font-body text-sm italic line-clamp-3">
-                   "{lyrics.split('\n')[0] || '...'}"
-                 </p>
-               </div>
-            )}
-            <p className="absolute bottom-6 font-mono text-[10px] text-gray-600 uppercase tracking-widest">
-              Shared via VibePlayer
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* --- TABS --- */}
+      {/* TABS HYBRID (YOUTUBE vs LOKAL) */}
       <div className="flex bg-[#0A0A0E] rounded-lg p-1 mb-3 border border-[#211D2C]">
-        <button onClick={() => setActiveTab('youtube')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${activeTab === 'youtube' ? 'bg-[#7C5CFF] text-white' : 'text-gray-500 hover:text-white'}`}>
+        <button
+          onClick={() => setActiveTab('youtube')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${
+            activeTab === 'youtube' ? 'bg-[#7C5CFF] text-white' : 'text-gray-500 hover:text-white'
+          }`}
+        >
           <MonitorPlay size={14} /> YouTube
         </button>
-        <button onClick={() => setActiveTab('local')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${activeTab === 'local' ? 'bg-[#2DD4BF] text-[#000]' : 'text-gray-500 hover:text-white'}`}>
-          <Library size={14} /> Lokal MP3
+        <button
+          onClick={() => setActiveTab('local')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-mono uppercase tracking-wider rounded-md transition-all ${
+            activeTab === 'local' ? 'bg-[#2DD4BF] text-[#000]' : 'text-gray-500 hover:text-white'
+          }`}
+        >
+          <FolderMusic size={14} /> Lokal MP3
         </button>
       </div>
 
-      {/* --- SEARCH / UPLOAD --- */}
+      {/* HEADER ACTION (SEARCH ATAU UPLOAD) */}
       <div className="relative mb-3 flex gap-2">
         {activeTab === 'youtube' ? (
           <div className="relative flex-1">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#6B6580]" />
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Cari video & lagu di YouTube..." className="w-full font-body text-xs py-2 pl-8 pr-8 outline-none transition-colors rounded" style={{ background: '#0A0A0E', border: '1px solid #211D2C', color: '#EDEAF6' }} onFocus={e => e.target.style.borderColor = '#7C5CFF'} onBlur={e => e.target.style.borderColor = '#211D2C'} />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim" />
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Cari video & lagu di YouTube..."
+              className="w-full font-body text-xs py-2 pl-8 pr-8 outline-none transition-colors rounded"
+              style={{ background: '#0A0A0E', border: '1px solid #211D2C', color: '#EDEAF6' }}
+              onFocus={e => e.target.style.borderColor = '#7C5CFF'}
+              onBlur={e => e.target.style.borderColor = '#211D2C'}
+            />
             {loading ? (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-0.5">
                 {[0, 1, 2].map(i => <span key={i} className="w-1 h-1 bg-[#7C5CFF] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
               </span>
             ) : query && (
-              <button onClick={() => { setQuery(''); setResults([]) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6580] hover:text-white"><X size={13} /></button>
+              <button onClick={() => { setQuery(''); setResults([]) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-white">
+                <X size={13} />
+              </button>
             )}
           </div>
         ) : (
-          <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-body rounded border border-dashed border-[#2DD4BF] text-[#2DD4BF] bg-[#050508] hover:bg-[#2DD4BF] hover:text-black transition-all">
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-body rounded border border-dashed border-[#2DD4BF] text-[#2DD4BF] bg-[#050508] hover:bg-[#2DD4BF] hover:text-black transition-all"
+          >
             <Upload size={14} /> Tambah Lagu dari HP
           </button>
         )}
-        <button onClick={() => setShowQueue(s => !s)} className="flex items-center justify-center px-3 rounded border border-[#211D2C] bg-[#0A0A0E]" style={{ color: showQueue ? '#7C5CFF' : '#6B6580' }}>
+
+        <button
+          onClick={() => setShowQueue(s => !s)}
+          className="flex items-center justify-center px-3 rounded border border-[#211D2C] bg-[#0A0A0E]"
+          style={{ color: showQueue ? '#7C5CFF' : '#6B6580' }}
+        >
           <ListMusic size={14} />
         </button>
       </div>
 
-      {/* --- NOTIFIKASI --- */}
+      {/* ERROR / TOAST */}
       {error && (
-        <div onClick={() => setError('')} className="flex items-center justify-center gap-1.5 px-2.5 py-2 mb-3 cursor-pointer rounded-md border border-red-900/50 bg-[#0A0A0E]">
+        <div onClick={() => setError('')} className="flex items-center justify-center gap-1.5 px-2.5 py-2 mb-3 cursor-pointer transition-opacity rounded-md border border-red-900/50 bg-[#0A0A0E]">
           <AlertTriangle size={12} className="text-red-400" />
           <p className="font-mono text-[10px] text-red-400">{error}</p>
         </div>
       )}
       {toast && (
-        <div onClick={() => setToast('')} className="mb-3 cursor-pointer text-center font-body text-[10px] py-1.5 px-3 rounded-md" style={{ background: 'rgba(124,92,255,0.12)', border: '1px solid #7C5CFF', color: '#7C5CFF' }}>
+        <div onClick={() => setToast('')} className="mb-3 cursor-pointer text-center font-body text-[10px] py-1.5 px-3 transition-opacity rounded-md" style={{ background: 'rgba(124,92,255,0.12)', border: '1px solid #7C5CFF', color: '#7C5CFF' }}>
           {toast}
         </div>
       )}
 
-      {/* --- LIST HASIL --- */}
+      {/* DAFTAR HASIL (YOUTUBE / LOKAL) */}
       {!showQueue && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
-          {activeTab === 'local' && localSongs.length === 0 && <p className="text-center text-[10px] font-mono text-gray-500 py-6">Brankas lokal kosong. Upload file MP3 kamu.</p>}
+          {/* List Lokal */}
+          {activeTab === 'local' && localSongs.length === 0 && (
+            <p className="text-center text-[10px] font-mono text-gray-500 py-6">Brankas lokal kosong. Upload file MP3 kamu.</p>
+          )}
+          
           {(activeTab === 'local' ? localSongs : results).map(track => {
             const trackId = track.id || track.videoId
             return (
@@ -491,20 +440,30 @@ export default function YouTubeSearchPlayer() {
                     <p className="font-mono text-[9px] text-gray-500 truncate mt-0.5">{decodeHtmlEntities(track.channel)}</p>
                   </div>
                 </button>
+
                 {activeTab === 'local' && (
-                  <button onClick={(e) => deleteLocalSong(track.id, e)} className="text-red-500/50 hover:text-red-500 px-1"><Trash2 size={13} /></button>
+                  <button onClick={(e) => deleteLocalSong(track.id, e)} className="text-red-500/50 hover:text-red-500 px-1">
+                    <Trash2 size={13} />
+                  </button>
                 )}
-                <button onClick={() => addToQueue(track)} className="px-1 transition-all" style={{ color: addedId === trackId ? (activeTab === 'local' ? '#2DD4BF' : '#7C5CFF') : '#6B6580', transform: addedId === trackId ? 'scale(1.2)' : 'scale(1)' }}>
+
+                <button
+                  onClick={() => addToQueue(track)}
+                  className="px-1 transition-all"
+                  style={{ color: addedId === trackId ? (activeTab === 'local' ? '#2DD4BF' : '#7C5CFF') : '#6B6580', transform: addedId === trackId ? 'scale(1.2)' : 'scale(1)' }}
+                >
                   <ListMusic size={13} />
                 </button>
-                <button onClick={() => playTrackNow(track)} className="text-gray-500 px-1 hover:text-[#7C5CFF]"><Play size={13} /></button>
+                <button onClick={() => playTrackNow(track)} className="text-gray-500 px-1 hover:text-[#7C5CFF]">
+                  <Play size={13} />
+                </button>
               </div>
             )
           })}
         </div>
       )}
 
-      {/* --- ANTRIAN --- */}
+      {/* ANTRIAN (QUEUE) */}
       {showQueue && (
         <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto mb-3">
           {queue.length === 0 && <p className="font-mono text-[10px] text-gray-500 text-center py-4">Antrean kosong</p>}
@@ -515,83 +474,72 @@ export default function YouTubeSearchPlayer() {
               <div key={(track.id || track.videoId) + idx} className="flex items-center gap-2 p-1.5 rounded border" style={{ background: isPlaying ? `${themeColor}15` : '#0A0A0E', borderColor: isPlaying ? themeColor : '#211D2C' }}>
                 <button onClick={() => playIndex(idx)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
                   <img src={track.thumb} alt="" className="w-10 h-8 object-cover rounded-sm" />
-                  <p className="font-body text-[11px] truncate" style={{ color: isPlaying ? themeColor : '#EDEAF6' }}>{decodeHtmlEntities(track.title)}</p>
+                  <p className="font-body text-[11px] truncate" style={{ color: isPlaying ? themeColor : '#EDEAF6' }}>
+                    {decodeHtmlEntities(track.title)}
+                  </p>
                 </button>
-                <button onClick={() => removeFromQueue(idx)} className="text-gray-500 px-1 hover:text-red-500"><Trash2 size={12} /></button>
+                <button onClick={() => removeFromQueue(idx)} className="text-gray-500 px-1 hover:text-red-500">
+                  <Trash2 size={12} />
+                </button>
               </div>
             )
           })}
         </div>
       )}
 
-      {/* --- PEMUTAR UTAMA --- */}
+      {/* PEMUTAR UTAMA (THE PLAYER) */}
       <div style={{ display: nowPlaying ? 'block' : 'none' }}>
-        <div className="bg-[#0A0A0E] border border-[#211D2C] rounded overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.5)] relative">
+        <div className="bg-[#0A0A0E] border border-[#211D2C] rounded overflow-hidden">
           
-          <div className="flex items-center gap-2 px-2 py-2 border-b border-[#211D2C] relative z-10 bg-[#0A0A0E]">
+          {/* Player Header (Title + Extra Controls) */}
+          <div className="flex items-center gap-2 px-2 py-2 border-b border-[#211D2C]">
             <div className="flex-1 min-w-0">
               <p className="font-mono text-[9px] uppercase tracking-wider mb-0.5" style={{ color: nowPlaying?.type === 'local' ? '#2DD4BF' : '#7C5CFF' }}>
-                {nowPlaying?.type === 'local' ? 'Lokal MP3' : 'YouTube Player'}
+                {nowPlaying?.type === 'local' ? 'Lokal MP3 Background' : 'YouTube Video Player'}
               </p>
               <p className="font-body text-[11px] text-[#EDEAF6] truncate">{decodeHtmlEntities(nowPlaying?.title)}</p>
             </div>
             
-            <div className="flex items-center gap-2.5 border-l border-[#211D2C] pl-3">
-              <button onClick={() => setShowLyrics(!showLyrics)} className="transition-colors" style={{ color: showLyrics ? '#7C5CFF' : '#6B6580' }}>
-                <Mic2 size={14} />
-              </button>
+            {/* SLEEP TIMER & SHARE BUTTONS */}
+            <div className="flex items-center gap-2 border-l border-[#211D2C] pl-2">
               <button onClick={handleSetTimer} className="relative transition-colors" style={{ color: sleepTimer ? '#FBBF24' : '#6B6580' }}>
                 <Timer size={14} />
                 {sleepTimer && <span className="absolute -top-1.5 -right-2 text-[8px] font-bold bg-[#FBBF24] text-black px-1 rounded-full">{sleepTimer}</span>}
               </button>
-              <button 
-                onClick={handleShare} 
-                disabled={isGeneratingCard}
-                className="transition-colors disabled:opacity-30" 
-                style={{ color: isGeneratingCard ? '#2DD4BF' : '#6B6580' }}
-              >
-                <Share2 size={14} className={isGeneratingCard ? "animate-spin" : ""} />
+              <button onClick={handleShare} className="text-[#6B6580] hover:text-white transition-colors">
+                <Share2 size={14} />
               </button>
             </div>
           </div>
 
-          <div className="aspect-video w-full bg-[#050508] relative flex flex-col items-center justify-center overflow-hidden">
+          {/* VISUAL PLAYER AREA */}
+          <div className="aspect-video w-full bg-[#050508] relative flex items-center justify-center overflow-hidden">
+            
+            {/* Container YouTube (Sembunyi jika muter MP3 Lokal) */}
             <div 
               ref={playerContainerRef} 
               className="absolute inset-0 w-full h-full"
-              style={{ opacity: nowPlaying?.type === 'youtube' && !showLyrics ? 1 : 0, pointerEvents: nowPlaying?.type === 'youtube' ? 'auto' : 'none' }}
+              style={{ opacity: nowPlaying?.type === 'youtube' ? 1 : 0, pointerEvents: nowPlaying?.type === 'youtube' ? 'auto' : 'none' }}
             />
 
-            {(nowPlaying?.type === 'local' || showLyrics) && (
-              <div className="flex flex-col items-center justify-center z-10 w-full h-full bg-[#050508] absolute inset-0">
-                {showLyrics ? (
-                  <div className="w-full h-full p-4 overflow-y-auto bg-gradient-to-t from-[#0A0A0E] to-[#120f1c] scrollbar-hide">
-                    {isLyricsLoading ? (
-                      <p className="text-[#6B6580] text-xs font-mono text-center mt-10 animate-pulse">Memuat lirik...</p>
-                    ) : (
-                      <pre className="text-[#EDEAF6] font-body text-xs whitespace-pre-wrap text-center leading-relaxed font-medium">
-                        {lyrics}
-                      </pre>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <div className="relative mt-2">
-                      <div className="absolute inset-0 rounded-full border border-[#2DD4BF] animate-ping opacity-20" />
-                      <img src={nowPlaying?.thumb} className="w-20 h-20 rounded-full object-cover shadow-[0_0_20px_rgba(45,212,191,0.5)] animate-[spin_8s_linear_infinite]" alt="cover" />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#050508] rounded-full border border-[#2DD4BF]" />
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-[#2DD4BF]">
-                      <Disc3 size={12} className="animate-pulse" />
-                      <p className="font-mono text-[9px] uppercase tracking-widest">Audio Lokal Aktif</p>
-                    </div>
-                  </>
-                )}
+            {/* Visualizer Lokal MP3 (Tampil jika muter MP3 Lokal) */}
+            {nowPlaying?.type === 'local' && (
+              <div className="flex flex-col items-center justify-center z-10 w-full h-full bg-[#050508]">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full border border-[#2DD4BF] animate-ping opacity-20" />
+                  <img src={nowPlaying.thumb} className="w-20 h-20 rounded-full object-cover shadow-[0_0_20px_rgba(45,212,191,0.5)] animate-[spin_8s_linear_infinite]" alt="cover" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#050508] rounded-full border border-[#2DD4BF]" />
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-[#2DD4BF]">
+                  <Disc3 size={12} className="animate-pulse" />
+                  <p className="font-mono text-[9px] uppercase tracking-widest">Memutar di Latar Belakang</p>
+                </div>
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-6 py-2.5 border-t border-[#211D2C] bg-[#0A0A0E] relative z-10">
+          {/* MAIN CONTROLS */}
+          <div className="flex items-center justify-center gap-6 py-2.5 border-t border-[#211D2C]">
             <button onClick={playPrev} disabled={!hasPrev} className="disabled:opacity-30 text-[#EDEAF6] active:scale-90 transition-transform">
               <SkipBack size={18} />
             </button>
@@ -602,6 +550,7 @@ export default function YouTubeSearchPlayer() {
 
         </div>
       </div>
+
     </div>
   )
 }
