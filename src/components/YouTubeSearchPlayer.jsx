@@ -52,7 +52,7 @@ export default function YouTubeSearchPlayer() {
 
   useEffect(() => { playModeRef.current = playMode }, [playMode])
 
-  // --- LIVE SEARCH OTOMATIS (Tanpa Enter) ---
+  // --- LIVE SEARCH OTOMATIS ---
   useEffect(() => {
     if (!query.trim()) {
       setResults([])
@@ -96,7 +96,7 @@ export default function YouTubeSearchPlayer() {
     setError('')
   }
 
-  // Init YT player once untuk Mode Video
+  // Init YT player
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
@@ -129,35 +129,35 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // ☠️ --- FUNGSI BACKGROUND TINGKAT FBI/NSA (MENGHUBUNGI API PROXY) --- ☠️
-  const playHackerAudio = async (track) => {
+  // ☠️ --- FUNGSI BACKGROUND DENGAN SISTEM AUTO-RETRY --- ☠️
+  const playHackerAudio = async (track, retryCount = 0) => {
     setAudioLoading(true)
-    setError('')
+    if (retryCount === 0) setError('')
 
     try {
-      // Panggil backend kita sendiri yang akan nyari URL dari satelit gelap
       const res = await fetch(`/api/stream-dark?id=${track.videoId}`)
       const data = await res.json()
 
       if (!res.ok || !data.url) {
-        throw new Error(data.error || 'Gagal bypass sistem.')
+        throw new Error(data.error || 'Gagal bypass')
       }
 
-      // Langsung eksekusi URL yang didapat
       if (audioRef.current) {
         audioRef.current.src = data.url
-        
-        // Coba mainkan, tangani jika diblokir auto-play browser
-        try {
-          await audioRef.current.play()
-        } catch (e) {
-          console.log('Autoplay diblokir oleh browser:', e)
-        }
+        await audioRef.current.play().catch(e => console.log('Autoplay dicegah browser:', e))
       }
 
+      setAudioLoading(false) // Sukses memutar
+
     } catch (e) {
-      setError(e.message || 'Jalur audio sedang sibuk, coba lagu lain.')
-    } finally {
+      if (retryCount < 1) {
+        // RETRY SILUMAN: Coba tembak ulang 1 kali tanpa memunculkan error ke user
+        console.warn("Tembakan pertama gagal, mencoba serangan ulang...")
+        return playHackerAudio(track, retryCount + 1)
+      }
+      
+      // Jika retry masih gagal, baru tampilkan error
+      setError('Sistem pertahanan terlalu kuat, coba lagu lain.')
       setAudioLoading(false)
     }
   }
@@ -440,7 +440,7 @@ export default function YouTubeSearchPlayer() {
                 alt="cover"
               />
               <p className="font-mono text-[10px] text-[#2DD4BF] z-10 font-bold uppercase tracking-widest mb-1 text-center">
-                {audioLoading ? 'Menghubungkan Jaringan...' : 'Latar Belakang Aktif'}
+                {audioLoading ? 'Menyusup Jaringan Cobalt...' : 'Latar Belakang Aktif'}
               </p>
               <p className="font-mono text-[9px] text-gray-500 z-10">Layar aman dimatikan</p>
               
