@@ -1,5 +1,8 @@
 import { Innertube, UniversalCache } from 'youtubei.js';
 
+// Global instance: Biar nggak usah start-up mesin dari nol setiap kali lagu ganti
+let youtube = null;
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -12,23 +15,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Inisialisasi Innertube ala Vercel (anti server sibuk)
-    const youtube = await Innertube.create({
-      cache: new UniversalCache(false),
-      generate_session_locally: true,
-    });
+    // Inisialisasi cuma sekali pas pertama kali dipanggil
+    if (!youtube) {
+      youtube = await Innertube.create({
+        cache: new UniversalCache(false),
+        generate_session_locally: true,
+      });
+    }
     
-    // Dapatkan info detail video berdasarkan ID
-    const info = await youtube.getInfo(id);
+    // PENTING: Gunakan getBasicInfo agar jauuuh lebih cepat! (menghindari Vercel Timeout 10 detik)
+    const info = await youtube.getBasicInfo(id);
     
-    // Perintahkan Innertube untuk mencari format audio murni (tanpa video) kualitas terbaik
     const format = info.chooseFormat({ type: 'audio', quality: 'best' });
     
     if (!format || !format.url) {
       throw new Error('Format audio tidak ditemukan');
     }
 
-    // Kembalikan URL direct audio ke frontend
     return res.status(200).json({ url: format.url });
     
   } catch (error) {
