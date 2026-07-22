@@ -273,6 +273,7 @@ export default function Home({ session }) {
   const todaysQuests = getTodaysQuests(userId)
   const claimedTodayIds = getClaimedTodayIds(questClaims)
   const { level } = calcLevel(totalExp)
+  const rankTier = getRankTier(level)
   const maxDayNumber = entries.length > 0 ? Math.max(...entries.map(e => e.day_number)) : 0
   const userStats = { totalDays: entries.length, streak, totalExp, level }
   const unlockedAchievements = getUnlockedAchievements(entries)
@@ -455,7 +456,7 @@ export default function Home({ session }) {
           </div>
           
           <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-            Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+            Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
           </p>
           
           <button 
@@ -560,34 +561,59 @@ export default function Home({ session }) {
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div className="max-w-lg mx-auto pb-32 w-full flex-1">
         
+        {/* HEADER NAVBAR DENGAN USER PROFILE BADGE */}
         <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
           <div 
-            onClassName={handleAdminPressStart}
+            onMouseDown={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
             onMouseLeave={handleAdminPressEnd}
             onTouchStart={handleAdminPressStart}
             onTouchEnd={handleAdminPressEnd}
-            className="flex items-center gap-3 cursor-pointer select-none h-full"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none h-full"
           >
             <img 
               src="/notification-icon.gif" 
               alt="Grind System Icon" 
-              style={{ height: '100%', width: '56px' }}
-              className="object-cover flex-shrink-0"
+              style={{ height: '36px', width: '36px' }}
+              className="object-cover flex-shrink-0 rounded-lg border border-[#211D2C]"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
-            <span className="font-display font-bold text-base text-accent tracking-widest active:text-[#7C5CFF] transition-colors flex items-center h-full">
-              DAILY GRIND LOG
-            </span>
+            <div className="flex flex-col justify-center">
+              <span className="font-display font-bold text-xs sm:text-sm text-accent tracking-widest leading-none">
+                DAILY GRIND LOG
+              </span>
+              <span className="font-mono text-[9px] text-text-dim tracking-wider uppercase mt-0.5">
+                {profile?.name || 'TRAINER'} • LV.{level}
+              </span>
+            </div>
           </div>
           
-          <div className="flex items-center gap-1">
-            <button onClick={() => setShowAboutModal(true)} className="p-2 hover:bg-border-hover transition-colors">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* BADGE USER LEVEL CAPSULE */}
+            <div 
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-[#100E16] border border-[#211D2C] hover:border-[#7C5CFF]/60 rounded-full cursor-pointer transition-all active:scale-95 shadow-inner"
+              title="Klik untuk Edit Profil"
+            >
+              <div className="w-5 h-5 rounded-full bg-[#7C5CFF] text-white flex items-center justify-center font-mono font-bold text-[10px] flex-shrink-0">
+                {profile?.name ? profile.name.charAt(0).toUpperCase() : 'T'}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-mono text-[10px] font-bold text-white leading-tight">
+                  Lv.{level}
+                </span>
+                <span className="font-mono text-[8px] text-[#7C5CFF] font-semibold leading-none uppercase">
+                  {rankTier || 'NOVICE'}
+                </span>
+              </div>
+            </div>
+
+            <button onClick={() => setShowAboutModal(true)} className="p-1.5 hover:bg-border-hover transition-colors rounded">
               <HelpCircle size={16} className="text-text-dim" />
             </button>
-            <button onClick={triggerLogoutModalWithVoice} className="p-2 hover:bg-border-hover transition-colors">
+            <button onClick={triggerLogoutModalWithVoice} className="p-1.5 hover:bg-border-hover transition-colors rounded">
               <LogOut size={16} className="text-text-dim" />
             </button>
           </div>

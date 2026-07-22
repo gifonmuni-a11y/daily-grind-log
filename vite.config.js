@@ -15,10 +15,16 @@ export default defineConfig({
       includeAssets: ['icons/*.png'],
       manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Mengatur pola file yang dicari saat build (disesuaikan dengan file milikmu)
+        globPatterns: ['**/*.{js,css,html,png,gif,json}'],
+        
+        // Mencegah error build (Vercel) jika ada tipe file yang kosong
+        globStrict: false,
+        
         runtimeCaching: [],
         skipWaiting: true,
         clientsClaim: true,
+        
         // MENYUNTIKKAN SCRIPT PENANGKAP PUSH NOTIFIKASI SECARA PERMANEN
         importScripts: ['/custom-push.js']
       }
