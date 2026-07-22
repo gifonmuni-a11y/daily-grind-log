@@ -19,7 +19,8 @@ const TITLE_MAP = { EX: 'ABSOLUTE BEING', SSS: 'RULER', SS: 'SOVEREIGN', S: 'MON
 const BASE_STATS = { str: 15, agi: 12, vit: 14, int: 10, per: 11 }
 const RANK_ORDER = { EX: 8, SSS: 7, SS: 6, S: 5, A: 4, B: 3, C: 2, D: 1, rest: 0 }
 
-function computePlayerProgress(schedule) {
+// Tambahan argumen currentDayIndex biar cuma ngitung sampai hari ini
+function computePlayerProgress(schedule, currentDayIndex) {
   const bonus = { str: 0, agi: 0, vit: 0, int: 0, per: 0 }
   const uniqueExercises = new Set()
   const focusCount = {}
@@ -28,7 +29,10 @@ function computePlayerProgress(schedule) {
   let bestRank = 'D'
   let hasAnyData = false
 
-  DAYS.forEach(day => {
+  DAYS.forEach((day, index) => {
+    // SYSTEM LIVE: Abaikan hari yang belum dilewati dalam minggu ini
+    if (index > currentDayIndex) return;
+
     const dayData = schedule[day] || { items: [], focus: 'Chest' }
     const items = dayData.items || []
     let dailyVolume = 0
@@ -109,6 +113,12 @@ export default function StatusWindow({ onBack }) {
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
 
+  // Cari index hari ini (0 = Senin, 6 = Minggu)
+  const todayIndex = useMemo(() => {
+    const day = new Date().getDay()
+    return day === 0 ? 6 : day - 1
+  }, [])
+
   useEffect(() => {
     const savedAvatar = localStorage.getItem('dg_status_avatar')
     if (savedAvatar) setAvatar(savedAvatar)
@@ -116,11 +126,9 @@ export default function StatusWindow({ onBack }) {
     const savedName = localStorage.getItem('dg_player_name')
     if (savedName) setPlayerName(savedName)
 
-    // Sinkron ulang setiap kali StatusWindow dibuka
     const fresh = loadSchedule()
     if (fresh) setSchedule(fresh)
 
-    // Dengarkan update live dari JadwalLatihan (kalau kedua komponen aktif bersamaan)
     const handleSync = () => {
       const updated = loadSchedule()
       if (updated) setSchedule(updated)
@@ -133,7 +141,8 @@ export default function StatusWindow({ onBack }) {
     }
   }, [])
 
-  const stats = useMemo(() => computePlayerProgress(schedule), [schedule])
+  // Kalkulasi progress disinkronkan dengan hari ini saja
+  const stats = useMemo(() => computePlayerProgress(schedule, todayIndex), [schedule, todayIndex])
 
   const startEditingName = () => {
     setNameDraft(playerName)

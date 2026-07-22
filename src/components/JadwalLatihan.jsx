@@ -28,7 +28,6 @@ const ANATOMY_AREAS = [
   { id: 'Core', name: 'PERUT / CORE', img: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=400&q=80' }
 ];
 
-// --- MANHWA UI TOKENS ---
 const SYS_COLORS = {
   rankEX: "#FF4D6D",
   rankSSS: "#FFD86B",
@@ -70,6 +69,12 @@ function StatCard({ label, value, color }) {
   );
 }
 
+// Helper buat ngambil nama hari ini dari index JS Date
+const getTodayIndex = () => {
+  const day = new Date().getDay();
+  return day === 0 ? 6 : day - 1;
+};
+
 export default function JadwalLatihan({ onBack }) {
   const [isLoading, setIsLoading] = useState(true);
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -78,8 +83,11 @@ export default function JadwalLatihan({ onBack }) {
   const [showCalendarAppPrompt, setShowCalendarAppPrompt] = useState(false);
   const [customAlert, setCustomAlert] = useState({ isOpen: false, message: '' });
 
-  const [view, setView] = useState("week"); // "week" | "month"
-  const [selectedDayRecap, setSelectedDayRecap] = useState(0); 
+  const [view, setView] = useState("week"); 
+  
+  // Set default Recap & Active tab ke HARI INI
+  const [selectedDayRecap, setSelectedDayRecap] = useState(getTodayIndex); 
+  const [activeDay, setActiveDay] = useState(() => DAYS[getTodayIndex()]);
   
   const [schedule, setSchedule] = useState(() => {
     return DAYS.reduce((acc, day) => ({ 
@@ -88,9 +96,7 @@ export default function JadwalLatihan({ onBack }) {
     }), {});
   });
   
-  const [activeDay, setActiveDay] = useState('Senin');
   const [isAdding, setIsAdding] = useState(false);
-  
   const [openDropdown, setOpenDropdown] = useState(null); 
   const [selectedExercise, setSelectedExercise] = useState('');
   const [customExerciseText, setCustomExerciseText] = useState('');
@@ -125,14 +131,13 @@ export default function JadwalLatihan({ onBack }) {
   useEffect(() => {
     if (!isLoading) {
       localStorage.setItem('dg_workout_schedule', JSON.stringify(schedule));
-      window.dispatchEvent(new Event('dg-schedule-updated')); // trigger sync ke StatusWindow
+      window.dispatchEvent(new Event('dg-schedule-updated')); 
     }
   }, [schedule, isLoading]);
 
-  // ==========================================
-  // PROFESSOR GYM LOGIC: DYNAMIC RECAP SYNC
-  // ==========================================
+  // Kalkulasi rekap sinkron hari ini
   const syncedStats = useMemo(() => {
+    const todayIndex = getTodayIndex();
     const weekMap = [];
     const detailMap = {};
     const rankDist = { EX: 0, SSS: 0, SS: 0, S: 0, A: 0, B: 0, C: 0, D: 0 };
@@ -162,8 +167,12 @@ export default function JadwalLatihan({ onBack }) {
       });
 
       const dailyExp = items.length > 0 ? Math.floor((items.length * 15) + (dailyVolume / 25)) : 0;
-      totalWeekExp += dailyExp;
-      if (dailyExp > 0) totalSessions++;
+      
+      // LIVE SYSTEM: Total hitungan cuma sampai hari ini aja biar sinkron sama status window
+      if (index <= todayIndex) {
+        totalWeekExp += dailyExp;
+        if (dailyExp > 0) totalSessions++;
+      }
 
       let rank = 'rest';
       if (dailyExp > 0) {
@@ -176,8 +185,11 @@ export default function JadwalLatihan({ onBack }) {
         else if (dailyExp < 600) rank = 'SSS';
         else rank = 'EX';
         
-        rankDist[rank]++;
-        if (rankOrder[rank] > rankOrder[bestRank]) bestRank = rank;
+        // Update rank & dist cuma kalau hari tsb udah masuk hitungan (live hari ini)
+        if (index <= todayIndex) {
+          rankDist[rank]++;
+          if (rankOrder[rank] > rankOrder[bestRank]) bestRank = rank;
+        }
       }
 
       weekMap.push({ label: day.substring(0, 3), rank, exp: dailyExp });
@@ -192,7 +204,6 @@ export default function JadwalLatihan({ onBack }) {
       } : null;
     });
 
-    // Proyeksi Bulanan (Mengisi Kalender 30 Hari)
     const monthCells = [];
     for (let i = 0; i < 30; i++) {
       const dayIndex = i % 7;
@@ -289,11 +300,9 @@ export default function JadwalLatihan({ onBack }) {
 
   const currentDayData = schedule[activeDay] || { focus: 'Chest', items: [] };
   
-  // Kalkulasi Grafik Minggu & Bulan
   const weekBarValues = syncedStats.weekMap.map((d) => d.exp);
   const weekPeak = weekBarValues.indexOf(Math.max(...weekBarValues));
   
-  // Simulasi Progressive Overload untuk Bar Chart Bulanan (Misal progress meningkat per minggu)
   const monthBarValues = [
     Math.floor(syncedStats.totalWeekExp * 0.7),
     Math.floor(syncedStats.totalWeekExp * 0.85),
@@ -340,7 +349,6 @@ export default function JadwalLatihan({ onBack }) {
           onClick={() => setShowCalendarAppPrompt(true)}
           className="w-full mt-1 py-3 bg-[#211D2C] text-[#7C5CFF] font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 relative border border-[#312C42]"
         >
-          <CornerBrackets />
           <HardDrive size={13} /> HUBUNGKAN KE KALENDER CLOUD
         </button>
       </div>
@@ -360,7 +368,6 @@ export default function JadwalLatihan({ onBack }) {
 
         {/* Status Bar Global */}
         <div className="flex items-center justify-between bg-black/40 border border-[#211D2C] px-3 py-3 relative mb-4">
-          <CornerBrackets />
           <div className="text-center flex-1">
             <div className="flex items-center justify-center gap-1 font-black text-xs text-[#7C5CFF]"><Flame size={12} /> SYNC</div>
             <div className="text-[8px] text-[#EDEAF6]/50 tracking-widest uppercase mt-1">STATUS</div>
@@ -394,7 +401,6 @@ export default function JadwalLatihan({ onBack }) {
 
             {/* Bar Chart Grafik Mingguan */}
             <div className="bg-black/40 border border-[#211D2C] p-3 relative mb-4">
-              <CornerBrackets />
               <div className="flex items-center justify-between text-[9px] text-[#EDEAF6]/50 tracking-widest font-bold uppercase mb-3 border-b border-[#211D2C] pb-2">
                 <span className="flex items-center gap-1"><TrendingUp size={10} /> GRAFIK EXP MINGGUAN</span>
                 <span className="text-[#7C5CFF]">+{syncedStats.totalWeekExp} XP</span>
@@ -414,7 +420,6 @@ export default function JadwalLatihan({ onBack }) {
             {/* Detail Harian Sesuai Pilihan Dropdown */}
             {syncedStats.detailMap[selectedDayRecap] ? (
               <div className="bg-[#14121C] border border-[#312C42] p-3 relative">
-                <CornerBrackets />
                 <div className="flex justify-between items-center mb-3 border-b border-[#211D2C] pb-2">
                   <span className="text-[10px] text-white font-black">{syncedStats.detailMap[selectedDayRecap].dayLabel}</span>
                   <span className="text-[9px] bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF] px-2 py-0.5 font-bold">RANK {syncedStats.detailMap[selectedDayRecap].rank}</span>
@@ -442,7 +447,6 @@ export default function JadwalLatihan({ onBack }) {
           <>
             {/* FITUR BULANAN (MONTH HEATMAP) */}
             <div className="bg-[#14121C] border border-[#312C42] p-3 relative mb-4">
-              <CornerBrackets />
               <div className="flex items-center justify-between font-mono uppercase mb-3 text-[10px] tracking-widest border-b border-[#211D2C] pb-2 text-[#EDEAF6]/50">
                 <span>KALENDER RANK</span>
                 <b className="text-[#7C5CFF]">PROYEKSI BULAN INI</b>
@@ -468,7 +472,6 @@ export default function JadwalLatihan({ onBack }) {
 
             {/* Bar Chart Grafik 4 Minggu */}
             <div className="bg-black/40 border border-[#211D2C] p-3 relative mb-4">
-              <CornerBrackets />
               <div className="flex items-center justify-between text-[9px] text-[#EDEAF6]/50 tracking-widest font-bold uppercase mb-3 border-b border-[#211D2C] pb-2">
                 <span className="flex items-center gap-1"><TrendingUp size={10} /> EXP PER MINGGU</span>
                 <span className="text-[#7C5CFF]">4 MINGGU</span>
@@ -487,7 +490,6 @@ export default function JadwalLatihan({ onBack }) {
 
             {/* Pencapaian Bulanan */}
             <div className="bg-[#14121C] border border-[#312C42] p-3 relative">
-              <CornerBrackets />
               <div className="flex items-center justify-between font-mono uppercase mb-3 text-[10px] tracking-widest border-b border-[#211D2C] pb-2 text-white">
                 <span className="flex items-center gap-1"><Trophy size={12} className="text-[#7C5CFF]"/> PENCAPAIAN BULAN INI</span>
                 <span className="bg-[#7C5CFF]/20 text-[#7C5CFF] border border-[#7C5CFF] px-2 py-0.5 font-bold">TERKUNCI</span>
@@ -528,7 +530,6 @@ export default function JadwalLatihan({ onBack }) {
                   : 'bg-[#100E16] border-[#211D2C] text-[#EDEAF6]/40 hover:bg-[#211D2C]'
               }`}
             >
-              {isActive && <CornerBrackets />}
               {day}
               {hasItems && <span className={`w-1.5 h-1.5 ${isActive ? 'bg-[#7C5CFF]' : 'bg-[#312C42]'}`} />}
             </button>
@@ -536,7 +537,7 @@ export default function JadwalLatihan({ onBack }) {
         })}
       </div>
 
-      {/* MATRIKS ANATOMI (TANPA ARSENAL PERALATAN GYM) */}
+      {/* MATRIKS ANATOMI */}
       <div className="flex flex-col gap-2 bg-[#100E16] border border-[#211D2C] p-3 relative shadow-lg">
         <CornerBrackets />
         <span className="text-[9px] uppercase font-bold text-[#7C5CFF] tracking-widest flex items-center gap-1 border-b border-[#211D2C] pb-2">
@@ -552,7 +553,6 @@ export default function JadwalLatihan({ onBack }) {
                 onClick={() => handleSetData('focus', area.id)}
                 className={`group h-16 relative overflow-hidden text-left font-mono border transition-all duration-200 ${isTarget ? 'border-[#312C42]' : 'border-[#211D2C] opacity-40 hover:opacity-75'}`}
               >
-                {isTarget && <CornerBrackets />}
                 <img src={area.img} alt={area.name} className="absolute inset-0 w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0" loading="lazy" />
                 <div className={`absolute inset-0 transition-opacity duration-300 ${isTarget ? 'bg-gradient-to-r from-[#0A0A0E] via-[#0A0A0E]/80 to-transparent' : 'bg-black/80'}`} />
                 <div className="absolute inset-y-0 left-2 flex flex-col justify-center">
@@ -582,7 +582,6 @@ export default function JadwalLatihan({ onBack }) {
           ) : (
             currentDayData.items.map((item, idx) => (
               <div key={item.id} className="flex items-center justify-between p-3 bg-black/40 border border-[#211D2C] relative transition-colors">
-                <CornerBrackets />
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-[#7C5CFF] text-[10px] font-black">#{idx + 1}</span>
                   <span className="text-[#EDEAF6] text-xs font-bold uppercase tracking-wide truncate">{item.text}</span>
@@ -604,7 +603,6 @@ export default function JadwalLatihan({ onBack }) {
                   onClick={() => setOpenDropdown(openDropdown === 'exercise' ? null : 'exercise')}
                   className="w-full bg-black border border-[#312C42] text-white text-xs p-3.5 flex items-center justify-between text-left font-mono relative"
                 >
-                  <CornerBrackets />
                   <span className="font-bold uppercase text-[#EDEAF6] truncate pr-4">{selectedExercise || 'PILIH PROTOKOL GERAKAN...'}</span>
                   <ChevronDown size={14} className="text-[#7C5CFF] flex-shrink-0" />
                 </button>
@@ -627,7 +625,6 @@ export default function JadwalLatihan({ onBack }) {
 
               {selectedExercise === 'Latihan Kustom (Isi Manual)' && (
                 <div className="relative z-[10]">
-                  <CornerBrackets />
                   <input
                     autoFocus
                     type="text"
@@ -648,7 +645,6 @@ export default function JadwalLatihan({ onBack }) {
                     onClick={() => setOpenDropdown(openDropdown === 'kg' ? null : 'kg')}
                     className="w-full bg-black border border-[#312C42] text-white font-bold text-xs p-3.5 flex items-center justify-between font-mono relative"
                   >
-                    <CornerBrackets />
                     <span>{selectedKg} KG</span>
                     <ChevronDown size={14} className="text-[#7C5CFF]" />
                   </button>
@@ -675,7 +671,6 @@ export default function JadwalLatihan({ onBack }) {
                     onClick={() => setOpenDropdown(openDropdown === 'reps' ? null : 'reps')}
                     className="w-full bg-black border border-[#312C42] text-white font-bold text-xs p-3.5 flex items-center justify-between font-mono relative"
                   >
-                    <CornerBrackets />
                     <span>{selectedReps} REPS</span>
                     <ChevronDown size={14} className="text-[#7C5CFF]" />
                   </button>
@@ -701,7 +696,7 @@ export default function JadwalLatihan({ onBack }) {
                   BATAL
                 </button>
                 <button type="submit" className="py-3 bg-[#211D2C] text-[#7C5CFF] text-[10px] font-black uppercase tracking-widest relative border border-[#312C42]">
-                  <CornerBrackets /> SIMPAN
+                  SIMPAN
                 </button>
               </div>
             </form>
@@ -724,7 +719,6 @@ export default function JadwalLatihan({ onBack }) {
             <CornerBrackets />
             
             <div className="w-12 h-12 bg-black border border-[#312C42] flex items-center justify-center mx-auto text-[#7C5CFF] relative">
-              <CornerBrackets />
               <DownloadCloud size={20} className="animate-pulse" />
             </div>
             
@@ -745,7 +739,7 @@ export default function JadwalLatihan({ onBack }) {
                 onClick={() => executeCloudRouting('daily')} 
                 className="w-full py-3 bg-[#14121C] text-[#EDEAF6] font-black text-[10px] uppercase border border-[#312C42] relative active:scale-95 transition-transform"
               >
-                <CornerBrackets /> SINKRONISASI HARI INI SAJA
+                SINKRONISASI HARI INI SAJA
               </button>
               
               <button 
@@ -753,7 +747,7 @@ export default function JadwalLatihan({ onBack }) {
                 onClick={() => executeCloudRouting('weekly')} 
                 className="w-full py-3 bg-[#211D2C] text-[#7C5CFF] font-black text-[10px] uppercase border border-[#312C42] relative active:scale-95 transition-transform"
               >
-                <CornerBrackets /> SINKRONISASI FULL 1 MINGGU
+                SINKRONISASI FULL 1 MINGGU
               </button>
               
               <a 
@@ -790,7 +784,7 @@ export default function JadwalLatihan({ onBack }) {
               onClick={() => setCustomAlert({ isOpen: false, message: '' })}
               className="w-full py-3 bg-[#211D2C] text-white font-black text-xs uppercase relative active:scale-95 mt-1 border border-[#312C42]"
             >
-              <CornerBrackets /> KONFIRMASI
+              KONFIRMASI
             </button>
           </div>
         </div>
@@ -818,7 +812,6 @@ export default function JadwalLatihan({ onBack }) {
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">PROTOKOL 1 BULAN FULL BODY</div>
                   <div className="bg-black border border-[#312C42] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
-                    <CornerBrackets />
                     <div>1. BARBELL SQUAT (3 SET X 8-10 REPS)</div>
                     <div>2. BENCH PRESS (3 SET X 8-10 REPS)</div>
                     <div>3. BARBELL ROW (3 SET X 8-10 REPS)</div>
@@ -831,7 +824,6 @@ export default function JadwalLatihan({ onBack }) {
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">PROTOKOL REKAYASA BULKING</div>
                   <div className="bg-black border border-[#312C42] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
-                    <CornerBrackets />
                     <div>M1: COBA BEBAN DASAR (50KG X 10 REPS)</div>
                     <div>M2: NAIKKAN INTENSITAS (+2.5KG)</div>
                     <div>M3: JAGA BEBAN, NAIKKAN JADI 12 REPS</div>
@@ -844,7 +836,6 @@ export default function JadwalLatihan({ onBack }) {
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">PROTOKOL REDUKSI LEMAK (CUTTING)</div>
                   <div className="bg-black border border-[#312C42] p-3 flex flex-col gap-2 text-[#7C5CFF] relative">
-                    <CornerBrackets />
                     <div>1. BENCH PRESS (PERTAHANKAN BEBAN)</div>
                     <div>2. LAT PULLDOWN (JAGA INTENSITAS)</div>
                     <div>3. HIIIT CARDIO (15 MENIT DI AKHIR SESI)</div>
@@ -856,7 +847,6 @@ export default function JadwalLatihan({ onBack }) {
                 <>
                   <div className="border-l-2 border-[#7C5CFF] pl-2 text-white font-bold flex items-center gap-1">FORMULA KALORI & MANAJEMEN TIDUR</div>
                   <p className="bg-black p-3 border border-[#312C42] relative text-white text-[9px]">
-                    <CornerBrackets />
                     PRIA = (10 X BERAT KG) + (6.25 X TINGGI CM) - (5 X UMUR) + 5
                   </p>
                   <p>Target Protein Utama: Konsumsi makro protein murni minimal 1.6g hingga 2.2g per kilogram berat badan.</p>
@@ -867,7 +857,7 @@ export default function JadwalLatihan({ onBack }) {
 
             <div className="p-4 bg-black/40 border-t border-[#211D2C] relative z-10">
               <button onClick={() => setShowGuideModal(false)} className="w-full py-3 bg-[#211D2C] text-[10px] font-black text-white tracking-widest uppercase active:scale-95 relative border border-[#312C42]">
-                <CornerBrackets /> TUTUP DOKUMEN
+                TUTUP DOKUMEN
               </button>
             </div>
           </div>
