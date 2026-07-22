@@ -32,6 +32,9 @@ import FitnessFoodMap from '../components/FitnessFoodMap'
 import AdminPanel from '../components/AdminPanel'
 import JadwalLatihan from '../components/JadwalLatihan'
 import StatusWindow from '../components/StatusWindow'
+import MonthlyHistory from '../components/MonthlyHistory'
+import MonthlyRecapModal from '../components/MonthlyRecapModal'
+import useMonthlyRecap from '../hooks/useMonthlyRecap'
 import { requestNotificationPermission, sendSystemNotification } from '../lib/notificationSystem'
 
 // DIRECT SUPABASE STORAGE AUDIO URL MAPPER
@@ -122,7 +125,9 @@ export default function Home({ session }) {
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
   const [showCompanion, setShowCompanion] = useState(false)
-  
+  const [showMonthlyHistory, setShowMonthlyHistory] = useState(false)
+  const { showRecap, recapMonth, closeRecap } = useMonthlyRecap()
+
   const [editEntry, setEditEntry] = useState(null)
 
   const [seeding, setSeeding] = useState(false)
@@ -645,6 +650,17 @@ export default function Home({ session }) {
 
             <StatusPanel entries={entries} />
             <StatsDashboard entries={entries} />
+
+            <div className="mx-4 mb-4">
+              <button
+                type="button"
+                onClick={() => setShowMonthlyHistory(true)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors"
+                style={{ background: '#0A0A0E', border: '1px solid #211D2C', color: '#9CA3AF' }}
+              >
+                Lihat Riwayat Bulanan
+              </button>
+            </div>
             
             <div className="mt-8 mb-5 mx-4 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               <FilterTabs active={activeFilter} onChange={setActiveFilter} />
@@ -934,6 +950,18 @@ export default function Home({ session }) {
       
       {showProfileModal && <ProfileEditModal profile={profile} userId={userId} onClose={() => setShowProfileModal(false)} onSaved={fetchProfile} />}
       {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} entries={entries} userId={userId} />}
+
+      {showMonthlyHistory && (
+        <MonthlyHistory entries={entries} onClose={() => setShowMonthlyHistory(false)} />
+      )}
+
+      {showRecap && (
+        <MonthlyRecapModal
+          entries={entries}
+          targetMonth={recapMonth}
+          onClose={closeRecap}
+        />
+      )}
 
       <LevelUpModal isOpen={showLevelUp} oldTier={levelUpData.oldTier} newTier={levelUpData.newTier} newLevel={levelUpData.newLevel} onClose={() => setShowLevelUp(false)} />
       <AchievementUnlockModal isOpen={showAchievementUnlock} achievement={activeUnlockAchievement} onClose={() => setShowAchievementUnlock(false)} />
