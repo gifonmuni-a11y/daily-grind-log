@@ -94,7 +94,7 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
   })
   const maxWeeklyExp = Math.max(...weeklyExp, 1)
 
-  // FIX SHARE & DOWNLOAD ACTION
+  // FIX SHARE & DOWNLOAD ACTION (DIBIKIN HD)
   const handleAction = async (actionType) => {
     if (!cardRef.current || downloading) return
     setDownloading(true)
@@ -102,13 +102,13 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     try {
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#0A0A0E',
-        scale: 2,
+        scale: 4, // <-- Skala HD
         useCORS: true,
         logging: false
       })
 
       if (actionType === 'download') {
-        const image = canvas.toDataURL('image/png')
+        const image = canvas.toDataURL('image/png', 1.0)
         const link = document.createElement('a')
         link.href = image
         link.download = `GrindLog_Rekap_${monthName.replace(/\s+/g, '_')}.png`
@@ -139,7 +139,7 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
             URL.revokeObjectURL(url)
           }
           setDownloading(false)
-        }, 'image/png')
+        }, 'image/png', 1.0)
       }
     } catch (err) {
       console.error('Gagal memproses gambar:', err)
@@ -180,8 +180,9 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
           <div className="flex items-center justify-between border-b border-[#211D2C] pb-4">
             {/* SISI KIRI: Logo PWA & Judul Rekap */}
             <div className="flex items-center gap-3">
+              {/* FIX ICON: Mengubah gif menjadi icon-maskable.png statis yang lebih jernih */}
               <img 
-                src="/notification-icon.gif" 
+                src="/icons/icon-maskable.png" 
                 alt="PWA Logo" 
                 className="w-9 h-9 object-cover rounded-lg border border-[#211D2C] flex-shrink-0"
                 onError={(e) => { e.target.style.display = 'none' }}
@@ -197,7 +198,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
             </div>
 
             {/* SISI KANAN: Nama User & Level Badge */}
-            {/* FIX TEKS POTONG: Pakai leading-relaxed dan break-words */}
             <div className="flex flex-col items-end pl-2">
               <span className="font-display font-black text-xs text-[#7C5CFF] tracking-wider uppercase max-w-[100px] text-right leading-relaxed break-words">
                 {userData.name}
@@ -224,7 +224,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
             </div>
             <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-1">
               <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider">TOP KATEGORI</span>
-              {/* FIX TEKS POTONG KATEGORI */}
               <span className="font-display font-black text-sm text-[#7C5CFF] leading-relaxed break-words">{topKategori}</span>
             </div>
           </div>
