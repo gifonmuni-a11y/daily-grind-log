@@ -4,7 +4,6 @@ import html2canvas from 'html2canvas'
 import { supabase } from '../lib/supabaseClient'
 import { calcLevel, getEffectiveTotalExp } from '../lib/expSystem'
 
-// Tambahkan map EXP untuk kalkulasi jika exp_gained kosong
 const RANK_EXP = { S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }
 
 export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, profile: propProfile, level: propLevel }) {
@@ -15,7 +14,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     level: propLevel || 1
   })
 
-  // Sinkronisasi/Fetch data user untuk ditampilkan di kartu rekap
   useEffect(() => {
     const loadUserData = async () => {
       if (propProfile?.name && propLevel) {
@@ -48,7 +46,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     loadUserData()
   }, [propProfile, propLevel, entries])
 
-  // Perhitungan Data Rekap Bulanan
   const now = targetMonth ? new Date(targetMonth) : new Date()
   const monthName = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
 
@@ -59,13 +56,11 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
 
   const totalSesi = monthlyEntries.length
   
-  // FIX EXP: Pastikan membaca dari RANK_EXP jika exp_gained tidak ada
   const totalExp = monthlyEntries.reduce((acc, curr) => {
     const exp = curr.exp_gained || RANK_EXP[curr.rank] || 0
     return acc + exp
   }, 0)
 
-  // Hitung Top Kategori
   const categoryCounts = {}
   monthlyEntries.forEach(e => {
     const cat = e.category || 'Lainnya'
@@ -75,7 +70,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     ? Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b)
     : '-'
 
-  // Hitung Best Rank
   const rankPriority = { 'S': 4, 'A': 3, 'B': 2, 'C': 1, 'D': 0, 'E': -1 }
   let bestRank = '-'
   monthlyEntries.forEach(e => {
@@ -84,7 +78,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     }
   })
 
-  // FIX GRAFIK: Hitung EXP per Minggu (M1 - M5) dengan RANK_EXP
   const weeklyExp = [0, 0, 0, 0, 0]
   monthlyEntries.forEach(e => {
     const day = new Date(e.entry_date).getDate()
@@ -94,7 +87,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
   })
   const maxWeeklyExp = Math.max(...weeklyExp, 1)
 
-  // FIX SHARE & DOWNLOAD ACTION (DIBIKIN HD)
   const handleAction = async (actionType) => {
     if (!cardRef.current || downloading) return
     setDownloading(true)
@@ -102,7 +94,7 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     try {
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#0A0A0E',
-        scale: 4, // <-- Skala HD
+        scale: 4, 
         useCORS: true,
         logging: false
       })
@@ -130,7 +122,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
               console.error('Batal share:', shareErr)
             }
           } else {
-            // Fallback download kalau device gak support Web Share API
             const url = URL.createObjectURL(blob)
             const link = document.createElement('a')
             link.href = url
@@ -151,7 +142,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4 overflow-y-auto">
       <div className="w-full max-w-sm flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-150">
         
-        {/* TOMBOL AKSI ATAS */}
         <div className="flex items-center justify-between text-white">
           <span className="font-mono text-xs text-[#8B8696] uppercase tracking-wider">
             PRATINJAU KARTU
@@ -165,22 +155,17 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
           </button>
         </div>
 
-        {/* --- KARTU YANG AKAN DI-SHARE --- */}
         <div 
           ref={cardRef} 
           className="bg-[#0A0A0E] border border-[#211D2C] p-5 rounded-none flex flex-col gap-5 text-white relative shadow-2xl select-none"
         >
-          {/* Accent Corner Lines */}
           <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-[#7C5CFF]" />
           <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-[#7C5CFF]" />
           <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-[#7C5CFF]" />
           <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-[#7C5CFF]" />
 
-          {/* HEADER KARTU: LOGO PWA + JUDUL + PROFIL USER */}
           <div className="flex items-center justify-between border-b border-[#211D2C] pb-4">
-            {/* SISI KIRI: Logo PWA & Judul Rekap */}
             <div className="flex items-center gap-3">
-              {/* FIX ICON: Mengubah gif menjadi icon-maskable.png statis yang lebih jernih */}
               <img 
                 src="/icons/icon-maskable.png" 
                 alt="PWA Logo" 
@@ -197,7 +182,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
               </div>
             </div>
 
-            {/* SISI KANAN: Nama User & Level Badge */}
             <div className="flex flex-col items-end pl-2">
               <span className="font-display font-black text-xs text-[#7C5CFF] tracking-wider uppercase max-w-[100px] text-right leading-relaxed break-words">
                 {userData.name}
@@ -208,27 +192,26 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
             </div>
           </div>
 
-          {/* GRID STATISTIK BULANAN */}
+          {/* FIX: Mengganti flex gap dengan block margin dan leading-none biar html2canvas nggak ngaco baca baseline teksnya */}
           <div className="grid grid-cols-2 gap-2.5">
-            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-1">
-              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider">TOTAL SESI</span>
-              <span className="font-display font-black text-xl text-[#7C5CFF]">{totalSesi}</span>
+            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col">
+              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider block leading-none mb-1.5">TOTAL SESI</span>
+              <span className="font-display font-black text-xl text-[#7C5CFF] block leading-none">{totalSesi}</span>
             </div>
-            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-1">
-              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider">TOTAL EXP</span>
-              <span className="font-display font-black text-xl text-[#7C5CFF]">{totalExp}</span>
+            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col">
+              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider block leading-none mb-1.5">TOTAL EXP</span>
+              <span className="font-display font-black text-xl text-[#7C5CFF] block leading-none">{totalExp}</span>
             </div>
-            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-1">
-              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider">BEST RANK</span>
-              <span className="font-display font-black text-xl text-[#7C5CFF]">{bestRank}</span>
+            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col">
+              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider block leading-none mb-1.5">BEST RANK</span>
+              <span className="font-display font-black text-xl text-[#7C5CFF] block leading-none">{bestRank}</span>
             </div>
-            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-1">
-              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider">TOP KATEGORI</span>
-              <span className="font-display font-black text-sm text-[#7C5CFF] leading-relaxed break-words">{topKategori}</span>
+            <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col">
+              <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider block leading-none mb-1.5">TOP KATEGORI</span>
+              <span className="font-display font-black text-sm text-[#7C5CFF] block leading-tight break-words">{topKategori}</span>
             </div>
           </div>
 
-          {/* GRAFIK BAR EXP PER MINGGU */}
           <div className="flex flex-col gap-2 pt-1">
             <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider">EXP PER MINGGU</span>
             <div className="h-28 bg-[#100E16] border border-[#211D2C] p-3 flex items-end justify-between gap-2">
@@ -247,7 +230,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
             </div>
           </div>
 
-          {/* FOOTER KARTU */}
           <div className="pt-2 border-t border-[#211D2C]/50 flex items-center justify-between">
             <span className="font-mono text-[8px] text-[#8B8696] uppercase tracking-wider">
               Dibuat otomatis oleh Daily Grind Log
@@ -256,7 +238,6 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
 
         </div>
 
-        {/* TOMBOL UNDUH GAMBAR & SHARE (TERPISAH) */}
         <div className="flex gap-2 w-full">
           <button
             type="button"
