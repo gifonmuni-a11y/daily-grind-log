@@ -455,7 +455,7 @@ export default function Home({ session }) {
           </div>
           
           <p className="font-mono text-[10px] text-[#8B8696] uppercase tracking-wide leading-relaxed">
-            Koneksi AI Seolha  Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
+            Koneksi AI Seolha Terdeteksi.<br/>Ketuk tombol untuk sinkronisasi suara.
           </p>
           
           <button 
@@ -562,7 +562,7 @@ export default function Home({ session }) {
         
         <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
           <div 
-            onClassName={handleAdminPressStart}
+            onMouseDown={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
             onMouseLeave={handleAdminPressEnd}
             onTouchStart={handleAdminPressStart}
@@ -975,28 +975,4 @@ export default function Home({ session }) {
 
     </div>
   )
-}
-
-useMonthlyRecap.js
-import { useEffect, useState } from 'react'
-
-export default function useMonthlyRecap() {
-  const [showRecap, setShowRecap] = useState(false)
-  const [recapMonth, setRecapMonth] = useState(null)
-
-  useEffect(() => {
-    const today = new Date()
-    if (today.getDate() !== 1) return
-
-    const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-    const storageKey = `recap_shown_${prevMonth.getFullYear()}-${prevMonth.getMonth()}`
-
-    if (!localStorage.getItem(storageKey)) {
-      setRecapMonth(prevMonth)
-      setShowRecap(true)
-      localStorage.setItem(storageKey, 'true')
-    }
-  }, [])
-
-  return { showRecap, recapMonth, closeRecap: () => setShowRecap(false) }
 }
