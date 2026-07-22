@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Camera, User, Activity, Zap, Shield, Brain, Eye, ChevronLeft, Pencil, Check } from 'lucide-react'
+import { Camera, User, Activity, Zap, Shield, Brain, Eye, ChevronLeft, Pencil, Check, Download, Upload, HardDrive } from 'lucide-react'
 
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
 
@@ -18,6 +18,28 @@ const TITLE_MAP = { EX: 'ABSOLUTE BEING', SSS: 'RULER', SS: 'SOVEREIGN', S: 'MON
 
 const BASE_STATS = { str: 15, agi: 12, vit: 14, int: 10, per: 11 }
 const RANK_ORDER = { EX: 8, SSS: 7, SS: 6, S: 5, A: 4, B: 3, C: 2, D: 1, rest: 0 }
+
+// --- SYSTEM UI SOUND EFFECT (NO FILE NEEDED) ---
+const playSystemClick = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'square'; // Suara mekanis/digital
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.03);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime); // Volume
+    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.03);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch (e) {
+    // Abaikan jika browser tidak support autoplay audio
+  }
+}
 
 // Tambahan argumen currentDayIndex biar cuma ngitung sampai hari ini
 function computePlayerProgress(schedule, currentDayIndex) {
@@ -113,7 +135,6 @@ export default function StatusWindow({ onBack }) {
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
 
-  // Cari index hari ini (0 = Senin, 6 = Minggu)
   const todayIndex = useMemo(() => {
     const day = new Date().getDay()
     return day === 0 ? 6 : day - 1
@@ -141,15 +162,16 @@ export default function StatusWindow({ onBack }) {
     }
   }, [])
 
-  // Kalkulasi progress disinkronkan dengan hari ini saja
   const stats = useMemo(() => computePlayerProgress(schedule, todayIndex), [schedule, todayIndex])
 
   const startEditingName = () => {
+    playSystemClick();
     setNameDraft(playerName)
     setIsEditingName(true)
   }
 
   const saveName = () => {
+    playSystemClick();
     const trimmed = nameDraft.trim()
     const finalName = trimmed.length > 0 ? trimmed.slice(0, 20) : 'PLAYER'
     setPlayerName(finalName)
@@ -163,6 +185,7 @@ export default function StatusWindow({ onBack }) {
   }
 
   const handlePhotoUpload = (e) => {
+    playSystemClick();
     const file = e.target.files[0]
     if (file) {
       const reader = new FileReader()
@@ -175,14 +198,54 @@ export default function StatusWindow({ onBack }) {
     }
   }
 
+  // --- SYSTEM BACKUP & RESTORE FUNCTIONS ---
+  const handleExportData = () => {
+    playSystemClick();
+    const systemData = {
+      dg_workout_schedule: localStorage.getItem('dg_workout_schedule'),
+      dg_player_name: localStorage.getItem('dg_player_name'),
+      dg_status_avatar: localStorage.getItem('dg_status_avatar'),
+      timestamp: new Date().toISOString()
+    }
+    const blob = new Blob([JSON.stringify(systemData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `GrindLog_SystemData_${new Date().toISOString().slice(0,10)}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportData = (e) => {
+    playSystemClick();
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result)
+        if (importedData.dg_workout_schedule) localStorage.setItem('dg_workout_schedule', importedData.dg_workout_schedule)
+        if (importedData.dg_player_name) localStorage.setItem('dg_player_name', importedData.dg_player_name)
+        if (importedData.dg_status_avatar) localStorage.setItem('dg_status_avatar', importedData.dg_status_avatar)
+        
+        alert('[SYSTEM RESTORED] Data berhasil dipulihkan. Sistem akan dimuat ulang.')
+        window.location.reload()
+      } catch (err) {
+        alert('[ERROR] File korup atau format tidak sesuai protokol!')
+      }
+    }
+    reader.readAsText(file)
+  }
+
   const expPercent = Math.min((stats.exp / stats.nextExp) * 100, 100)
 
   return (
     <div className="w-full h-full bg-[#0A0A0E] text-white font-mono p-4 pb-32 animate-in fade-in duration-300">
 
+      {/* HEADER */}
       <div className="flex items-center gap-3 mb-6 border-b border-[#211D2C] pb-4">
         <button
-          onClick={onBack}
+          onClick={() => { playSystemClick(); onBack(); }}
           className="p-2 bg-[#100E16] border border-[#211D2C] hover:bg-[#7C5CFF]/20 text-white transition-all active:scale-95"
         >
           <ChevronLeft size={20} />
@@ -195,6 +258,7 @@ export default function StatusWindow({ onBack }) {
         </span>
       </div>
 
+      {/* PLAYER CARD */}
       <div className="relative bg-[#100E16] border border-[#211D2C] p-5 shadow-[0_0_30px_rgba(124,92,255,0.1)] mb-6">
         <div className="absolute -top-[2px] -left-[2px] w-4 h-4 border-t-2 border-l-2 border-[#7C5CFF]" />
         <div className="absolute -top-[2px] -right-[2px] w-4 h-4 border-t-2 border-r-2 border-[#7C5CFF]" />
@@ -258,7 +322,7 @@ export default function StatusWindow({ onBack }) {
                 ) : (
                   <button
                     onClick={startEditingName}
-                    className="flex items-center gap-1.5 group"
+                    className="flex items-center gap-1.5 group outline-none"
                   >
                     <p className="text-sm font-bold tracking-wider text-[#EDEAF6]">{playerName}</p>
                     <Pencil size={11} className="text-[#7C5CFF]/50 group-hover:text-[#7C5CFF] transition-colors" />
@@ -291,40 +355,30 @@ export default function StatusWindow({ onBack }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+      {/* STATS MATRIX */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-[#100E16] border border-[#211D2C] p-4 relative">
           <h2 className="text-xs font-black text-[#7C5CFF] tracking-widest uppercase mb-4 flex items-center gap-2">
-            <Activity size={14} />
-            Physical Stats
+            <Activity size={14} /> Physical Stats
           </h2>
-
           <div className="space-y-4">
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-[#211D2C] text-red-400 group-hover:bg-red-500/20 transition-colors">
-                  <Zap size={14} />
-                </div>
+                <div className="p-1.5 bg-[#211D2C] text-red-400 group-hover:bg-red-500/20 transition-colors"><Zap size={14} /></div>
                 <span className="text-xs tracking-wider text-gray-300">STRENGTH (STR)</span>
               </div>
               <span className="text-sm font-bold text-white">{stats.str}</span>
             </div>
-
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-[#211D2C] text-green-400 group-hover:bg-green-500/20 transition-colors">
-                  <Activity size={14} />
-                </div>
+                <div className="p-1.5 bg-[#211D2C] text-green-400 group-hover:bg-green-500/20 transition-colors"><Activity size={14} /></div>
                 <span className="text-xs tracking-wider text-gray-300">AGILITY (AGI)</span>
               </div>
               <span className="text-sm font-bold text-white">{stats.agi}</span>
             </div>
-
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-[#211D2C] text-blue-400 group-hover:bg-blue-500/20 transition-colors">
-                  <Shield size={14} />
-                </div>
+                <div className="p-1.5 bg-[#211D2C] text-blue-400 group-hover:bg-blue-500/20 transition-colors"><Shield size={14} /></div>
                 <span className="text-xs tracking-wider text-gray-300">VITALITY (VIT)</span>
               </div>
               <span className="text-sm font-bold text-white">{stats.vit}</span>
@@ -334,33 +388,54 @@ export default function StatusWindow({ onBack }) {
 
         <div className="bg-[#100E16] border border-[#211D2C] p-4 relative">
           <h2 className="text-xs font-black text-[#7C5CFF] tracking-widest uppercase mb-4 flex items-center gap-2">
-            <Brain size={14} />
-            Mental Stats
+            <Brain size={14} /> Mental Stats
           </h2>
-
           <div className="space-y-4">
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-[#211D2C] text-purple-400 group-hover:bg-purple-500/20 transition-colors">
-                  <Brain size={14} />
-                </div>
+                <div className="p-1.5 bg-[#211D2C] text-purple-400 group-hover:bg-purple-500/20 transition-colors"><Brain size={14} /></div>
                 <span className="text-xs tracking-wider text-gray-300">INTELLIGENCE (INT)</span>
               </div>
               <span className="text-sm font-bold text-white">{stats.int}</span>
             </div>
-
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-[#211D2C] text-yellow-400 group-hover:bg-yellow-500/20 transition-colors">
-                  <Eye size={14} />
-                </div>
+                <div className="p-1.5 bg-[#211D2C] text-yellow-400 group-hover:bg-yellow-500/20 transition-colors"><Eye size={14} /></div>
                 <span className="text-xs tracking-wider text-gray-300">PERCEPTION (PER)</span>
               </div>
               <span className="text-sm font-bold text-white">{stats.per}</span>
             </div>
           </div>
         </div>
+      </div>
 
+      {/* DATA MANAGEMENT ZONE (BACKUP & RESTORE) */}
+      <div className="bg-[#100E16] border border-[#211D2C] p-4 relative shadow-lg">
+        <h2 className="text-[10px] font-black text-[#8B8696] tracking-widest uppercase mb-3 flex items-center gap-1.5 border-b border-[#211D2C] pb-2">
+          <HardDrive size={12} /> DATABASE SYSTEM MANAGEMENT
+        </h2>
+        <div className="text-[9px] text-gray-500 mb-4 leading-relaxed uppercase tracking-wider">
+          Simpan progres sistem Anda secara lokal. Berguna saat Anda berpindah perangkat atau menghapus cache memori.
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={handleExportData}
+            className="flex items-center justify-center gap-2 py-3 bg-[#211D2C] hover:bg-[#312C42] border border-[#312C42] text-[#7C5CFF] text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+          >
+            <Download size={14} /> BACKUP DATA
+          </button>
+          
+          <label className="flex items-center justify-center gap-2 py-3 bg-transparent hover:bg-[#211D2C] border border-dashed border-[#312C42] text-[#EDEAF6]/60 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer">
+            <Upload size={14} /> RESTORE
+            <input 
+              type="file" 
+              accept=".json" 
+              onChange={handleImportData} 
+              className="hidden" 
+            />
+          </label>
+        </div>
       </div>
 
     </div>
