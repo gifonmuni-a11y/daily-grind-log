@@ -184,3 +184,6 @@ function wrapText(ctx, text, maxWidth, font) {
   lines.push(currentLine)
   return lines
 }
+
+// 🎯 FIX VERCEL: Tambahan export default agar tidak terjadi error "default is not exported"
+export default generateShareCard;
