@@ -12,6 +12,31 @@ const RANK_ROWS = [
   { rank: 'E', label: 'Failed', exp: 5 },
 ]
 
+const mailSubject = 'Laporan Masalah / Masukan Aplikasi Daily Grind Log'
+
+const mailBody = `[JUDUL LAPORAN] (Contoh: Laporan Masalah / Masukan Aplikasi Daily Grind Log)
+
+1. Informasi Perangkat & Aplikasi
+Perangkat & OS: [Contoh: iPhone 13, iOS 19]
+Versi Aplikasi: [Contoh: v2.5.0]
+
+2. Jenis Laporan (Pilih salah satu atau isi yang relevan)
+[BUG] MASALAH / BUG (Jika ada yang error):
+Kendala: [Contoh: Aplikasi force close saat simpan data latihan Bench Press]
+Langkah Kejadian: [Contoh: Buka menu Log > Isi data > Klik simpan]
+
+[FITUR] PERMINTAAN FITUR (Jika ada saran menu baru):
+Fitur Baru: [Contoh: Tambahkan kalkulator otomatis untuk persentase 1RM]
+Tujuan: [Contoh: Mempermudah perhitungan beban tanpa perlu buka aplikasi kalkulator luar]
+
+[FEEDBACK] FEEDBACK UI/UX (Jika ada masukan tampilan):
+Masukan: [Contoh: Tombol 'Tentang & Bantuan' terlalu kecil dan warnanya kurang kontras]
+
+3. Lampiran (Opsional)
+[Sertakan screenshot / rekaman layar jika ada]`
+
+const mailtoLink = `mailto:admingrind@gmail.com?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`
+
 export default function AboutModal({ onClose, entries = [], userId = '' }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const unlockedIds = new Set(unlockedAchievements.map(a => a.id))
@@ -281,7 +306,7 @@ export default function AboutModal({ onClose, entries = [], userId = '' }) {
             <p className="font-body text-xs text-gray-400 leading-relaxed">
               Menemukan kendala teknis, bug sistem, atau ingin mengajukan banding atas status akun? Silakan hubungi tim dukungan kami melalui email di bawah ini:
             </p>
-            <a href="mailto:admingrind@gmail.com" className="font-mono text-sm font-bold text-accent mt-2 inline-block hover:text-[#9A80FF] transition-colors">
+            <a href={mailtoLink} className="font-mono text-sm font-bold text-accent mt-2 inline-block hover:text-[#9A80FF] transition-colors">
               admingrind@gmail.com
             </a>
           </section>
