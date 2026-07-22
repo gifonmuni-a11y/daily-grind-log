@@ -4,6 +4,9 @@ import html2canvas from 'html2canvas'
 import { supabase } from '../lib/supabaseClient'
 import { calcLevel, getEffectiveTotalExp } from '../lib/expSystem'
 
+// Tambahkan map EXP untuk kalkulasi jika exp_gained kosong
+const RANK_EXP = { S: 100, A: 70, B: 45, C: 20, D: 10, E: 5 }
+
 export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, profile: propProfile, level: propLevel }) {
   const cardRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
@@ -55,7 +58,12 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
   })
 
   const totalSesi = monthlyEntries.length
-  const totalExp = monthlyEntries.reduce((acc, curr) => acc + (curr.exp_gained || 0), 0)
+  
+  // FIX EXP: Pastikan membaca dari RANK_EXP jika exp_gained tidak ada
+  const totalExp = monthlyEntries.reduce((acc, curr) => {
+    const exp = curr.exp_gained || RANK_EXP[curr.rank] || 0
+    return acc + exp
+  }, 0)
 
   // Hitung Top Kategori
   const categoryCounts = {}
@@ -68,7 +76,7 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     : '-'
 
   // Hitung Best Rank
-  const rankPriority = { 'S': 4, 'A': 3, 'B': 2, 'C': 1 }
+  const rankPriority = { 'S': 4, 'A': 3, 'B': 2, 'C': 1, 'D': 0, 'E': -1 }
   let bestRank = '-'
   monthlyEntries.forEach(e => {
     if (e.rank && (!bestRank || rankPriority[e.rank] > (rankPriority[bestRank] || 0))) {
@@ -76,17 +84,18 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
     }
   })
 
-  // Hitung EXP per Minggu (M1 - M5)
+  // FIX GRAFIK: Hitung EXP per Minggu (M1 - M5) dengan RANK_EXP
   const weeklyExp = [0, 0, 0, 0, 0]
   monthlyEntries.forEach(e => {
     const day = new Date(e.entry_date).getDate()
     const weekIndex = Math.min(Math.floor((day - 1) / 7), 4)
-    weeklyExp[weekIndex] += (e.exp_gained || 0)
+    const exp = e.exp_gained || RANK_EXP[e.rank] || 0
+    weeklyExp[weekIndex] += exp
   })
   const maxWeeklyExp = Math.max(...weeklyExp, 1)
 
-  // Fungsi Download Kartu Rekap sebagai Gambar
-  const handleDownloadImage = async () => {
+  // FIX SHARE & DOWNLOAD ACTION
+  const handleAction = async (actionType) => {
     if (!cardRef.current || downloading) return
     setDownloading(true)
 
@@ -98,14 +107,42 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
         logging: false
       })
 
-      const image = canvas.toDataURL('image/png')
-      const link = document.createElement('a')
-      link.href = image
-      link.download = `GrindLog_Rekap_${monthName.replace(/\s+/g, '_')}.png`
-      link.click()
+      if (actionType === 'download') {
+        const image = canvas.toDataURL('image/png')
+        const link = document.createElement('a')
+        link.href = image
+        link.download = `GrindLog_Rekap_${monthName.replace(/\s+/g, '_')}.png`
+        link.click()
+        setDownloading(false)
+      } else if (actionType === 'share') {
+        canvas.toBlob(async (blob) => {
+          if (!blob) throw new Error('Blob gagal dibuat')
+          const file = new File([blob], `GrindLog_Rekap_${monthName.replace(/\s+/g, '_')}.png`, { type: 'image/png' })
+          
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: 'Daily Grind Log',
+                text: `Rekap Bulan ${monthName}`,
+                files: [file]
+              })
+            } catch (shareErr) {
+              console.error('Batal share:', shareErr)
+            }
+          } else {
+            // Fallback download kalau device gak support Web Share API
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = file.name
+            link.click()
+            URL.revokeObjectURL(url)
+          }
+          setDownloading(false)
+        }, 'image/png')
+      }
     } catch (err) {
-      console.error('Gagal mengunduh gambar:', err)
-    } finally {
+      console.error('Gagal memproses gambar:', err)
       setDownloading(false)
     }
   }
@@ -117,7 +154,7 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
         {/* TOMBOL AKSI ATAS */}
         <div className="flex items-center justify-between text-white">
           <span className="font-mono text-xs text-[#8B8696] uppercase tracking-wider">
-            PRATINJAU SHARE
+            PRATINJAU KARTU
           </span>
           <button 
             type="button" 
@@ -160,8 +197,9 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
             </div>
 
             {/* SISI KANAN: Nama User & Level Badge */}
+            {/* FIX TEKS POTONG: Pakai leading-relaxed dan break-words */}
             <div className="flex flex-col items-end pl-2">
-              <span className="font-display font-black text-xs text-[#7C5CFF] tracking-wider uppercase truncate max-w-[100px]">
+              <span className="font-display font-black text-xs text-[#7C5CFF] tracking-wider uppercase max-w-[100px] text-right leading-relaxed break-words">
                 {userData.name}
               </span>
               <span className="font-mono text-[9px] text-gray-400 font-bold tracking-widest uppercase mt-0.5">
@@ -186,7 +224,8 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
             </div>
             <div className="bg-[#100E16] border border-[#211D2C] p-3 flex flex-col gap-1">
               <span className="font-mono text-[9px] text-[#8B8696] uppercase tracking-wider">TOP KATEGORI</span>
-              <span className="font-display font-black text-sm text-[#7C5CFF] truncate">{topKategori}</span>
+              {/* FIX TEKS POTONG KATEGORI */}
+              <span className="font-display font-black text-sm text-[#7C5CFF] leading-relaxed break-words">{topKategori}</span>
             </div>
           </div>
 
@@ -218,25 +257,37 @@ export default function MonthlyRecapModal({ entries = [], targetMonth, onClose, 
 
         </div>
 
-        {/* TOMBOL UNDUH GAMBAR */}
-        <button
-          type="button"
-          onClick={handleDownloadImage}
-          disabled={downloading}
-          className="w-full py-3 bg-[#7C5CFF] hover:bg-[#6b52e0] text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
-        >
-          {downloading ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              <span>MEMPROSES GAMBAR...</span>
-            </>
-          ) : (
-            <>
-              <Download size={16} />
-              <span>SIMPAN KARTU REKAP (PNG)</span>
-            </>
-          )}
-        </button>
+        {/* TOMBOL UNDUH GAMBAR & SHARE (TERPISAH) */}
+        <div className="flex gap-2 w-full">
+          <button
+            type="button"
+            onClick={() => handleAction('download')}
+            disabled={downloading}
+            className="flex-1 py-3 bg-[#211D2C] hover:bg-[#2d283c] text-white font-mono font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Download size={16} />
+            <span>UNDUH</span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => handleAction('share')}
+            disabled={downloading}
+            className="flex-[2] py-3 bg-[#7C5CFF] hover:bg-[#6b52e0] text-white font-mono font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+          >
+            {downloading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>MEMPROSES...</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={16} />
+                <span>BAGIKAN KARTU</span>
+              </>
+            )}
+          </button>
+        </div>
 
       </div>
     </div>
