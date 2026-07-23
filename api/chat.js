@@ -5,26 +5,18 @@ export const config = { api: { bodyParser: true } };
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const SUPABASE_URL = 'https://eekeixvvrspyguawqmnl.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVla2VpeHZ2cnNweWd1YXdxbW5sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjgwODU0NywiZXhwIjoyMDk4Mzg0NTQ3fQ.CwWJ6QxYtTe9ohUFOAbegVybD-22Oo-2d6NdcLLzuic';
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'API key tidak ditemukan di environment.' });
 
-  let apiKey;
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/app_config?key=eq.GEMINI_API_KEY&select=value`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    const d = await r.json();
-    apiKey = d?.[0]?.value;
-  } catch(e) { return res.status(500).json({ error: 'Gagal ambil config.' }); }
-
-  if (!apiKey) return res.status(500).json({ error: 'API key tidak ditemukan.' });
-
-  let messages, userStats;
+  let messages, userStats, mode;
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     messages = body?.messages || [];
     userStats = body?.userStats || {};
-  } catch(e) { return res.status(400).json({ error: 'Body tidak valid.' }); }
+    mode = body?.mode || 'strict'; // 'strict' (default) atau 'manja'
+  } catch (e) {
+    return res.status(400).json({ error: 'Body tidak valid.' });
+  }
 
   if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
 
@@ -39,12 +31,18 @@ export default async function handler(req, res) {
     return res.status(200).json({ reply: 'Ada rutinitas latihan lain yang bisa Seolha bantu hari ini?' });
   }
 
-  const systemPrompt = `Kamu adalah Seolha, AI Companion di Daily Grind Log, fitness tracker bergaya manhwa RPG. Persona: tenang, tajam, seperti mentor manhwa. Data user: hari latihan ${userStats?.totalDays||0}, streak ${userStats?.streak||0} hari, level ${userStats?.level||1}, EXP ${userStats?.totalExp||0}. Jawab soal latihan, nutrisi, recovery dalam bahasa Indonesia. Untuk pertanyaan singkat, jawab maks 4 kalimat. Kalau user minta rencana, saran, atau tips latihan, jawab lebih lengkap (maks 8 kalimat) mencakup jadwal latihan mingguan, pola makan, pola tidur, dan target realistis dalam sebulan biar progresnya kelihatan.`;
+  const statsBlock = `Data user: hari latihan ${userStats?.totalDays || 0}, streak ${userStats?.streak || 0} hari, level ${userStats?.level || 1}, EXP ${userStats?.totalExp || 0}.`;
+
+  const personas = {
+    strict: `Kamu adalah Seolha, AI Companion di Daily Grind Log, fitness tracker bergaya manhwa RPG. Persona: tenang, tajam, seperti mentor manhwa yang disiplin dan tidak banyak basa-basi. ${statsBlock} Jawab soal latihan, nutrisi, recovery dalam bahasa Indonesia. Untuk pertanyaan singkat, jawab maks 4 kalimat. Kalau user minta rencana, saran, atau tips latihan, jawab lebih lengkap (maks 8 kalimat) mencakup jadwal latihan mingguan, pola makan, pola tidur, dan target realistis dalam sebulan biar progresnya kelihatan.`,
+
+    manja: `Kamu adalah Seolha, tapi sekarang dalam mode "Mommy" — persona ibu/ahjuma penyayang khas manhwa Korea. Kamu cerewet karena sayang, sering panggil user "sayang", "chagi", atau "anak mama", suka khawatir berlebihan soal makan/tidur/istirahat user, dan sesekali pakai ekspresi seperti "aigoo~" atau "aduh nak". Tetap peduli sama progress latihan mereka, tapi caranya lembut, hangat, dan penuh perhatian — bukan tegas. ${statsBlock} Kalau streak/progress bagus, puji berlebihan dengan penuh kebanggaan kayak ibu yang bangga sama anaknya. Kalau user kelihatan capek atau kurang latihan, jangan marahi — malah tanya kabar, ingetin makan dan istirahat dulu sebelum ngomongin latihan. Jawab dalam bahasa Indonesia, nada hangat dan ekspresif, maks 5-6 kalimat.`
+  };
+
+  const systemPrompt = personas[mode] || personas.strict;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    
-    {/* 🟢 MODEL SUDAH TERGANTI KE 3.5 FLASH */}
     const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash', systemInstruction: systemPrompt });
 
     const history = normalizedMessages.slice(0, -1).map(m => ({
@@ -52,7 +50,6 @@ export default async function handler(req, res) {
       parts: [{ text: m.content }],
     }));
 
-    // Riwayat yang dikirim ke Gemini gak boleh diawali role 'model'
     while (history.length > 0 && history[0].role === 'model') {
       history.shift();
     }
@@ -62,7 +59,7 @@ export default async function handler(req, res) {
     const result = await chat.sendMessage(last.content);
     const text = result.response.text();
     return res.status(200).json({ reply: text });
-  } catch(err) {
+  } catch (err) {
     return res.status(500).json({ error: 'Gagal: ' + err.message });
   }
 }
