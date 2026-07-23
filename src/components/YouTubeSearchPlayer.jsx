@@ -50,7 +50,7 @@ export default function YouTubeSearchPlayer() {
 
   useEffect(() => { playModeRef.current = playMode }, [playMode])
 
-  // --- LIVE SEARCH OTOMATIS (No Limit & Cepat) ---
+  // --- LIVE SEARCH OTOMATIS (Dengan Deteksi Sinyal Lag) ---
   useEffect(() => {
     if (!query.trim()) {
       setResults([])
@@ -64,13 +64,30 @@ export default function YouTubeSearchPlayer() {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
 
     searchTimeoutRef.current = setTimeout(async () => {
+      // Cek koneksi lokal dulu sebelum nembak server
+      if (!navigator.onLine) {
+        setError('Koneksi internet terputus')
+        setLoading(false)
+        return
+      }
+
       try {
         const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`)
+        
+        if (res.status === 429) {
+          throw new Error('Limit pencarian habis, coba beberapa saat lagi')
+        }
+
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Gagal mencari lagu.')
         setResults(data.items || [])
       } catch (err) {
-        setError('Server pencarian sedang sibuk')
+        // 🎯 FIX: Deteksi apakah eror karena sinyal lag/RTO atau servernya yang down
+        if (err.name === 'TypeError' || err.message.includes('fetch')) {
+          setError('Koneksi internet lambat / timeout')
+        } else {
+          setError(err.message || 'Server pencarian sedang sibuk')
+        }
         setResults([])
       } finally {
         setLoading(false)
@@ -83,7 +100,7 @@ export default function YouTubeSearchPlayer() {
   // --- ERROR AUTO-DISMISS ---
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(''), 3000)
+      const timer = setTimeout(() => setError(''), 4000)
       return () => clearTimeout(timer)
     }
   }, [error])
@@ -94,7 +111,7 @@ export default function YouTubeSearchPlayer() {
     setError('')
   }
 
-  // Init YouTube Official Player (Stabil & Anti-Error)
+  // Init YouTube Official Player (Stabil & Sekali Load Permanen)
   useEffect(() => {
     let cancelled = false
     loadYouTubeIframeApi().then((YT) => {
@@ -124,7 +141,7 @@ export default function YouTubeSearchPlayer() {
   const playNextRef = useRef(() => {})
   const playPrevRef = useRef(() => {})
 
-  // --- FUNGSI PUTAR MUSIK (Menggunakan Player Resmi YouTube) ---
+  // --- FUNGSI PUTAR MUSIK ---
   function playIndex(idx) {
     if (idx < 0 || idx >= queue.length) return
     const track = queue[idx]
@@ -191,6 +208,7 @@ export default function YouTubeSearchPlayer() {
     })
   }
 
+  // Cek antrean ganda
   function addToQueue(track) {
     let alreadyIn = false
     setQueue(prev => {
@@ -361,7 +379,7 @@ export default function YouTubeSearchPlayer() {
 
       {/* PLAYER UTAMA */}
       <div style={{ display: nowPlaying ? 'block' : 'none' }}>
-        <div style={{ background: '#0A0A0E', border: '1px solid #211D2C', borderRadius: '4px', overflow: 'hidden' }}>
+        <div style={{ background: '#0A0A0E', border: '1px solid #211D2C', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
           
           <div className="flex items-start gap-2 px-2 py-1.5" style={{ borderBottom: '1px solid #211D2C' }}>
             <p className="font-body text-[11px] flex-1" style={{ color: playMode === 'video' ? '#7C5CFF' : '#2DD4BF' }}>
@@ -372,19 +390,21 @@ export default function YouTubeSearchPlayer() {
             </p>
           </div>
 
-          {/* Mode Video */}
-          <div className="aspect-video w-full" style={{ display: playMode === 'video' ? 'block' : 'none' }}>
+          {/* 🎯 FIX ABSOLUTE CONTAINER: Elemen Iframe YouTube dibuat abadi di sini, tidak dihancurkan saat ganti mode */}
+          <div 
+            className="aspect-video w-full transition-all duration-300" 
+            style={
+              playMode === 'video' 
+                ? { display: 'block' } 
+                : { position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', overflow: 'hidden' }
+            }
+          >
             <div ref={playerContainerRef} style={{ width: '100%', height: '100%' }} />
           </div>
 
-          {/* Mode Background (Player iframe disembunyikan/dikecilkan agar audionya tetap muter mulus tanpa kena blokir server) */}
+          {/* Mode Background (Tampilan visual piringan musik pengganti video) */}
           {playMode === 'background' && (
             <div className="aspect-video w-full flex flex-col items-center justify-center relative p-4 bg-[#050508] overflow-hidden">
-              {/* Wadah player resmi YouTube dikecilkan dan disembunyikan di pojok biar audionya tetap hidup */}
-              <div style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-                <div ref={playMode === 'background' ? playerContainerRef : null} />
-              </div>
-
               <img 
                 src={nowPlaying?.thumb} 
                 className="w-20 h-20 rounded-full object-cover shadow-[0_0_20px_#2DD4BF] mb-3 animate-[spin_10s_linear_infinite]"
