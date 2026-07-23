@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Edit2, Music, Flame, Zap } from 'lucide-react'
 import SystemFrame from './SystemFrame'
 import { calcLevel, getEffectiveTotalExp, getRankTier } from '../lib/expSystem'
@@ -27,6 +27,10 @@ function getSpotifyEmbedUrl(link) {
 export default function ProfileHeader({ profile, entries, streak, userId, onEditClick }) {
   const [musicTab, setMusicTab] = useState('spotify')
 
+  // 🎯 FIX ANTI-CACHE: Bikin timestamp unik setiap kali object `profile` di-fetch ulang dari Supabase.
+  // Pake useMemo biar gambar nggak nge-reload terus-terusan (kedap-kedip) pas lu klik tab music!
+  const imageCacheBuster = useMemo(() => Date.now(), [profile])
+
   const totalExp = getEffectiveTotalExp(entries, userId, profile?.exp || 0)
   const { level, expIntoLevel, expForNext } = calcLevel(totalExp)
   const expPct = Math.min(100, Math.round((expIntoLevel / expForNext) * 100))
@@ -51,7 +55,8 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
         {profile?.banner_url ? (
           <div
             className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${profile.banner_url})` }}
+            // 🎯 PENERAPAN ANTI-CACHE DI BANNER
+            style={{ backgroundImage: `url(${profile.banner_url}?t=${imageCacheBuster})` }}
           />
         ) : (
           <div
@@ -87,7 +92,8 @@ export default function ProfileHeader({ profile, entries, streak, userId, onEdit
             >
               {profile?.avatar_url ? (
                 <img
-                  src={profile.avatar_url}
+                  // 🎯 PENERAPAN ANTI-CACHE DI AVATAR
+                  src={`${profile.avatar_url}?t=${imageCacheBuster}`}
                   alt="avatar"
                   className="w-full h-full object-cover"
                 />

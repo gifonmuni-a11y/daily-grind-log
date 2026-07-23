@@ -562,7 +562,7 @@ export default function Home({ session }) {
         
         <div className="flex items-center justify-between px-4 bg-[#0A0A0E]" style={{ height: '56px', borderBottom: '1px solid #211D2C' }}>
           <div 
-            onClassName={handleAdminPressStart}
+            onMouseDown={handleAdminPressStart}
             onMouseUp={handleAdminPressEnd}
             onMouseLeave={handleAdminPressEnd}
             onTouchStart={handleAdminPressStart}
@@ -574,9 +574,6 @@ export default function Home({ session }) {
               alt="Grind System Icon" 
               style={{ height: '100%', width: '56px' }}
               className="object-cover flex-shrink-0"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
             />
             <span className="font-display font-bold text-base text-accent tracking-widest active:text-[#7C5CFF] transition-colors flex items-center h-full">
               DAILY GRIND LOG
