@@ -54,15 +54,22 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
     try {
       let avatarUrl = profile?.avatar_url || null
       let bannerUrl = profile?.banner_url || null
+      
+      // 🎯 SENJATA ANTI-CACHE: Bikin timestamp acak berdasarkan waktu saat ini
+      const timestamp = new Date().getTime()
 
       if (avatarFile) {
         const ext = avatarFile.name.split('.').pop()
-        avatarUrl = await uploadImage(avatarFile, `${userId}/avatar.${ext}`)
+        const rawUrl = await uploadImage(avatarFile, `${userId}/avatar.${ext}`)
+        // 🎯 FIX: Tempelkan timestamp ke URL agar browser selalu me-refresh foto baru
+        avatarUrl = `${rawUrl}?t=${timestamp}`
       }
 
       if (bannerFile) {
         const ext = bannerFile.name.split('.').pop()
-        bannerUrl = await uploadImage(bannerFile, `${userId}/banner.${ext}`)
+        const rawUrl = await uploadImage(bannerFile, `${userId}/banner.${ext}`)
+        // 🎯 FIX: Tempelkan timestamp ke URL agar browser selalu me-refresh foto baru
+        bannerUrl = `${rawUrl}?t=${timestamp}`
       }
 
       const { error: dbErr } = await supabase
@@ -77,6 +84,8 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
         })
 
       if (dbErr) throw dbErr
+      
+      // onSaved() akan otomatis me-refresh data profil di PWA lu dengan URL yang baru
       onSaved()
       onClose()
     } catch (err) {
@@ -88,7 +97,6 @@ export default function ProfileEditModal({ profile, userId, onClose, onSaved }) 
 
   return (
     <div
-      // 🎯 FIXED POSITION: items-center dipaksa mutlak di HP biar posisi kotak pop-up edit profil naik pas ke tengah layar, tidak mepet ke bawah lagi.
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(10,10,14,0.85)', backdropFilter: 'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
