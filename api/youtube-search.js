@@ -1,19 +1,3 @@
-import { Innertube } from 'youtubei.js';
-
-// 🎯 FIX UTAMA: Letakkan instance di LUAR handler (Singleton Pattern)
-// Dengan cara ini, Vercel reuse koneksi yang sudah ada tanpa bikin sesi baru terus-menerus.
-// Hasilnya: Pencarian super ngebut dan IP server lu aman dari blokir YouTube!
-let ytInstance = null;
-
-async function getYoutube() {
-  if (!ytInstance) {
-    ytInstance = await Innertube.create({
-      generate_session_locally: true,
-    });
-  }
-  return ytInstance;
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -26,54 +10,65 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Ambil instance youtube yang sudah di-cache / hangat
-    const youtube = await getYoutube();
+    // 🎯 TRIK KILAT: Langsung tembak halaman hasil pencarian YouTube versi web desktop
+    // Ditambahkan parameter '&sp=EgIQAQ%253D%253D' untuk mengunci hasil pencarian agar HANYA berupa video
+    const targetUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}&sp=EgIQAQ%253D%253D`;
     
-    // Eksekusi pencarian ke YouTube
-    const search = await youtube.search(q, { type: 'video' });
-
-    // 🎯 FIX FILTER DATA: youtubei.js kadang menyelipkan objek non-video (seperti lembar info/iklan) 
-    // Kita filter ketat yang tipenya beneran 'Video' biar gak bikin frontend crash atau nge-blank hitam
-    const videoResults = search.results 
-      ? search.results.filter(item => item.type === 'Video') 
-      : [];
-
-    // Format data sesuai kemauan komponen frontend PWA lu
-    const items = videoResults.map((video) => {
-      // Cari resolusi thumbnail terbaik yang tersedia
-      const thumbnailList = video.thumbnails || [];
-      let bestThumb = thumbnailList.length > 0 
-        ? thumbnailList[thumbnailList.length - 1]?.url 
-        : '';
-
-      // 🎯 FIX DIAGNOSIS GAMBAR KOSONG: YouTube kadang ngasih URL berawalan "//" tanpa "https:"
-      // Ini yang sering bikin PWA bingung dan nampilin lingkaran hitam kosong!
-      if (bestThumb.startsWith('//')) {
-        bestThumb = `https:${bestThumb}`;
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7'
       }
+    });
 
-      return {
-        videoId: video.id,
-        title: video.title?.text || 'Tanpa Judul',
-        channel: video.author?.name || 'Unknown Artist',
-        thumb: bestThumb,
-        duration: video.duration?.text || '',
-      };
-    }).slice(0, 15);
+    if (!response.ok) throw new Error('YouTube menolak koneksi');
 
-    // Tambahkan Cache-Control di tingkat Edge Serverless biar performa makin gila dan hemat kuota
-    res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=60');
+    const html = await response.text();
+    
+    // Ekstrak data JSON internal YouTube (ytInitialData) menggunakan Regex kilat
+    const regex = /var ytInitialData = ({.*?});/;
+    const match = html.match(regex);
+    
+    if (!match) {
+      throw new Error('Gagal membaca struktur data YouTube');
+    }
+
+    const searchData = JSON.parse(match[1]);
+    
+    // Telusuri lorong objek JSON YouTube untuk mengambil deretan video
+    const contents = searchData.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || [];
+    
+    // Filter data agar hanya mengambil object video asli dan bersihkan strukturnya
+    const items = contents
+      .filter(item => item.videoRenderer)
+      .map(item => {
+        const video = item.videoRenderer;
+        
+        // Ambil resolusi thumbnail terbaik
+        const thumbs = video.thumbnail?.thumbnails || [];
+        let bestThumb = thumbs.length > 0 ? thumbs[thumbs.length - 1]?.url : '';
+        
+        if (bestThumb.startsWith('//')) {
+          bestThumb = `https:${bestThumb}`;
+        }
+
+        return {
+          videoId: video.videoId,
+          title: video.title?.runs?.[0]?.text || 'Tanpa Judul',
+          channel: video.ownerText?.runs?.[0]?.text || 'Unknown Channel',
+          thumb: bestThumb,
+          duration: video.lengthText?.simpleText || ''
+        };
+      })
+      .slice(0, 15);
+
+    // Pasang cache di server tepi (Edge Cache) selama 15 menit biar kalau dicari lagi makin instan
+    res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=60');
 
     return res.status(200).json({ items });
-    
+
   } catch (error) {
-    console.error('InnerTube Vercel Error:', error);
-    
-    // Tangkap status 429 jika emang beneran kena limit dari YouTube
-    if (error.status === 429 || error.message?.includes('429')) {
-      return res.status(429).json({ error: 'Limit pencarian habis, coba beberapa saat lagi' });
-    }
-    
-    return res.status(500).json({ error: 'Gagal memproses pencarian.' });
+    console.error('Super Scraper Error:', error);
+    return res.status(500).json({ error: 'Gagal memproses pencarian cepat.' });
   }
 }
