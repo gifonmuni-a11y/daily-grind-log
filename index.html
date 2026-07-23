@@ -3,33 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-    <meta name="theme-color" content="#0A0A0E" />
+    
+    <!-- 🎯 FIX 1: Theme color disesuaikan ke Hitam Pekat OLED (#000000) -->
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- 🎯 FIX 2: Fitur khusus iOS PWA (Fullscreen di iPhone) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Grind Log" />
 
     <title>Daily Grind Log — AI Companion untuk Tracking Progress Harianmu</title>
     <meta name="description" content="Daily Grind Log adalah AI companion untuk mencatat progress latihan, kebiasaan, dan rutinitas harianmu. Chat AI, voice, dan tracking otomatis dalam satu aplikasi." />
     <link rel="canonical" href="https://dailygrindlog.my.id/" />
 
+    <!-- Open Graph / WhatsApp / Telegram -->
     <meta property="og:title" content="Daily Grind Log — AI Companion untuk Tracking Progress Harianmu" />
     <meta property="og:description" content="Catat progress latihan dan rutinitas harianmu dengan bantuan AI companion. Chat, voice, dan tracking otomatis." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://dailygrindlog.my.id/" />
-    <meta property="og:image" content="https://dailygrindlog.my.id/icons/icon-192.png" />
+    <!-- 🎯 FIX 3: Icon 512px dipasang biar preview WhatsApp & Medsos tidak pecah -->
+    <meta property="og:image" content="https://dailygrindlog.my.id/icons/icon-512.png" />
     <meta property="og:locale" content="id_ID" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Daily Grind Log — AI Companion untuk Tracking Progress Harianmu" />
     <meta name="twitter:description" content="Catat progress latihan dan rutinitas harianmu dengan bantuan AI companion." />
-    <meta name="twitter:image" content="https://dailygrindlog.my.id/icons/icon-192.png" />
+    <meta name="twitter:image" content="https://dailygrindlog.my.id/icons/icon-512.png" />
 
+    <!-- PWA Links -->
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
+    <!-- Structured Data / SEO -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -40,7 +52,7 @@
       "applicationCategory": "HealthApplication",
       "operatingSystem": "Web, Android, iOS",
       "inLanguage": "id-ID",
-      "image": "https://dailygrindlog.my.id/icons/icon-192.png",
+      "image": "https://dailygrindlog.my.id/icons/icon-512.png",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -71,7 +83,7 @@
         scrollbar-color: #7C5CFF #000000;
         scrollbar-width: thin;
 
-        /* 🎯 FIX SECURITY LAYER 1: Mematikan highlight sorotan biru & seleksi teks di level global CSS browser mobile */
+        /* Mematikan seleksi teks global biar berasa app native */
         -webkit-touch-callout: none;
         -webkit-user-select: none;
         -khtml-user-select: none;
@@ -79,6 +91,14 @@
         -ms-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+      }
+
+      /* 🎯 FIX 4: Pengecualian agar kolom ngetik/chat tetap lancar & bisa diedit */
+      input, textarea, [contenteditable="true"] {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
       }
     </style>
   </head>
