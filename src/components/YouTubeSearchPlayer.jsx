@@ -92,7 +92,7 @@ export default function YouTubeSearchPlayer() {
       } finally {
         setLoading(false)
       }
-    }, 400)
+    }, 1000)
 
     return () => clearTimeout(searchTimeoutRef.current)
   }, [query])

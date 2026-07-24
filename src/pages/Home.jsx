@@ -159,6 +159,25 @@ export default function Home({ session }) {
   const [showAdminModal, setShowAdminModal] = useState(false)
   const adminTimerRef = useRef(null)
 
+  // --- AUDIO MANAGER ---
+  const activeAudioRef = useRef(null)
+
+  const playSound = useCallback((url) => {
+    if (!url) return;
+    
+    // Kalau ada audio yang masih jalan, matikan paksa!
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current.currentTime = 0;
+    }
+    
+    // Putar audio yang baru
+    const audio = new Audio(url);
+    activeAudioRef.current = audio;
+    audio.play().catch(e => console.log("Audio Error:", e));
+  }, []);
+  // ---------------------
+
   useEffect(() => {
     window.history.pushState(null, null, window.location.pathname);
     
@@ -278,7 +297,7 @@ export default function Home({ session }) {
   const unlockedAchievements = getUnlockedAchievements(entries)
   const equippedAchievement = ACHIEVEMENTS.find(a => a.id === equippedTitleId) || null
 
-  // SAKLAR OTOMATIS TIER DAN ACHIEVEMENT ADA DI SINI
+  // SAKLAR OTOMATIS TIER DAN ACHIEVEMENT
   useEffect(() => {
     if (loading) return;
 
@@ -292,8 +311,7 @@ export default function Home({ session }) {
         
         const tierSoundUrl = AUDIO_URLS.tiers[newTier];
         if (tierSoundUrl) {
-          const audio = new Audio(tierSoundUrl);
-          audio.play().catch(e => console.log("Audio Error:", e));
+          playSound(tierSoundUrl);
         }
       }
     }
@@ -311,14 +329,13 @@ export default function Home({ session }) {
           
           const achSoundUrl = AUDIO_URLS.achievements[newlyUnlocked.title];
           if (achSoundUrl) {
-            const audio = new Audio(achSoundUrl);
-            audio.play().catch(e => console.log("Audio Error:", e));
+            playSound(achSoundUrl);
           }
         }
       }
     }
     prevUnlockedIdsRef.current = currentUnlockedIds;
-  }, [level, unlockedAchievements, loading]);
+  }, [level, unlockedAchievements, loading, playSound]);
 
   const handleWelcomeInitialization = async () => {
     try {
@@ -378,8 +395,7 @@ export default function Home({ session }) {
 
   const confirmDeleteSesi = async () => {
     if (!deleteTargetId) return
-    const deleteAudio = new Audio(AUDIO_URLS.others.hapusLog)
-    deleteAudio.play().catch(e => console.log(e))
+    playSound(AUDIO_URLS.others.hapusLog);
     
     await supabase.from('entries').delete().eq('id', deleteTargetId)
     setDeleteTargetId(null)
@@ -401,8 +417,7 @@ export default function Home({ session }) {
   }
 
   const triggerLogoutModalWithVoice = () => {
-    const logoutAudio = new Audio(AUDIO_URLS.others.logOut)
-    logoutAudio.play().catch(e => console.log(e))
+    playSound(AUDIO_URLS.others.logOut);
     setShowLogoutConfirm(true)
   }
 
@@ -936,8 +951,7 @@ export default function Home({ session }) {
           editEntry={editEntry} 
           onClose={() => { setShowLogModal(false); setEditEntry(null) }} 
           onSaved={() => {
-            const updateAudio = new Audio(AUDIO_URLS.others.updateLog)
-            updateAudio.play().catch(e => console.log(e))
+            playSound(AUDIO_URLS.others.updateLog);
             fetchEntries()
             fetchProfile() 
             setActiveFilter('Semua') 
