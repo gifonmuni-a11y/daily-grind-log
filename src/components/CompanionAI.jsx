@@ -395,8 +395,13 @@ export default function CompanionAI({ userStats, profile, onClose }) {
         </div>
       </div>
 
-      {/* AVATAR CONTAINER */}
-      <div className="mt-2.5 flex flex-col items-center justify-center p-2 bg-[#100E16] border border-[#211D2C] rounded-lg relative overflow-hidden">
+      {/* AVATAR CONTAINER (DENGAN BACKGROUND) */}
+      <div 
+        className="mt-2.5 flex flex-col items-center justify-center p-2 border border-[#211D2C] rounded-lg relative overflow-hidden bg-cover bg-center"
+        style={{ 
+          backgroundImage: `linear-gradient(rgba(16, 14, 22, 0.8), rgba(16, 14, 22, 0.8)), url('https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/Background/IMG_20260728_194634.jpg')` 
+        }}
+      >
         <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
           <img key={`${avatarState}-${interactionId}`} src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
         </div>
@@ -405,8 +410,13 @@ export default function CompanionAI({ userStats, profile, onClose }) {
         </div>
       </div>
 
-      {/* AREA TEXT ROOM CHAT */}
-      <div className="main-chat-container flex-1 overflow-y-auto py-3 space-y-4 pr-1">
+      {/* AREA TEXT ROOM CHAT (DENGAN BACKGROUND) */}
+      <div 
+        className="main-chat-container flex-1 overflow-y-auto py-3 space-y-4 pr-1 bg-cover bg-center"
+        style={{ 
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.82)), url('https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/Background/HNkTcA_bwAAghJZ.jpg')` 
+        }}
+      >
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
             <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
