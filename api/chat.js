@@ -6,19 +6,19 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key tidak ditemukan di environment.' });
+  if (!apiKey) return res.status(200).json({ reply: '⚠️ ERROR: GEMINI_API_KEY tidak ditemukan di environment variables Vercel.' });
 
   let messages, userStats, mode;
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     messages = body?.messages || [];
     userStats = body?.userStats || {};
-    mode = body?.mode || 'strict'; // 'strict' (default) atau 'manja'
+    mode = body?.mode || 'strict';
   } catch (e) {
-    return res.status(400).json({ error: 'Body tidak valid.' });
+    return res.status(200).json({ reply: '⚠️ ERROR: Body request tidak valid. ' + e.message });
   }
 
-  if (!messages.length) return res.status(400).json({ error: 'Pesan kosong.' });
+  if (!messages.length) return res.status(200).json({ reply: '⚠️ ERROR: Pesan kosong dikirim ke server.' });
 
   const normalizedMessages = messages
     .map(m => ({
@@ -41,6 +41,9 @@ export default async function handler(req, res) {
 
   const systemPrompt = personas[mode] || personas.strict;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
   try {
     const ai = new GoogleGenAI({ apiKey });
 
@@ -61,11 +64,16 @@ export default async function handler(req, res) {
 
     const last = normalizedMessages[normalizedMessages.length - 1];
     const result = await chat.sendMessage({ message: last.content });
-    const text = result.text;
+    clearTimeout(timeoutId);
 
+    const text = result.text || '⚠️ ERROR: Gemini membalas kosong (kemungkinan diblokir safety filter).';
     return res.status(200).json({ reply: text });
   } catch (err) {
+    clearTimeout(timeoutId);
     console.error('Gemini API error:', err);
-    return res.status(500).json({ error: 'Gagal: ' + err.message });
+    const status = err?.status || err?.response?.status;
+    let msg = err.message || JSON.stringify(err);
+    if (status === 429) msg = 'Kuota/rate-limit Gemini API habis untuk saat ini.';
+    return res.status(200).json({ reply: '⚠️ ERROR ASLI: ' + msg });
   }
 }
