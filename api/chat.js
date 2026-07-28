@@ -2,11 +2,48 @@ import { GoogleGenAI } from '@google/genai';
 
 export const config = { api: { bodyParser: true } };
 
+async function callGemini(apiKey, model, history, systemPrompt, lastMessage) {
+  const ai = new GoogleGenAI({ apiKey });
+  const chat = ai.chats.create({ model, history, config: { systemInstruction: systemPrompt } });
+  const result = await chat.sendMessage({ message: lastMessage });
+  const text = result.text;
+  if (!text) throw new Error('Gemini membalas kosong (kemungkinan diblokir safety filter).');
+  return text;
+}
+
+async function callGroq(apiKey, normalizedMessages, systemPrompt) {
+  const groqMessages = [
+    { role: 'system', content: systemPrompt },
+    ...normalizedMessages.map(m => ({ role: m.role, content: m.content }))
+  ];
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: groqMessages,
+      max_tokens: 500
+    })
+  });
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`Groq error ${res.status}: ${errBody}`);
+  }
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Groq membalas kosong.');
+  return text;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(200).json({ reply: '⚠️ ERROR: GEMINI_API_KEY tidak ditemukan di environment variables Vercel.' });
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!geminiKey) return res.status(200).json({ reply: '⚠️ ERROR: GEMINI_API_KEY tidak ditemukan di environment variables Vercel.' });
 
   let messages, userStats, mode;
   try {
@@ -41,39 +78,38 @@ export default async function handler(req, res) {
 
   const systemPrompt = personas[mode] || personas.strict;
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const history = normalizedMessages.slice(0, -1).map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+  while (history.length > 0 && history[0].role === 'model') history.shift();
+  const lastMessage = normalizedMessages[normalizedMessages.length - 1].content;
 
+  // 1. Coba Gemini 3.5 Flash
   try {
-    const ai = new GoogleGenAI({ apiKey });
-
-    const history = normalizedMessages.slice(0, -1).map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
-
-    while (history.length > 0 && history[0].role === 'model') {
-      history.shift();
-    }
-
-    const chat = ai.chats.create({
-      model: 'gemini-3.5-flash',
-      history,
-      config: { systemInstruction: systemPrompt }
-    });
-
-    const last = normalizedMessages[normalizedMessages.length - 1];
-    const result = await chat.sendMessage({ message: last.content });
-    clearTimeout(timeoutId);
-
-    const text = result.text || '⚠️ ERROR: Gemini membalas kosong (kemungkinan diblokir safety filter).';
+    const text = await callGemini(geminiKey, 'gemini-3.5-flash', history, systemPrompt, lastMessage);
     return res.status(200).json({ reply: text });
-  } catch (err) {
-    clearTimeout(timeoutId);
-    console.error('Gemini API error:', err);
-    const status = err?.status || err?.response?.status;
-    let msg = err.message || JSON.stringify(err);
-    if (status === 429) msg = 'Kuota/rate-limit Gemini API habis untuk saat ini.';
-    return res.status(200).json({ reply: '⚠️ ERROR ASLI: ' + msg });
+  } catch (err1) {
+    console.error('Gemini 3.5-flash gagal:', err1.message);
+
+    // 2. Fallback ke Gemini 2.5 Flash
+    try {
+      const text = await callGemini(geminiKey, 'gemini-2.5-flash', history, systemPrompt, lastMessage);
+      return res.status(200).json({ reply: text });
+    } catch (err2) {
+      console.error('Gemini 2.5-flash gagal:', err2.message);
+
+      // 3. Fallback terakhir ke Groq
+      if (!groqKey) {
+        return res.status(200).json({ reply: '⚠️ ERROR ASLI: ' + err2.message + ' (Groq fallback tidak aktif, GROQ_API_KEY belum diset)' });
+      }
+      try {
+        const text = await callGroq(groqKey, normalizedMessages, systemPrompt);
+        return res.status(200).json({ reply: text });
+      } catch (err3) {
+        console.error('Groq gagal:', err3.message);
+        return res.status(200).json({ reply: '⚠️ ERROR ASLI: Semua provider AI gagal. ' + err3.message });
+      }
+    }
   }
 }
