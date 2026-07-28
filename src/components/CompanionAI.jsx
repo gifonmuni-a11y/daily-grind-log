@@ -5,17 +5,17 @@ import { getRankTier } from '../lib/expSystem'
 
 const ScrollbarStyles = () => (
   <style dangerouslySetInnerHTML={{__html: `
-    .main-chat-container::-webkit-scrollbar { width: 6px !important; background: transparent !important; }
-    .main-chat-container::-webkit-scrollbar-thumb { background: rgba(124, 92, 255, 0.5) !important; border-radius: 4px !important; }
-    .main-chat-container { scrollbar-width: thin !important; scrollbar-color: rgba(124, 92, 255, 0.5) transparent !important; }
+    .main-chat-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
+    .main-chat-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
+    .main-chat-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
 
     .faq-slider-container::-webkit-scrollbar { height: 6px !important; background: #100E16 !important; display: block !important; }
     .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
     .faq-slider-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; overflow-x: auto !important; }
 
-    .matrix-dropdown-container::-webkit-scrollbar { width: 6px !important; background: transparent !important; }
-    .matrix-dropdown-container::-webkit-scrollbar-thumb { background: rgba(124, 92, 255, 0.5) !important; border-radius: 4px !important; }
-    .matrix-dropdown-container { scrollbar-width: thin !important; scrollbar-color: rgba(124, 92, 255, 0.5) transparent !important; }
+    .matrix-dropdown-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
+    .matrix-dropdown-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
+    .matrix-dropdown-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
   `}} />
 )
 
@@ -77,7 +77,7 @@ function CategoryItem({ cat, index }) {
           <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">{cat.name}:</strong> {cat.apa_itu}</p>
           <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Manfaatnya:</strong> {cat.manfaatnya}</p>
           <p className="font-body text-xs text-[#EDEAF6] leading-relaxed"><strong className="text-accent font-black">Tata Cara / Gerakan:</strong> {cat.tata_cara_atau_gerakan}</p>
-          <div className="w-full mt-2 p-1 bg-[#100E16]/80 backdrop-blur-sm border border-[#211D2C] rounded-lg overflow-hidden aspect-video shadow-lg">
+          <div className="w-full mt-2 p-1 bg-[#100E16] border border-[#211D2C] rounded-lg overflow-hidden aspect-video">
             <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${cat.id_video}?playsinline=1&enablejsapi=1&rel=0`} title={cat.name} frameBorder="0" allowFullScreen />
           </div>
         </div>
@@ -395,67 +395,45 @@ export default function CompanionAI({ userStats, profile, onClose }) {
         </div>
       </div>
 
-      {/* AVATAR CONTAINER (DENGAN BACKGROUND + BLUR/OPACITY TWEAK) */}
-      <div 
-        className="mt-2.5 flex flex-col items-center justify-center p-2 border border-[#211D2C] rounded-lg relative overflow-hidden bg-cover bg-center shadow-lg"
-        style={{ 
-          // Opacity overlay dinaikin sedikit ke 0.65 biar gambarnya lebih nampak jelas
-          backgroundImage: `linear-gradient(rgba(16, 14, 22, 0.65), rgba(16, 14, 22, 0.65)), url('https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/Background/IMG_20260728_194634.jpg')` 
-        }}
-      >
-        <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/40 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_20px_rgba(124,92,255,0.3)] backdrop-blur-sm">
+      {/* AVATAR CONTAINER */}
+      <div className="mt-2.5 flex flex-col items-center justify-center p-2 bg-[#100E16] border border-[#211D2C] rounded-lg relative overflow-hidden">
+        <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
           <img key={`${avatarState}-${interactionId}`} src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
         </div>
-        <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/60 backdrop-blur-md px-2 py-1.5 border border-[#211D2C] rounded shadow-md">
+        <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/40 px-2 py-1.5 border border-[#211D2C] rounded">
           Status: <span className="text-accent font-black">{avatarState === 'seolha_marah' ? 'seolha marah' : avatarState}</span>
         </div>
       </div>
 
-      {/* AREA TEXT ROOM CHAT (DENGAN BACKGROUND) */}
-      <div 
-        className="main-chat-container flex-1 overflow-y-auto py-3 space-y-4 pr-1 bg-cover bg-center"
-        style={{ 
-          // Gelapnya dikurangin jadi 0.70 biar gambar cantiknya lebih keluar
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.70), rgba(0, 0, 0, 0.70)), url('https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/Background/HNkTcA_bwAAghJZ.jpg')` 
-        }}
-      >
+      {/* AREA TEXT ROOM CHAT */}
+      <div className="main-chat-container flex-1 overflow-y-auto py-3 space-y-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
-            
-            {/* EFEK KACA/GLASSMORPHISM DITERAPKAN DI KOTAK CHAT INI */}
-            <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed shadow-xl backdrop-blur-md ${
-              m.sender === 'user' 
-                ? 'bg-accent/80 text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl border border-white/10' 
-                : 'bg-[#100E16]/65 border border-[#211D2C]/80 text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'
-            }`}>
+            <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
             
-            {/* GLASSMORPHISM DI KOTAK VIDEO */}
             {m.sender === 'seolha' && m.mediaSources && Array.isArray(m.mediaSources) && (
               <div className="w-[85%] mt-2 space-y-3">
                 {m.mediaSources.map((srcId, sIdx) => (
-                  <div key={sIdx} className="w-full p-1 bg-[#100E16]/70 backdrop-blur-md border border-[#211D2C]/80 rounded-lg shadow-xl overflow-hidden aspect-video">
+                  <div key={sIdx} className="w-full p-1 bg-[#100E16] border border-[#211D2C] rounded-lg shadow-xl overflow-hidden aspect-video">
                     <iframe className="w-full h-full rounded" src={`https://www.youtube.com/embed/${srcId}?playsinline=1&enablejsapi=1&rel=0`} title={`FAQ Video Guide ${sIdx}`} frameBorder="0" allowFullScreen />
                   </div>
                 ))}
               </div>
             )}
 
-            {/* GLASSMORPHISM DI KOTAK MATRIX LATIHAN */}
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
-              <div className="matrix-dropdown-container w-[85%] space-y-4 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E]/80 backdrop-blur-md border border-[#211D2C]/80 rounded-lg shadow-2xl">
+              <div className="matrix-dropdown-container w-[85%] space-y-4 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
                 {m.multiMedia.map((vid, vIdx) => <CategoryItem key={vIdx} cat={vid} index={vIdx} />)}
               </div>
             )}
           </div>
         ))}
-        
-        {/* GLASSMORPHISM DI INDIKATOR LOADING */}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-[#100E16]/70 backdrop-blur-md border border-[#211D2C]/80 p-3 rounded-xl shadow-xl flex items-center gap-2 font-mono text-xs text-text-dim">
+            <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
               <Loader2 size={12} className="animate-spin text-accent" />
               Seolha sedang berpikir...
             </div>
