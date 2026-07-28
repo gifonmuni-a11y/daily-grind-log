@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import ErrorBoundary from '../ErrorBoundary'
 import { Plus, LogOut, HelpCircle, Sparkles, Loader2, Bot, Target, CheckCircle2, Circle, Award, Trophy, Lock, Map, AlertTriangle, Swords, User } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { calcStreak } from '../lib/streakSystem'
@@ -942,7 +943,7 @@ export default function Home({ session }) {
         </div>
       )}
 
-      {showCompanion && <CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} />}
+      {showCompanion && <ErrorBoundary><CompanionAI userStats={userStats} profile={profile} onClose={() => setShowCompanion(false)} /></ErrorBoundary>}
       
       {showLogModal && (
         <LogModal 
