@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 export const config = { api: { bodyParser: true } };
 
@@ -42,8 +42,7 @@ export default async function handler(req, res) {
   const systemPrompt = personas[mode] || personas.strict;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash', systemInstruction: systemPrompt });
+    const ai = new GoogleGenAI({ apiKey });
 
     const history = normalizedMessages.slice(0, -1).map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
@@ -54,12 +53,19 @@ export default async function handler(req, res) {
       history.shift();
     }
 
-    const chat = model.startChat({ history });
+    const chat = ai.chats.create({
+      model: 'gemini-3.5-flash',
+      history,
+      config: { systemInstruction: systemPrompt }
+    });
+
     const last = normalizedMessages[normalizedMessages.length - 1];
-    const result = await chat.sendMessage(last.content);
-    const text = result.response.text();
+    const result = await chat.sendMessage({ message: last.content });
+    const text = result.text;
+
     return res.status(200).json({ reply: text });
   } catch (err) {
+    console.error('Gemini API error:', err);
     return res.status(500).json({ error: 'Gagal: ' + err.message });
   }
 }
