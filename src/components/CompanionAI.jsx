@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { X, Send, Bot, Loader2, Clock, Volume2, VolumeX } from 'lucide-react'
+import { X, Send, Bot, Loader2, Clock, Volume2, VolumeX, Settings } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { getRankTier } from '../lib/expSystem'
 
 const ScrollbarStyles = () => (
   <style dangerouslySetInnerHTML={{__html: `
-    .main-chat-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
+    .main-chat-container::-webkit-scrollbar { width: 6px !important; background: transparent !important; }
     .main-chat-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
-    .main-chat-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
+    .main-chat-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF transparent !important; }
 
-    .faq-slider-container::-webkit-scrollbar { height: 6px !important; background: #100E16 !important; display: block !important; }
+    .faq-slider-container::-webkit-scrollbar { height: 6px !important; background: transparent !important; display: block !important; }
     .faq-slider-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
-    .faq-slider-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; overflow-x: auto !important; }
+    .faq-slider-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF transparent !important; overflow-x: auto !important; }
 
-    .matrix-dropdown-container::-webkit-scrollbar { width: 6px !important; background: #100E16 !important; }
+    .matrix-dropdown-container::-webkit-scrollbar { width: 6px !important; background: transparent !important; }
     .matrix-dropdown-container::-webkit-scrollbar-thumb { background: #7C5CFF !important; border-radius: 4px !important; }
-    .matrix-dropdown-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF #100E16 !important; }
+    .matrix-dropdown-container { scrollbar-width: thin !important; scrollbar-color: #7C5CFF transparent !important; }
   `}} />
 )
 
@@ -25,6 +25,17 @@ const AVATAR_LINKS = {
   mikir: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/mikir.gif',
   seolha_marah: 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/entry-images/seolha_marah.gif'
 }
+
+const SEOLHA_THEME_AVATAR_BG = 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/Background/AIVideofromPopVid-AIvideo--cd2431-ezgif.com-optimize.gif'
+const SEOLHA_THEME_CHAT_BG = 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v1/object/public/Public/Background/HNcI2yiacAAU2WF.jpg'
+
+const FONT_SIZE_CLASSES = { xs: 'text-xs', sm: 'text-sm', base: 'text-base' }
+const FONT_SIZE_LABELS = { xs: 'Kecil', sm: 'Sedang', base: 'Besar' }
+
+const MANJA_KEYWORDS = ['mom', 'mommy', 'mam', 'ibu', 'bu', 'sayang', 'capek', 'cape', 'istirahat', 'latihan ringan', 'bun', 'bunda', 'ahjuma', 'okasan']
+const RESET_KEYWORDS = ['serius', 'fokus', 'mode normal']
+const MANJA_REGEX = new RegExp(`\\b(${MANJA_KEYWORDS.join('|')})\\b`, 'i')
+const RESET_REGEX = new RegExp(`\\b(${RESET_KEYWORDS.join('|')})\\b`, 'i')
 
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), and lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
@@ -63,10 +74,10 @@ const MASTER_34_CATEGORIES = [
   { name: 'Pendinginan (Cool-down)', tokoh_terkenal: 'Reg Park: Tenangkan sistem tubuh Anda sebelum meninggalkan area gym agar aliran darah seimbang.', apa_itu: 'Fase penutup latihan fisik dengan cara menurunkan intensitas gerakan secara bertahap menuju kondisi tubuh rileks semula.', manfaatnya: 'Menunrunkan detak jantung kembali ke batas normal secara perlahan, serta mencegah terjadinya penumpukan darah mendadak di area kaki (blood pooling).', tata_cara_atau_gerakan: 'Lakukan jalan lambat di tempat selama 2 sampai 3 menit, dilanjutkan dengan teknik penarikan napas dalam secara rileks sembari meluruskan tangan ke atas.', id_video: 'COO2S7lPBzA' }
 ]
 
-function CategoryItem({ cat, index }) {
+function CategoryItem({ cat, index, theme }) {
   const [isOpen, setIsOpen] = useState(false)
   return (
-    <div className="border-b border-[#211D2C]/40 pb-3 last:border-0">
+    <div className={`border-b pb-3 last:border-0 ${theme === 'seolha' ? 'border-white/10' : 'border-[#211D2C]/40'}`}>
       <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-full text-left font-mono text-xs text-accent font-black uppercase tracking-wider flex justify-between items-center py-1.5 hover:text-purple-400 transition-colors">
         <span>{index + 1}. {cat.name} <span className="text-text-dim font-normal normal-case ml-1">[silakan klik penjelasan dan videonya]</span></span>
         <span className="text-text-dim text-[10px]">{isOpen ? '▲' : '▼'}</span>
@@ -95,13 +106,19 @@ export default function CompanionAI({ userStats, profile, onClose }) {
   const [isMuted, setIsMuted] = useState(false)
   const [avatarState, setAvatarState] = useState('diam')
   const [interactionId, setInteractionId] = useState(0)
+  const [mode, setMode] = useState('strict')
+  const [theme, setTheme] = useState('dark')
+  const [fontSize, setFontSize] = useState('sm')
+  const [showSettings, setShowSettings] = useState(false)
   const messagesEndRef = useRef(null)
   const utteranceRef = useRef(null)
 
   const userName = profile?.name || 'Trainer'
   const userStatsWithProfile = { ...userStats, name: userName }
   const currentTier = getRankTier(userStats?.level || 1)
-  
+  const isSeolhaTheme = theme === 'seolha'
+  const fontSizeClass = FONT_SIZE_CLASSES[fontSize]
+
   const getDynamicGreeting = () => {
     const hrs = new Date().getHours()
     if (hrs >= 0 && hrs < 4) return "Selamat pagi"
@@ -128,10 +145,10 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     const namePattern = userName && userName !== 'Trainer' ? `\\b${userName}\\b` : ""
     const numberPattern = "\\b\\d+\\b"
     const importantPattern = "\\b(?:streak|Level|EXP|hari ke-\\d+|Energi)\\b"
-    
+
     const patterns = [greetingsPattern, namePattern, numberPattern, importantPattern].filter(Boolean).join("|")
     if (!patterns) return str
-    
+
     const regex = new RegExp(`(${patterns})`, 'gi')
     const subParts = str.split(regex)
     return subParts.map((sub, sIdx) => {
@@ -154,7 +171,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       let match
       const isBullet = line.trim().startsWith('* ')
       if (isBullet) processedLine = line.trim().substring(2)
-      
+
       while ((match = cleanRegex.exec(processedLine)) !== null) {
         if (match.index > lastIndex) {
           const plainText = processedLine.substring(lastIndex, match.index)
@@ -169,9 +186,9 @@ export default function CompanionAI({ userStats, profile, onClose }) {
         parts.push(...[].concat(highlightPlainWords(plainText, idx, parts.length)))
       }
       const content = parts.length > 0 ? parts : highlightPlainWords(processedLine, idx, 0)
-      
-      if (isBullet) return <div key={idx} className="flex items-start gap-2 my-1 pl-1 font-body text-sm text-[#EDEAF6]"><span className="text-accent text-xs mt-1.5">•</span><div className="flex-1 whitespace-pre-wrap leading-relaxed">{content}</div></div>
-      return <p key={idx} className="whitespace-pre-wrap font-body text-sm text-[#EDEAF6] leading-relaxed my-1">{content}</p>
+
+      if (isBullet) return <div key={idx} className={`flex items-start gap-2 my-1 pl-1 font-body ${fontSizeClass} text-[#EDEAF6]`}><span className="text-accent text-xs mt-1.5">•</span><div className="flex-1 whitespace-pre-wrap leading-relaxed">{content}</div></div>
+      return <p key={idx} className={`whitespace-pre-wrap font-body ${fontSizeClass} text-[#EDEAF6] leading-relaxed my-1`}>{content}</p>
     })
   }
 
@@ -190,18 +207,18 @@ export default function CompanionAI({ userStats, profile, onClose }) {
 
   const speakText = (text, customEndState = null, customStartState = null) => {
     if (isMuted) return
-    
+
     stopSpeechSafely()
-    
+
     const cleanText = text.replace(/[*#_]/g, '').replace(/\bHunter\b/g, userName)
-    
+
     setInteractionId(prev => prev + 1)
     setAvatarState(customStartState || 'ngomong')
 
     const utterance = new SpeechSynthesisUtterance(cleanText)
     utterance.lang = 'id-ID'
     utterance.rate = 1.05
-    
+
     utteranceRef.current = utterance
     window.currentUtterance = utterance 
 
@@ -212,7 +229,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       console.error("Google SpeechSynthesis Error:", e)
       setAvatarState(customEndState || (loading ? 'mikir' : 'diam'))
     }
-    
+
     window.speechSynthesis.speak(utterance)
   }
 
@@ -221,7 +238,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     const msg = `${greetingText}, ${userName}. Seolha siap mendampingi latihan harian Anda hari ini. Ada target fisik yang ingin kita tembus bersama?`
     setMessages([{ sender: 'seolha', text: msg, mediaSources: null }])
     fetchDailyLimit()
-    
+
     setTimeout(() => { speakText(msg) }, 600)
     return () => {
       stopSpeechSafely()
@@ -250,13 +267,23 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     if (e) e.preventDefault()
     const msgToSend = customMsg || input
     if (!msgToSend.trim() || loading) return
-    
+
     stopSpeechSafely()
+
+    let currentMode = mode
+    if (!isFaq && !isAllCategories) {
+      if (MANJA_REGEX.test(msgToSend)) {
+        currentMode = 'manja'
+        if (mode !== 'manja') setMode('manja')
+      } else if (RESET_REGEX.test(msgToSend)) {
+        currentMode = 'strict'
+        if (mode !== 'strict') setMode('strict')
+      }
+    }
 
     if (!isFaq && dailyCount >= 5) {
       const failMsg = `Energi aku sudah habis untuk hari ini (Batas 5 pertanyaan telah tercapai). Kita obrol lagi besok ya, ${userName}!`
       setMessages(prev => [...prev, { sender: 'user', text: msgToSend }, { sender: 'seolha', text: failMsg, mediaSources: null }])
-      failMsg
       if (!customMsg) setInput('')
       return
     }
@@ -323,7 +350,8 @@ export default function CompanionAI({ userStats, profile, onClose }) {
             role: m.sender === 'user' ? 'user' : 'assistant',
             content: m.text
           })), 
-          userStats: userStatsWithProfile 
+          userStats: userStatsWithProfile,
+          mode: currentMode
         })
       })
 
@@ -360,19 +388,38 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     ]
     const randomIdx = Math.floor(Math.random() * interactiveTexts.length)
     const reply = interactiveTexts[randomIdx]
-    
+
     setMessages(prev => [...prev, { sender: 'seolha', text: `*[SYSTEM NOTIFICATION: Anda menyentuh asisten Seolha]*\n\n"${reply}"`, mediaSources: null }])
-    
+
     setInteractionId(prev => prev + 1)
     speakText(reply, 'diam', 'seolha_marah')
   }
 
+  const bubbleClass = (sender) => {
+    if (sender === 'user') {
+      return isSeolhaTheme
+        ? 'bg-accent/80 backdrop-blur-md text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl'
+        : 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl'
+    }
+    return isSeolhaTheme
+      ? 'bg-black/45 backdrop-blur-md border border-white/10 text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'
+      : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#000000] p-4 max-w-lg mx-auto select-none">
+    <div 
+      className={`fixed inset-0 z-50 flex flex-col p-4 max-w-lg mx-auto select-none ${isSeolhaTheme ? 'bg-black' : 'bg-[#000000]'}`}
+      style={isSeolhaTheme ? {
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.8)), url(${SEOLHA_THEME_CHAT_BG})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      } : {}}
+    >
       <ScrollbarStyles />
-      
+
       {/* HEADER UTAMA */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#211D2C]">
+      <div className={`flex items-center justify-between pb-2 border-b ${isSeolhaTheme ? 'border-white/10' : 'border-[#211D2C]'}`}>
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
           <span className="font-display font-bold text-text-high tracking-wider">Seolha</span>
@@ -386,6 +433,9 @@ export default function CompanionAI({ userStats, profile, onClose }) {
           <button onClick={handleToggleMute} className="p-1.5 hover:bg-border-hover rounded text-accent transition-colors">
             {isMuted ? <VolumeX size={15} className="text-text-dim" /> : <Volume2 size={15} />}
           </button>
+          <button onClick={() => setShowSettings(s => !s)} className="p-1.5 hover:bg-border-hover rounded text-accent transition-colors">
+            <Settings size={15} />
+          </button>
           <div className="w-[1px] h-4 bg-[#211D2C]" />
           <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-text-high bg-[#100E16] border border-[#7C5CFF]/30 px-2 py-1 rounded">
             <span>{5 - dailyCount}/5 Energi</span>
@@ -395,12 +445,36 @@ export default function CompanionAI({ userStats, profile, onClose }) {
         </div>
       </div>
 
+      {/* PANEL PENGATURAN */}
+      {showSettings && (
+        <div className={`mt-2 p-3 rounded-lg space-y-3 border ${isSeolhaTheme ? 'bg-black/60 backdrop-blur-md border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>
+          <div>
+            <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">Tema</div>
+            <div className="flex gap-2">
+              <button onClick={() => setTheme('dark')} className={`flex-1 text-xs px-2 py-1.5 font-mono uppercase border rounded ${theme === 'dark' ? 'bg-accent text-white border-accent' : 'bg-[#0A0A0E] border-[#211D2C] text-text-dim'}`}>Gelap</button>
+              <button onClick={() => setTheme('seolha')} className={`flex-1 text-xs px-2 py-1.5 font-mono uppercase border rounded ${theme === 'seolha' ? 'bg-accent text-white border-accent' : 'bg-[#0A0A0E] border-[#211D2C] text-text-dim'}`}>Seolha</button>
+            </div>
+          </div>
+          <div>
+            <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">Ukuran Teks</div>
+            <div className="flex gap-2">
+              {Object.keys(FONT_SIZE_LABELS).map(key => (
+                <button key={key} onClick={() => setFontSize(key)} className={`flex-1 text-xs px-2 py-1.5 font-mono uppercase border rounded ${fontSize === key ? 'bg-accent text-white border-accent' : 'bg-[#0A0A0E] border-[#211D2C] text-text-dim'}`}>{FONT_SIZE_LABELS[key]}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* AVATAR CONTAINER */}
-      <div className="mt-2.5 flex flex-col items-center justify-center p-2 bg-[#100E16] border border-[#211D2C] rounded-lg relative overflow-hidden">
-        <div onClick={handleAvatarTap} className="w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
+      <div className={`mt-2.5 flex flex-col items-center justify-center p-2 border rounded-lg relative overflow-hidden ${isSeolhaTheme ? 'border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>
+        {isSeolhaTheme && (
+          <img src={SEOLHA_THEME_AVATAR_BG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-70" />
+        )}
+        <div onClick={handleAvatarTap} className="relative z-10 w-24 h-24 rounded-full border-2 border-accent/40 bg-black/60 overflow-hidden cursor-pointer active:scale-95 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(124,92,255,0.15)]">
           <img key={`${avatarState}-${interactionId}`} src={AVATAR_LINKS[avatarState]} alt="Seolha State" className="w-full h-full object-cover" />
         </div>
-        <div className="mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest bg-black/40 px-2 py-1.5 border border-[#211D2C] rounded">
+        <div className={`relative z-10 mt-1 font-mono text-[9px] text-text-dim uppercase tracking-widest px-2 py-1.5 border rounded ${isSeolhaTheme ? 'bg-black/50 border-white/10' : 'bg-black/40 border-[#211D2C]'}`}>
           Status: <span className="text-accent font-black">{avatarState === 'seolha_marah' ? 'seolha marah' : avatarState}</span>
         </div>
       </div>
@@ -409,11 +483,11 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       <div className="main-chat-container flex-1 overflow-y-auto py-3 space-y-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`max-w-[85%] p-3 font-body text-sm leading-relaxed ${m.sender === 'user' ? 'bg-accent text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl' : 'bg-[#100E16] border border-[#211D2C] text-[#EDEAF6] rounded-tl-xl rounded-tr-xl rounded-br-xl'}`}>
+            <div className={`max-w-[85%] p-3 font-body ${fontSizeClass} leading-relaxed ${bubbleClass(m.sender)}`}>
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
               <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p className="whitespace-pre-wrap">{m.text}</p>}</div>
             </div>
-            
+
             {m.sender === 'seolha' && m.mediaSources && Array.isArray(m.mediaSources) && (
               <div className="w-[85%] mt-2 space-y-3">
                 {m.mediaSources.map((srcId, sIdx) => (
@@ -425,15 +499,15 @@ export default function CompanionAI({ userStats, profile, onClose }) {
             )}
 
             {m.sender === 'seolha' && m.multiMedia && Array.isArray(m.multiMedia) && (
-              <div className="matrix-dropdown-container w-[85%] space-y-4 mt-3 max-h-[380px] overflow-y-auto p-3 bg-[#0A0A0E] border border-[#211D2C] rounded-lg">
-                {m.multiMedia.map((vid, vIdx) => <CategoryItem key={vIdx} cat={vid} index={vIdx} />)}
+              <div className={`matrix-dropdown-container w-[85%] space-y-4 mt-3 max-h-[380px] overflow-y-auto p-3 rounded-lg border ${isSeolhaTheme ? 'bg-black/45 backdrop-blur-md border-white/10' : 'bg-[#0A0A0E] border-[#211D2C]'}`}>
+                {m.multiMedia.map((vid, vIdx) => <CategoryItem key={vIdx} cat={vid} index={vIdx} theme={theme} />)}
               </div>
             )}
           </div>
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-[#100E16] border border-[#211D2C] p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim">
+            <div className={`p-3 rounded-xl flex items-center gap-2 font-mono text-xs text-text-dim border ${isSeolhaTheme ? 'bg-black/45 backdrop-blur-md border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>
               <Loader2 size={12} className="animate-spin text-accent" />
               Seolha sedang berpikir...
             </div>
@@ -443,22 +517,22 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       </div>
 
       {/* FAQ SLIDER BAR */}
-      <div className="mb-2 bg-background pt-1.5">
+      <div className={`mb-2 pt-1.5 ${isSeolhaTheme ? 'bg-black/30 backdrop-blur-sm' : 'bg-background'}`}>
         <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
         <div className="faq-slider-container flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Mulai dari mana?</button>
-          <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Kardio atau angkat?</button>
-          <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Cara & Jenis Latihan</button>
-          <button type="button" onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Nutrisi & Makan</button>
-          <button type="button" onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Tidur & Recovery</button>
-          <button type="button" onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-[#100E16] border border-[#211D2C] text-text-high font-mono tracking-wide uppercase hover:border-accent">Kesalahan Fatal</button>
+          <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} className={`flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 border text-text-high font-mono tracking-wide uppercase hover:border-accent ${isSeolhaTheme ? 'bg-black/40 backdrop-blur-sm border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>Mulai dari mana?</button>
+          <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} className={`flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 border text-text-high font-mono tracking-wide uppercase hover:border-accent ${isSeolhaTheme ? 'bg-black/40 backdrop-blur-sm border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>Kardio atau angkat?</button>
+          <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} className={`flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 border text-text-high font-mono tracking-wide uppercase hover:border-accent ${isSeolhaTheme ? 'bg-black/40 backdrop-blur-sm border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>Cara & Jenis Latihan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)} className={`flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 border text-text-high font-mono tracking-wide uppercase hover:border-accent ${isSeolhaTheme ? 'bg-black/40 backdrop-blur-sm border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>Nutrisi & Makan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)} className={`flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 border text-text-high font-mono tracking-wide uppercase hover:border-accent ${isSeolhaTheme ? 'bg-black/40 backdrop-blur-sm border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>Tidur & Recovery</button>
+          <button type="button" onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)} className={`flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 border text-text-high font-mono tracking-wide uppercase hover:border-accent ${isSeolhaTheme ? 'bg-black/40 backdrop-blur-sm border-white/10' : 'bg-[#100E16] border-[#211D2C]'}`}>Kesalahan Fatal</button>
           <button type="button" onClick={() => handleSend(null, 'Semua Kategori Matrix Latihan', false, true)} className="flex-shrink-0 w-[150px] text-center text-xs px-2.5 py-2 bg-accent/20 border border-accent text-accent font-mono tracking-wide uppercase font-black hover:bg-accent hover:text-white transition-all">SEMUA KATEGORI</button>
         </div>
       </div>
 
       {/* INPUT FORM */}
-      <form onSubmit={(e) => handleSend(e)} className="pt-2 border-t border-[#211D2C] flex gap-2">
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className="flex-1 bg-[#0A0A0E] border border-[#211D2C] px-4 py-2.5 text-sm text-text-high focus:outline-none focus:border-accent" />
+      <form onSubmit={(e) => handleSend(e)} className={`pt-2 border-t flex gap-2 ${isSeolhaTheme ? 'border-white/10' : 'border-[#211D2C]'}`}>
+        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tanya Seolha..." className={`flex-1 px-4 py-2.5 text-sm text-text-high focus:outline-none focus:border-accent border ${isSeolhaTheme ? 'bg-black/40 backdrop-blur-sm border-white/10' : 'bg-[#0A0A0E] border-[#211D2C]'}`} />
         <button type="submit" disabled={loading || !input.trim()} className="w-11 h-11 bg-accent flex items-center justify-center text-white"><Send size={16} /></button>
       </form>
     </div>
