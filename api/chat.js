@@ -11,30 +11,27 @@ async function callGemini(apiKey, model, history, systemPrompt, lastMessage) {
   return text;
 }
 
-async function callGroq(apiKey, normalizedMessages, systemPrompt) {
-  const groqMessages = [
+async function callOpenAICompatible(providerName, baseUrl, apiKey, model, normalizedMessages, systemPrompt, extraHeaders = {}) {
+  const chatMessages = [
     { role: 'system', content: systemPrompt },
     ...normalizedMessages.map(m => ({ role: m.role, content: m.content }))
   ];
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await fetch(baseUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'Authorization': `Bearer ${apiKey}`,
+      ...extraHeaders
     },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: groqMessages,
-      max_tokens: 500
-    })
+    body: JSON.stringify({ model, messages: chatMessages, max_tokens: 500 })
   });
   if (!res.ok) {
     const errBody = await res.text();
-    throw new Error(`Groq error ${res.status}: ${errBody}`);
+    throw new Error(`${providerName} error ${res.status}: ${errBody}`);
   }
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Groq membalas kosong.');
+  if (!text) throw new Error(`${providerName} membalas kosong.`);
   return text;
 }
 
@@ -43,6 +40,10 @@ export default async function handler(req, res) {
 
   const geminiKey = process.env.GEMINI_API_KEY;
   const groqKey = process.env.GROQ_API_KEY;
+  const githubKey = process.env.GITHUB_MODELS_TOKEN;
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
+  const cerebrasKey = process.env.CEREBRAS_API_KEY;
+
   if (!geminiKey) return res.status(200).json({ reply: '⚠️ ERROR: GEMINI_API_KEY tidak ditemukan di environment variables Vercel.' });
 
   let messages, userStats, mode;
@@ -85,31 +86,49 @@ export default async function handler(req, res) {
   while (history.length > 0 && history[0].role === 'model') history.shift();
   const lastMessage = normalizedMessages[normalizedMessages.length - 1].content;
 
-  // 1. Coba Gemini 3.5 Flash
-  try {
-    const text = await callGemini(geminiKey, 'gemini-3.5-flash', history, systemPrompt, lastMessage);
-    return res.status(200).json({ reply: text });
-  } catch (err1) {
-    console.error('Gemini 3.5-flash gagal:', err1.message);
+  const attempts = [
+    { name: 'Gemini 3.5-flash', run: () => callGemini(geminiKey, 'gemini-3.5-flash', history, systemPrompt, lastMessage) },
+    { name: 'Gemini 2.5-flash', run: () => callGemini(geminiKey, 'gemini-2.5-flash', history, systemPrompt, lastMessage) },
+  ];
 
-    // 2. Fallback ke Gemini 2.5 Flash
+  if (groqKey) {
+    attempts.push({
+      name: 'Groq',
+      run: () => callOpenAICompatible('Groq', 'https://api.groq.com/openai/v1/chat/completions', groqKey, 'llama-3.3-70b-versatile', normalizedMessages, systemPrompt)
+    });
+  }
+  if (githubKey) {
+    attempts.push({
+      name: 'GitHub Models',
+      run: () => callOpenAICompatible('GitHub Models', 'https://models.github.ai/inference/chat/completions', githubKey, 'openai/gpt-4.1', normalizedMessages, systemPrompt)
+    });
+  }
+  if (openrouterKey) {
+    attempts.push({
+      name: 'OpenRouter',
+      run: () => callOpenAICompatible('OpenRouter', 'https://openrouter.ai/api/v1/chat/completions', openrouterKey, 'meta-llama/llama-3.3-70b-instruct:free', normalizedMessages, systemPrompt, {
+        'HTTP-Referer': 'https://daily-grind-log.vercel.app',
+        'X-Title': 'Daily Grind Log - Seolha'
+      })
+    });
+  }
+  if (cerebrasKey) {
+    attempts.push({
+      name: 'Cerebras',
+      run: () => callOpenAICompatible('Cerebras', 'https://api.cerebras.ai/v1/chat/completions', cerebrasKey, 'llama-3.3-70b', normalizedMessages, systemPrompt)
+    });
+  }
+
+  const errors = [];
+  for (const attempt of attempts) {
     try {
-      const text = await callGemini(geminiKey, 'gemini-2.5-flash', history, systemPrompt, lastMessage);
+      const text = await attempt.run();
       return res.status(200).json({ reply: text });
-    } catch (err2) {
-      console.error('Gemini 2.5-flash gagal:', err2.message);
-
-      // 3. Fallback terakhir ke Groq
-      if (!groqKey) {
-        return res.status(200).json({ reply: '⚠️ ERROR ASLI: ' + err2.message + ' (Groq fallback tidak aktif, GROQ_API_KEY belum diset)' });
-      }
-      try {
-        const text = await callGroq(groqKey, normalizedMessages, systemPrompt);
-        return res.status(200).json({ reply: text });
-      } catch (err3) {
-        console.error('Groq gagal:', err3.message);
-        return res.status(200).json({ reply: '⚠️ ERROR ASLI: Semua provider AI gagal. ' + err3.message });
-      }
+    } catch (err) {
+      console.error(`${attempt.name} gagal:`, err.message);
+      errors.push(`${attempt.name}: ${err.message}`);
     }
   }
+
+  return res.status(200).json({ reply: '⚠️ ERROR ASLI: Semua provider AI gagal.\n' + errors.join('\n') });
 }
