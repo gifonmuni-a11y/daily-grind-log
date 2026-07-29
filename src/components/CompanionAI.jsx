@@ -30,7 +30,7 @@ const SEOLHA_THEME_CHAT_BG = 'https://eekeixvvrspyguawqmnl.supabase.co/storage/v
 
 const MIN_FONT_SIZE = 10
 const MAX_FONT_SIZE = 24
-const DEFAULT_FONT_SIZE = 14
+const DEFAULT_FONT_SIZE = 12
 
 const MANJA_KEYWORDS = ['mom', 'mommy', 'mam', 'ibu', 'bu', 'sayang', 'capek', 'cape', 'istirahat', 'latihan ringan', 'bun', 'bunda', 'ahjuma', 'okasan']
 const RESET_KEYWORDS = ['serius', 'fokus', 'mode normal']
@@ -39,6 +39,7 @@ const RESET_REGEX = new RegExp(`\\b(${RESET_KEYWORDS.join('|')})\\b`, 'i')
 
 const THEME_STORAGE_KEY = 'seolha_theme'
 const FONT_STORAGE_KEY = 'seolha_font_size'
+const TYPEWRITER_STORAGE_KEY = 'seolha_typewriter'
 
 const MASTER_34_CATEGORIES = [
   { name: 'Pemanasan (Warm-up)', tokoh_terkenal: 'Arnold Schwarzenegger: Otot yang dingin adalah otot yang rapuh. Pompa darah sebelum mengangkat besi beban berat.', apa_itu: 'Sesi latihan intensitas rendah di awal untuk meningkatkan suhu tubuh dan menyiapkan otot sebelum masuk ke latihan inti.', manfaatnya: 'Meningkatkan sirkulasi aliran darah ke seluruh tubuh, melumasi mobilitas sendi-sendi utama, serta mencegah kram mendadak.', tata_cara_atau_gerakan: 'Lakukan gerakan dinamis seperti arm circles (memutar lengan), leg swings (mengayun kaki), and lunges tanpa beban selama 5-10 menit.', id_video: 'mUD2u-YVn7A' },
@@ -100,6 +101,29 @@ function CategoryItem({ cat, index, theme }) {
   )
 }
 
+function SeolhaMessageBody({ text, animate, renderMessageText }) {
+  const [revealed, setRevealed] = useState(animate ? 0 : text.length)
+
+  useEffect(() => {
+    if (!animate) { setRevealed(text.length); return }
+    let current = 0
+    const step = Math.max(1, Math.ceil(text.length / 100))
+    const interval = setInterval(() => {
+      current += step
+      if (current >= text.length) {
+        setRevealed(text.length)
+        clearInterval(interval)
+      } else {
+        setRevealed(current)
+      }
+    }, 16)
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return <>{renderMessageText(text.slice(0, revealed))}</>
+}
+
 export default function CompanionAI({ userStats, profile, onClose }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -119,6 +143,10 @@ export default function CompanionAI({ userStats, profile, onClose }) {
     const saved = Number(localStorage.getItem(FONT_STORAGE_KEY))
     return saved && saved >= MIN_FONT_SIZE && saved <= MAX_FONT_SIZE ? saved : DEFAULT_FONT_SIZE
   })
+  const [typewriterEffect, setTypewriterEffect] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem(TYPEWRITER_STORAGE_KEY) === '1'
+  })
   const [showSettings, setShowSettings] = useState(false)
   const messagesEndRef = useRef(null)
   const utteranceRef = useRef(null)
@@ -131,6 +159,7 @@ export default function CompanionAI({ userStats, profile, onClose }) {
 
   useEffect(() => { localStorage.setItem(THEME_STORAGE_KEY, theme) }, [theme])
   useEffect(() => { localStorage.setItem(FONT_STORAGE_KEY, String(fontSize)) }, [fontSize])
+  useEffect(() => { localStorage.setItem(TYPEWRITER_STORAGE_KEY, typewriterEffect ? '1' : '0') }, [typewriterEffect])
 
   const getDynamicGreeting = () => {
     const hrs = new Date().getHours()
@@ -486,6 +515,13 @@ export default function CompanionAI({ userStats, profile, onClose }) {
               className="w-full accent-accent"
             />
           </div>
+          <div>
+            <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">Cara Balasan Muncul</div>
+            <div className="flex gap-2">
+              <button onClick={() => setTypewriterEffect(false)} className={`flex-1 text-xs px-2 py-1.5 font-mono uppercase border rounded ${!typewriterEffect ? 'bg-accent text-white border-accent' : 'bg-[#0A0A0E] border-[#211D2C] text-text-dim'}`}>Langsung</button>
+              <button onClick={() => setTypewriterEffect(true)} className={`flex-1 text-xs px-2 py-1.5 font-mono uppercase border rounded ${typewriterEffect ? 'bg-accent text-white border-accent' : 'bg-[#0A0A0E] border-[#211D2C] text-text-dim'}`}>Diketik Pelan</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -511,7 +547,11 @@ export default function CompanionAI({ userStats, profile, onClose }) {
           <div key={i} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
             <div className={`max-w-[85%] p-3 font-body leading-relaxed ${bubbleClass(m.sender)}`}>
               {m.sender === 'seolha' && <div className="font-mono text-[10px] text-accent font-bold uppercase mb-1 flex items-center gap-1"><Bot size={10} /> SEOLHA</div>}
-              <div className="flex flex-col">{m.sender === 'seolha' ? renderMessageText(m.text) : <p style={textStyle} className="whitespace-pre-wrap">{m.text}</p>}</div>
+              <div className="flex flex-col">
+                {m.sender === 'seolha'
+                  ? <SeolhaMessageBody text={m.text} animate={typewriterEffect} renderMessageText={renderMessageText} />
+                  : <p style={textStyle} className="whitespace-pre-wrap">{m.text}</p>}
+              </div>
             </div>
 
             {m.sender === 'seolha' && m.mediaSources && Array.isArray(m.mediaSources) && (
@@ -546,13 +586,13 @@ export default function CompanionAI({ userStats, profile, onClose }) {
       <div className="mb-2 pt-1.5">
         <div className="font-mono text-[10px] text-text-dim uppercase tracking-wider mb-1.5">FAQ — 0 ENERGI</div>
         <div className="faq-slider-container flex gap-2 overflow-x-auto pb-2 flex-nowrap" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-full font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Mulai dari mana?</button>
-          <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-full font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Kardio atau angkat?</button>
-          <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-full font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Cara & Jenis Latihan</button>
-          <button type="button" onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-full font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Nutrisi & Makan</button>
-          <button type="button" onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-full font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Tidur & Recovery</button>
-          <button type="button" onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-full font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Kesalahan Fatal</button>
-          <button type="button" onClick={() => handleSend(null, 'Semua Kategori Matrix Latihan', false, true)} style={textStyle} className="flex-shrink-0 w-[150px] text-center px-3 py-2 bg-accent/25 backdrop-blur-md border border-accent rounded-full text-accent font-mono tracking-wide uppercase font-black hover:bg-accent hover:text-white transition-all">SEMUA KATEGORI</button>
+          <button type="button" onClick={() => handleSend(null, 'Pemula mulai dari mana?', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-xl font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Mulai dari mana?</button>
+          <button type="button" onClick={() => handleSend(null, 'Kardio atau angkat beban?', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-xl font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Kardio atau angkat?</button>
+          <button type="button" onClick={() => handleSend(null, 'Jenis & Cara Latihan Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-xl font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Cara & Jenis Latihan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Makan & Nutrisi Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-xl font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Nutrisi & Makan</button>
+          <button type="button" onClick={() => handleSend(null, 'Pola Tidur & Recovery Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-xl font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Tidur & Recovery</button>
+          <button type="button" onClick={() => handleSend(null, 'Kesalahan Fatal Pemula', true)} style={textStyle} className={`flex-shrink-0 w-[150px] text-center px-3 py-2 border rounded-xl font-mono tracking-wide uppercase hover:border-accent ${faqButtonClass}`}>Kesalahan Fatal</button>
+          <button type="button" onClick={() => handleSend(null, 'Semua Kategori Matrix Latihan', false, true)} style={textStyle} className="flex-shrink-0 w-[150px] text-center px-3 py-2 bg-accent/25 backdrop-blur-md border border-accent rounded-xl text-accent font-mono tracking-wide uppercase font-black hover:bg-accent hover:text-white transition-all">SEMUA KATEGORI</button>
         </div>
       </div>
 
